@@ -9,192 +9,257 @@ using namespace hi;
 
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 20, int cHigh = 120,
+void makeV2Hist(int cLow = 20, int cHigh = 80,
                 float ptLow = 0, float ptHigh = 30, 
                 float yLow = 0, float yHigh=2.4,
                 float SiMuPtCut = 4)
 {
-  TFile *rf = new TFile("OniaFlow_skim.root","read");
-  TTree *tree = (TTree*) rf -> Get("mmep");
+  gStyle->SetOptStat(0);
+  TFile *rf = new TFile("TEST.root","read");
+  TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   TH1::SetDefaultSumw2();
-  DiMuon dm;
-  TBranch *b_dm;
-  tree -> SetBranchAddress("mm", &dm, &b_dm);
   
-  Double_t mass;
-  Double_t qxa, qya, qxb, qyb, qxc, qyc, qxdimu, qydimu;
-  Double_t pt, y, pt1, pt2, eta1, eta2;
+  const int nMaxDimu = 1000;
+  float mass[nMaxDimu];
+  float qxa[nMaxDimu];
+  float qya[nMaxDimu];
+  float qxb[nMaxDimu]; 
+  float qyb[nMaxDimu];
+  float qxc[nMaxDimu];
+  float qyc[nMaxDimu];
+  float qxdimu[nMaxDimu];
+  float qydimu[nMaxDimu];
+  float pt[nMaxDimu];
+  float y[nMaxDimu]; 
+  float pt1[nMaxDimu];
+  float pt2[nMaxDimu];
+  float eta[nMaxDimu];
+  float eta1[nMaxDimu];
+  float eta2[nMaxDimu];
   Int_t cBin;
   Int_t event; 
+  Int_t nDimu; 
+
+  TBranch *b_event;
+  TBranch *b_cBin;
+  TBranch *b_nDimu;
+  TBranch *b_mass;
+  TBranch *b_pt;
+  TBranch *b_y;
+  TBranch *b_eta;
+  TBranch *b_eta1;
+  TBranch *b_eta2;
+  TBranch *b_pt1;
+  TBranch *b_pt2;
+  TBranch *b_qxa;
+  TBranch *b_qxb;
+  TBranch *b_qxc;
+  TBranch *b_qxdimu;
+  TBranch *b_qya;
+  TBranch *b_qyb;
+  TBranch *b_qyc;
+  TBranch *b_qydimu;
+  
+
+  tree -> SetBranchAddress("event", &event, &b_event);
+  tree -> SetBranchAddress("cBin", &cBin, &b_cBin);
+  tree -> SetBranchAddress("nDimu", &nDimu, &b_nDimu);
+  tree -> SetBranchAddress("mass", mass, &b_mass);
+  tree -> SetBranchAddress("y", y, &b_y);
+  tree -> SetBranchAddress("pt", pt, &b_pt);
+  tree -> SetBranchAddress("pt1", pt1, &b_pt1);
+  tree -> SetBranchAddress("pt2", pt2, &b_pt2);
+  tree -> SetBranchAddress("eta", eta, &b_eta);
+  tree -> SetBranchAddress("eta1", eta1, &b_eta1);
+  tree -> SetBranchAddress("eta2", eta2, &b_eta2);
+  tree -> SetBranchAddress("qxa", qxa, &b_qxa);
+  tree -> SetBranchAddress("qxb", qxb, &b_qxb);
+  tree -> SetBranchAddress("qxc", qxc, &b_qxc);
+  tree -> SetBranchAddress("qxdimu", qxdimu, &b_qxdimu);
+  tree -> SetBranchAddress("qya", qya, &b_qya);
+  tree -> SetBranchAddress("qyb", qyb, &b_qyb);
+  tree -> SetBranchAddress("qyc", qyc, &b_qyc);
+  tree -> SetBranchAddress("qydimu", qydimu, &b_qydimu);
+  
 
   const int nMassBin = 10;
-  double massLow = 8;
-  double massHigh = 14;
+  float massLow = 8;
+  float massHigh = 14;
+
+  float massBinDiff = (massHigh-massLow)/nMassBin;
+  float massBin[nMassBin+1];
+  for(int i=0; i<=nMassBin; i++){
+    massBin[i] = massLow + massBinDiff*i;
+  }
 
   int bfevt =-1;
   int afevt =-1;
+
+  double mass_low_SB1 = 8; 
+  double mass_high_SB1 = 9; 
+  double mass_low_SB = 9; 
+  double mass_high_SB = 10; 
+  double mass_low_SB2 = 10; 
+  double mass_high_SB2 = 14; 
+
+  int nQBin = 200;
+  const int nMass_div = 3;
+
+  TString fSB[nMass_div] = {"SB1 (8<m<9)","SB2 (10m<14)","S (9<m<10)"};
+  
+  TH1D* h_v2_1[nMass_div];
+  TH1D* h_v2_2[nMass_div];
+  TH1D* h_v2_3[nMass_div];
+  TH1D* h_v2_4[nMass_div];
+
+  double Q_avg_low = -6500;
+  double Q_avg_high = 27000;
+  double Q_avg_low_dimu = -150;
+  double Q_avg_high_dimu = 150;
+  for(int imass=0; imass<nMass_div;imass++){
+    h_v2_1[imass] = new TH1D(Form("h_v2_1_%d",imass),";#LTQ_{2}Q_{2A}^{*}#GT;counts",100,Q_avg_low_dimu,Q_avg_high_dimu);
+    h_v2_2[imass] = new TH1D(Form("h_v2_2_%d",imass),";#LTQ_{2A}Q_{2B}^{*}#GT;counts",nQBin,Q_avg_low,Q_avg_high);
+    h_v2_3[imass] = new TH1D(Form("h_v2_3_%d",imass),";#LTQ_{2A}Q_{2C}^{*}#GT;counts",nQBin,Q_avg_low,Q_avg_high);
+    h_v2_4[imass] = new TH1D(Form("h_v2_4_%d",imass),";#LTQ_{2B}Q_{2C}^{*}#GT;counts",nQBin,Q_avg_low,Q_avg_high);
+  }
+  
+  TH1D* h_v2_num_q1 = new TH1D("h_v2_num_q1",";m_{#mu^{+}#mu^{-}};#LTQ_{2}Q_{2A}^{*}#GT",nMassBin,massLow,massHigh);
+  TH1D* h_v2_den_q2 = new TH1D("h_v2_num_q2",";m_{#mu^{+}#mu^{-}};#LTQ_{2A}Q_{2B}^{*}#GT",nMassBin,massLow,massHigh);
+  TH1D* h_v2_den_q3 = new TH1D("h_v2_num_q3",";m_{#mu^{+}#mu^{-}};#LTQ_{2A}Q_{2C}^{*}#GT",nMassBin,massLow,massHigh);
+  TH1D* h_v2_den_q4 = new TH1D("h_v2_num_q4",";m_{#mu^{+}#mu^{-}};#LTQ_{2B}Q_{2C}^{*}#GT",nMassBin,massLow,massHigh);
   
   TH1D* h2 = new TH1D("h2",";m_{#mu^{+}#mu^{-}};Counts",60,massLow,massHigh);
 
-  TH1D* h_v2_num_q1 = new TH1D("h_v2_num_q1",";m_{#mu^{+}#mu^{-}};#langleQ_{2}Q_{2A}^{*}#rangle",nMassBin,massLow,massHigh);
-  TH1D* h_v2_den_q2 = new TH1D("h_v2_num_q2",";m_{#mu^{+}#mu^{-}};#langleQ_{2A}Q_{2B}^{*}#rangle",nMassBin,massLow,massHigh);
-  TH1D* h_v2_den_q3 = new TH1D("h_v2_num_q3",";m_{#mu^{+}#mu^{-}};#langleQ_{2A}Q_{2C}^{*}#rangle",nMassBin,massLow,massHigh);
-  TH1D* h_v2_den_q4 = new TH1D("h_v2_num_q4",";m_{#mu^{+}#mu^{-}};#langleQ_{2B}Q_{2C}^{*}#rangle",nMassBin,massLow,massHigh);
-  
-  double v2_1[nMassBin];
-  double v2_2[nMassBin];
-  double v2_3[nMassBin];
-  double v2_4[nMassBin];
-  double v2_1_avg[nMassBin];
-  double v2_2_avg[nMassBin];
-  double v2_3_avg[nMassBin];
-  double v2_4_avg[nMassBin];
-    
+  const static int countMax = 1000000;
+  double static v2_1[nMassBin][countMax];
+  double static v2_2[nMassBin][countMax];
+  double static v2_3[nMassBin][countMax];
+  double static v2_4[nMassBin][countMax];
+  for(int i=0;i<nMassBin;i++){
+    for(int j=0;j<countMax;j++){
+      v2_1[i][j]=0;
+      v2_2[i][j]=0;
+      v2_3[i][j]=0;
+      v2_4[i][j]=0;
+    }
+  }
 
-
+  double v2_1_avg[nMassBin]={0.};
+  double v2_2_avg[nMassBin]={0.};
+  double v2_3_avg[nMassBin]={0.};
+  double v2_4_avg[nMassBin]={0.};
+   
+  int dbcount=0;
   int count[nMassBin] = {0};
+
+  int nDimuPass=0;
+  int nDimu_one=0;
+  int nDimu_more=0;
   Int_t nEvt = tree->GetEntries();
   cout << "nEvt : " << nEvt << endl;
   for(int i=0; i<nEvt; i++){
-    dm.clear();
     tree->GetEntry(i);
-    bfevt = 0; afevt = 0;
-    mass    = dm.mass;
-    pt      = dm.pt;
-    pt1     = dm.pt1;
-    pt2     = dm.pt2;
-    eta1    = dm.eta1;
-    eta2    = dm.eta2;
-    y       = dm.y;
-    cBin    = dm.cBin;
-    qxa     = dm.qxa;
-    qxb     = dm.qxb;
-    qxc     = dm.qxc;
-    qya     = dm.qya;
-    qyb     = dm.qyb;
-    qyc     = dm.qyc;
-    qxdimu  = dm.qxdimu;
-    qydimu  = dm.qydimu;
-    event   = dm.event;
+    nDimuPass=0;
+    
+    if(!(cBin>cLow&&cBin<cHigh)) continue; 
 
-    for(int j=0; j<nMassBin; j++){
-      if(pt>ptLow&&pt<ptHigh&&abs(y)<yHigh&&abs(y)>yLow&&pt1>SiMuPtCut&&pt2>SiMuPtCut&&abs(eta1)<2.4&&abs(eta2)<2.4 && cBin>cLow&&cBin<cHigh)
-      {
-        bfevt = event;
-        tree->GetEntry(i+1);
-        if(pt>ptLow&&pt<ptHigh&&abs(y)<yHigh&&abs(y)>yLow&&pt1>SiMuPtCut&&pt2>SiMuPtCut&&abs(eta1)<2.4&&abs(eta2)<2.4 && cBin>cLow&&cBin<cHigh) afevt = dm.event;
-        if(bfevt == afevt) continue;
+    for(int j=0; j<nDimu; j++){
+      if(mass[j]<massLow || mass[j]>massHigh) continue;
+      if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
+        nDimuPass++;
+      }
+    }
 
-        if(mass >= (massLow+(massHigh-massLow)/nMassBin*j) && mass < (massLow+(massHigh-massLow)/nMassBin*(j+1)))
-        {
-          v2_1[j] = qxa*qxdimu + qya*qydimu;
-          v2_1_avg[j] += v2_1[j];  
-          v2_2[j] = qxa*qxb + qya*qyb;
-          v2_2_avg[j] += v2_2[j];  
-          v2_3[j] = qxa*qxc + qya*qyc;
-          v2_3_avg[j] += v2_3[j];  
-          v2_4[j] = qxb*qxc + qyb*qyc;
-          v2_4_avg[j] += v2_4[j];  
-          count[j]++;
+    if(nDimuPass>1) {nDimu_more++; continue;}
+    nDimu_one++;
+
+    for(int j=0; j<nDimu; j++){
+      if(mass[j]<massLow || mass[j]>massHigh) continue;
+      if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
+        for(int imbin=0; imbin<nMassBin; imbin++){
+          if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
+            v2_1[imbin][count[imbin]] = qxa[j]*qxdimu[j] + qya[j]*qydimu[j];
+            v2_2[imbin][count[imbin]] = qxa[j]*qxb[j] + qya[j]*qyb[j];
+            v2_3[imbin][count[imbin]] = qxa[j]*qxc[j] + qya[j]*qyc[j];
+            v2_4[imbin][count[imbin]] = qxb[j]*qxc[j] + qyb[j]*qyc[j];
+
+            v2_1_avg[imbin] += v2_1[imbin][count[imbin]];
+            v2_2_avg[imbin] += v2_2[imbin][count[imbin]];
+            v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
+            v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
+            count[imbin]++;
+
+          }
         }
-        h2->Fill(mass);
+        if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
+          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
+          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
+          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
+          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+        }
+        else if(mass[j]>=mass_low_SB2 && mass[j]<mass_high_SB2){
+          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
+          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
+          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
+          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+        }
+        else if(mass[j]>=mass_low_SB && mass[j]<mass_high_SB){
+          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
+          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
+          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
+          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+        }
+
+      h2->Fill(mass[j]);
       }
     }
   }
 
-  double v2_final[nMassBin]; 
-  
-  cout << "Number of upsilon candidate in given bin " << endl;
+  cout << "more than one dimuon : " << nDimu_more << endl;
+  cout << "one dimuon : " << nDimu_one << endl;
+
+  double v2_1_err[nMassBin] = {0.};
+  double v2_2_err[nMassBin] = {0.};
+  double v2_3_err[nMassBin] = {0.};
+  double v2_4_err[nMassBin] = {0.};
+
   for(int ibin=0; ibin<nMassBin; ibin++){
-    
     v2_1_avg[ibin] = v2_1_avg[ibin]/count[ibin];
     v2_2_avg[ibin] = v2_2_avg[ibin]/count[ibin];
     v2_3_avg[ibin] = v2_3_avg[ibin]/count[ibin];
     v2_4_avg[ibin] = v2_4_avg[ibin]/count[ibin];
 
-  }
-
-  //Calculate standard deviation
-  double v2_1_cand=0;
-  double v2_2_cand=0;
-  double v2_3_cand=0;
-  double v2_4_cand=0;
-  double v2_1_dev[nMassBin]={0.};
-  double v2_2_dev[nMassBin]={0.};
-  double v2_3_dev[nMassBin]={0.};
-  double v2_4_dev[nMassBin]={0.};
-  for(int i=0; i<nEvt; i++){
-    dm.clear();
-    tree->GetEntry(i);
-    bfevt = 0; afevt = 0;
-    mass    = dm.mass;
-    pt      = dm.pt;
-    pt1     = dm.pt1;
-    pt2     = dm.pt2;
-    eta1    = dm.eta1;
-    eta2    = dm.eta2;
-    y       = dm.y;
-    cBin    = dm.cBin;
-    qxa     = dm.qxa;
-    qxb     = dm.qxb;
-    qxc     = dm.qxc;
-    qya     = dm.qya;
-    qyb     = dm.qyb;
-    qyc     = dm.qyc;
-    qxdimu  = dm.qxdimu;
-    qydimu  = dm.qydimu;
-    event   = dm.event;
-
-    for(int j=0; j<nMassBin; j++){
-      if(pt>ptLow&&pt<ptHigh&&abs(y)<yHigh&&abs(y)>yLow&&pt1>SiMuPtCut&&pt2>SiMuPtCut&&abs(eta1)<2.4&&abs(eta2)<2.4 && cBin>cLow&&cBin<cHigh)
-      {
-        bfevt = event;
-        tree->GetEntry(i+1);
-        if(pt>ptLow&&pt<ptHigh&&abs(y)<yHigh&&abs(y)>yLow&&pt1>SiMuPtCut&&pt2>SiMuPtCut&&abs(eta1)<2.4&&abs(eta2)<2.4 && cBin>cLow&&cBin<cHigh) afevt = dm.event;
-        if(bfevt == afevt) continue;
-
-        if(mass >= (massLow+(massHigh-massLow)/nMassBin*j) && mass < (massLow+(massHigh-massLow)/nMassBin*(j+1)))
-        {
-          v2_1_cand = qxa*qxdimu + qya*qydimu;
-          v2_2_cand = qxa*qxb + qya*qyb;
-          v2_3_cand = qxa*qxc + qya*qyc;
-          v2_4_cand = qxb*qxc + qyb*qyc;
-          v2_1_dev[j] += (v2_1_cand-v2_1_avg[j])*(v2_1_cand-v2_1_avg[j]);
-          v2_2_dev[j] += (v2_2_cand-v2_2_avg[j])*(v2_2_cand-v2_2_avg[j]);
-          v2_3_dev[j] += (v2_3_cand-v2_3_avg[j])*(v2_3_cand-v2_3_avg[j]);
-          v2_4_dev[j] += (v2_4_cand-v2_4_avg[j])*(v2_4_cand-v2_4_avg[j]);
-        }
-      }
+    for(int icount=0; icount<count[ibin]; icount++){
+      v2_1_err[ibin] += (v2_1[ibin][icount]-v2_1_avg[ibin])*(v2_1[ibin][icount]-v2_1_avg[ibin]);
+      v2_2_err[ibin] += (v2_2[ibin][icount]-v2_2_avg[ibin])*(v2_2[ibin][icount]-v2_2_avg[ibin]);
+      v2_3_err[ibin] += (v2_3[ibin][icount]-v2_3_avg[ibin])*(v2_3[ibin][icount]-v2_3_avg[ibin]);
+      v2_4_err[ibin] += (v2_4[ibin][icount]-v2_4_avg[ibin])*(v2_4[ibin][icount]-v2_4_avg[ibin]);
     }
-  }
+    v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin]/count[ibin]);
+    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin]/count[ibin]);
+    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin]/count[ibin]);
+    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin]/count[ibin]);
 
-  for(int ibin=0; ibin<nMassBin; ibin++){
-    v2_1_dev[ibin] = TMath::Sqrt(v2_1_dev[ibin]/count[ibin]);
-    v2_2_dev[ibin] = TMath::Sqrt(v2_2_dev[ibin]/count[ibin]);
-    v2_3_dev[ibin] = TMath::Sqrt(v2_3_dev[ibin]/count[ibin]);
-    v2_4_dev[ibin] = TMath::Sqrt(v2_4_dev[ibin]/count[ibin]);
+    h_v2_num_q1->SetBinContent(ibin+1,v2_1_avg[ibin]);
+    h_v2_num_q1->SetBinError(ibin+1,v2_1_err[ibin]);
+    h_v2_den_q2->SetBinContent(ibin+1,v2_2_avg[ibin]);
+    h_v2_den_q2->SetBinError(ibin+1,v2_2_err[ibin]);
+    h_v2_den_q3->SetBinContent(ibin+1,v2_3_avg[ibin]);
+    h_v2_den_q3->SetBinError(ibin+1,v2_3_err[ibin]);
+    h_v2_den_q4->SetBinContent(ibin+1,v2_4_avg[ibin]);
+    h_v2_den_q4->SetBinError(ibin+1,v2_4_err[ibin]);
     
     cout << ibin << "th Bin : " << count[ibin] << endl;
     cout << "v2_1_avg " << ibin << " : " << v2_1_avg[ibin] << endl;
     cout << "v2_2_avg " << ibin << " : " << v2_2_avg[ibin] << endl;
     cout << "v2_3_avg " << ibin << " : " << v2_3_avg[ibin] << endl;
     cout << "v2_4_avg " << ibin << " : " << v2_4_avg[ibin] << endl;
-
-    h_v2_num_q1->SetBinContent(ibin+1,v2_1_avg[ibin]); 
-    h_v2_num_q1->SetBinError(ibin+1,v2_1_dev[ibin]); 
-    h_v2_den_q2->SetBinContent(ibin+1,v2_2_avg[ibin]); 
-    h_v2_den_q2->SetBinError(ibin+1,v2_2_dev[ibin]); 
-    h_v2_den_q3->SetBinContent(ibin+1,v2_3_avg[ibin]); 
-    h_v2_den_q3->SetBinError(ibin+1,v2_3_dev[ibin]); 
-    h_v2_den_q4->SetBinContent(ibin+1,v2_4_avg[ibin]); 
-    h_v2_den_q4->SetBinError(ibin+1,v2_4_dev[ibin]); 
-
-
-    cout << "h_v2_num_q1 " << ibin << ", val : " << h_v2_num_q1->GetBinContent(ibin) << " err : " << h_v2_num_q1->GetBinError(ibin) << endl;
-    cout << "h_v2_den_q2 " << ibin << ", val : " << h_v2_den_q2->GetBinContent(ibin) << " err : " << h_v2_den_q2->GetBinError(ibin) << endl;
-    cout << "h_v2_den_q3 " << ibin << ", val : " << h_v2_den_q3->GetBinContent(ibin) << " err : " << h_v2_den_q3->GetBinError(ibin) << endl;
-    cout << "h_v2_den_q4 " << ibin << ", val : " << h_v2_den_q4->GetBinContent(ibin) << " err : " << h_v2_den_q4->GetBinError(ibin) << endl;
+    
+    cout << "h_v2_num_q1 " << ibin << ", val : " << h_v2_num_q1->GetBinContent(ibin+1) << " err : " << h_v2_num_q1->GetBinError(ibin+1) << endl;
+    cout << "h_v2_den_q2 " << ibin << ", val : " << h_v2_den_q2->GetBinContent(ibin+1) << " err : " << h_v2_den_q2->GetBinError(ibin+1) << endl;
+    cout << "h_v2_den_q3 " << ibin << ", val : " << h_v2_den_q3->GetBinContent(ibin+1) << " err : " << h_v2_den_q3->GetBinError(ibin+1) << endl;
+    cout << "h_v2_den_q4 " << ibin << ", val : " << h_v2_den_q4->GetBinContent(ibin+1) << " err : " << h_v2_den_q4->GetBinError(ibin+1) << endl;
   }
 
   TH1D* h_v2_den_ = (TH1D*)h_v2_den_q2->Clone("h_v2_den_");
@@ -207,11 +272,13 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_v2_final = (TH1D*) h_v2_num_q1 -> Clone("h_v2_final");
   h_v2_final->Divide(h_v2_den);
 
+  h_v2_final->GetYaxis()->SetRangeUser(-0.2,0.2);
+  h_v2_final->GetYaxis()->SetTitle("v_{2}^{S+B}");
+  stripErr(h_v2_final);
   SetHistStyle(h_v2_final,0,0);
   SetHistStyle(h2,0,0);
   h2->GetYaxis()->SetLimits(0,14000);
 //  h2->GetYaxis()->SetRangeUser(0,14000);
-  gStyle->SetOptStat(0);
   TCanvas *c1 = new TCanvas("c1","",600,600);
   gPad->SetLeftMargin(0.17);
   TCanvas *c2 = new TCanvas("c2","",600,600);
@@ -221,8 +288,85 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   c2->cd();
   h2->Draw("P");
 
-  c1->SaveAs("v2_SplusB_test.pdf");
-  c2->SaveAs("MassDist.pdf");
+  c1->SaveAs("plots/v2_SplusB.pdf");
+  c2->SaveAs("plots/MassDist.pdf");
+  
+  TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
+  TLegend *leg_v2_2 = new TLegend(0.38,0.64,0.77,0.9);
+  TLegend *leg_v2_3 = new TLegend(0.38,0.64,0.77,0.9);
+  TLegend *leg_v2_4 = new TLegend(0.38,0.64,0.77,0.9);
+  SetLegendStyle(leg_v2_1);
+  SetLegendStyle(leg_v2_2);
+  SetLegendStyle(leg_v2_3);
+  SetLegendStyle(leg_v2_4);
+
+  double mean_v2_1[nMass_div];
+  double mean_v2_2[nMass_div];
+  double mean_v2_3[nMass_div];
+  double mean_v2_4[nMass_div];
+
+  double mean_err_v2_1[nMass_div];
+  double mean_err_v2_2[nMass_div];
+  double mean_err_v2_3[nMass_div];
+  double mean_err_v2_4[nMass_div];
+
+  for(int i=0;i<nMass_div;i++){
+    SetHistStyle(h_v2_1[i],i,i);
+    SetHistStyle(h_v2_2[i],i,i);
+    SetHistStyle(h_v2_3[i],i,i);
+    SetHistStyle(h_v2_4[i],i,i);
+    scaleInt(h_v2_1[i]);
+    scaleInt(h_v2_2[i]);
+    scaleInt(h_v2_3[i]);
+    scaleInt(h_v2_4[i]);
+
+    mean_v2_1[i] = h_v2_1[i]->GetMean();
+    mean_v2_2[i] = h_v2_2[i]->GetMean();
+    mean_v2_3[i] = h_v2_3[i]->GetMean();
+    mean_v2_4[i] = h_v2_4[i]->GetMean();
+
+    mean_err_v2_1[i] = h_v2_1[i]->GetMeanError();
+    mean_err_v2_2[i] = h_v2_2[i]->GetMeanError();
+    mean_err_v2_3[i] = h_v2_3[i]->GetMeanError();
+    mean_err_v2_4[i] = h_v2_4[i]->GetMeanError();
+
+    leg_v2_1->AddEntry(h_v2_1[i],(fSB[i]+Form(" mean:%.2f",mean_v2_1[i])+Form(" err:%.2f",mean_err_v2_1[i])).Data(),"l");
+    leg_v2_2->AddEntry(h_v2_2[i],(fSB[i]+Form(" mean:%.2f",mean_v2_2[i])+Form(" err:%.2f",mean_err_v2_2[i])).Data(),"l");
+    leg_v2_3->AddEntry(h_v2_3[i],(fSB[i]+Form(" mean:%.2f",mean_v2_3[i])+Form(" err:%.2f",mean_err_v2_3[i])).Data(),"l");
+    leg_v2_4->AddEntry(h_v2_4[i],(fSB[i]+Form(" mean:%.2f",mean_v2_4[i])+Form(" err:%.2f",mean_err_v2_4[i])).Data(),"l");
+  }
+
+  TCanvas *c_qq_1 = new TCanvas("c_qq_1","",600,600);
+  c_qq_1->cd();
+  h_v2_1[0]->Draw("hist");
+  h_v2_1[1]->Draw("hist same");
+  h_v2_1[2]->Draw("hist same");
+  leg_v2_1->Draw("same");
+  c_qq_1->SaveAs("plots/c_qq_1.pdf");
+
+  TCanvas *c_qq_2 = new TCanvas("c_qq_2","",600,600);
+  c_qq_2->cd();
+  h_v2_2[0]->Draw("hist");
+  h_v2_2[1]->Draw("hist same");
+  h_v2_2[2]->Draw("hist same");
+  leg_v2_2->Draw("same");
+  c_qq_2->SaveAs("plots/c_qq_2.pdf");
+
+  TCanvas *c_qq_3 = new TCanvas("c_qq_3","",600,600);
+  c_qq_3->cd();
+  h_v2_3[0]->Draw("hist");
+  h_v2_3[1]->Draw("hist same");
+  h_v2_3[2]->Draw("hist same");
+  leg_v2_3->Draw("same");
+  c_qq_3->SaveAs("plots/c_qq_3.pdf");
+
+  TCanvas *c_qq_4 = new TCanvas("c_qq_4","",600,600);
+  c_qq_4->cd();
+  h_v2_4[0]->Draw("hist");
+  h_v2_4[1]->Draw("hist same");
+  h_v2_4[2]->Draw("hist same");
+  leg_v2_4->Draw("same");
+  c_qq_4->SaveAs("plots/c_qq_4.pdf");
 }
     
 
