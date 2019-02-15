@@ -228,6 +228,7 @@ void SkimTree_Event(int nevt=-1)
   int lumi;
   int cBin;
   int nDimu;
+  float vz;
   float mass[nMaxDimu];
   float pt[nMaxDimu];
   float y[nMaxDimu];
@@ -255,6 +256,7 @@ void SkimTree_Event(int nevt=-1)
   mmevttree->Branch("event",&evt,"event/I");
   mmevttree->Branch("lumi",&lumi,"lumi/I");
   mmevttree->Branch("cBin",&cBin,"cBin/I");
+  mmevttree->Branch("vz",&vz,"vz/F");
   mmevttree->Branch("nDimu",&nDimu,"nDimu/I");
   mmevttree->Branch("mass",mass,"mass[nDimu]/F");
   mmevttree->Branch("y",y,"y[nDimu]/F");
@@ -309,6 +311,7 @@ void SkimTree_Event(int nevt=-1)
       evt = eventNb;
       lumi = LS;
       cBin = Centrality;
+      vz = zVtx;
 
 
       JP_Reco = (TLorentzVector*) Reco_QQ_4mom->At(irqq);

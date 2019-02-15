@@ -3,6 +3,9 @@
 #include "cutsAndBinUpsilonV2.h"
 #include "HiEvtPlaneList.h"
 #include "Style_jaebeom.h"
+#include "tdrstyle.C"
+#include "CMS_lumi_square.C"
+
 
 using namespace std;
 using namespace hi;
@@ -15,6 +18,11 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
                 float SiMuPtCut = 4)
 {
   gStyle->SetOptStat(0);
+  setTDRStyle();
+  writeExtraText= true;
+  int iPeriod = 2;
+  int iPos = 33;
+
   TFile *rf = new TFile("OniaFlow_skim_1st_UpsTrig.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
@@ -280,23 +288,67 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_v2_final = (TH1D*) h_v2_num_q1 -> Clone("h_v2_SplusB");
   h_v2_final->Divide(h_v2_den);
 
-  h_v2_final->GetYaxis()->SetRangeUser(-0.2,0.2);
+  h_v2_final->GetYaxis()->SetRangeUser(-0.15,0.2);
   h_v2_final->GetYaxis()->SetTitle("v_{2}^{S+B}");
+  h_v2_final->GetYaxis()->SetLabelSize(0.04);
+  h_v2_final->GetXaxis()->SetLabelSize(0.04);
 //  stripErr(h_v2_final);
   SetHistStyle(h_v2_final,0,0);
   SetHistStyle(h_mass,0,0);
   h_mass->GetYaxis()->SetLimits(0,14000);
+  h_mass->GetYaxis()->SetLabelSize(0.04);
+  h_mass->GetXaxis()->SetLabelSize(0.04);
+  h_mass->GetYaxis()->SetTitleSize(0.04);
+  h_mass->GetYaxis()->SetTitleOffset(1.8);
+  h_mass->GetXaxis()->SetTitleSize(0.05);
 //  h2->GetYaxis()->SetRangeUser(0,14000);
   TCanvas *c1 = new TCanvas("c1","",600,600);
   gPad->SetLeftMargin(0.17);
+  gPad->SetTopMargin(0.06);
   TCanvas *c2 = new TCanvas("c2","",600,600);
+  gPad->SetTopMargin(0.06);
   gPad->SetLeftMargin(0.17);
+
   c1->cd();
+  c1->SetTicks(1,1);
   h_v2_final->Draw("P");
+  
+  float pos_x = 0.23;
+  float pos_x_mass = 0.45;
+  float pos_y = 0.82;
+  float pos_y_diff = 0.052;
+  int text_color = 1;
+  float text_size = 16;
+  TString perc = "%";
+  jumSun(massLow,0,massHigh,0,1,1);
+
+  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x,pos_y,text_color,text_size);
+  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x,pos_y,text_color,text_size);
+  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
+  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.f GeV/c", SiMuPtCut ), pos_x,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText("|#eta^{#mu}| < 2.4", pos_x,pos_y-pos_y_diff*3,text_color,text_size);
+  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x,pos_y-pos_y_diff*4,text_color,text_size);
+
+
   c2->cd();
+  c2->SetTicks(1,1);
   h_mass->Draw("P");
 
+  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText("|#eta^{#mu}| < 2.4", pos_x_mass,pos_y-pos_y_diff*3,text_color,text_size);
+  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
+  
+  CMS_lumi_square( c1, iPeriod, iPos );
+  c1->Update();
   c1->SaveAs(Form("plots/v2_SplusB_%s.pdf",kineLabel.Data()));
+  
+  CMS_lumi_square( c2, iPeriod, iPos );
+  c2->Update();
   c2->SaveAs(Form("plots/MassDist_%s.pdf",kineLabel.Data()));
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
