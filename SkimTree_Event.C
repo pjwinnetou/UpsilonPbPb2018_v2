@@ -233,6 +233,8 @@ void SkimTree_Event(int nevt=-1)
   float pt[nMaxDimu];
   float y[nMaxDimu];
   float phi[nMaxDimu];
+  float phi1[nMaxDimu];
+  float phi2[nMaxDimu];
   float eta[nMaxDimu];
   float eta1[nMaxDimu];
   float eta2[nMaxDimu];
@@ -250,6 +252,8 @@ void SkimTree_Event(int nevt=-1)
   float qyc[nMaxDimu];
   float qxdimu[nMaxDimu];
   float qydimu[nMaxDimu];
+  float qxmupl[nMaxDimu];
+  float qymumi[nMaxDimu];
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
   mmevttree->SetMaxTreeSize(MAXTREESIZE);
@@ -276,6 +280,8 @@ void SkimTree_Event(int nevt=-1)
   mmevttree->Branch("qyc",qyc,"qyc[nDimu]/F");
   mmevttree->Branch("qxdimu",qxdimu,"qxdimu[nDimu]/F");
   mmevttree->Branch("qydimu",qydimu,"qydimu[nDimu]/F");
+  mmevttree->Branch("qxmupl",qxmupl,"qxmupl[nDimu]/F");
+  mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -422,6 +428,8 @@ void SkimTree_Event(int nevt=-1)
 
       mass[nDimu] = JP_Reco->M();
       phi[nDimu] = JP_Reco->Phi();
+      phi1[nDimu] = mupl_Reco->Phi();
+      phi2[nDimu] = mumi_Reco->Phi();
       eta[nDimu] = JP_Reco->Eta();
       y[nDimu] = JP_Reco->Rapidity();
       pt[nDimu] = JP_Reco->Pt();
@@ -431,6 +439,8 @@ void SkimTree_Event(int nevt=-1)
       eta2[nDimu] = mumi_Reco->Eta();
       qxdimu[nDimu] = TMath::Cos(2*phi[nDimu]);
       qydimu[nDimu] = TMath::Sin(2*phi[nDimu]);
+      qxmupl[nDimu] = TMath::Cos(2*phi1[nDimu]);
+      qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
       nDimu++;
 
     } // end of dimuon loop
