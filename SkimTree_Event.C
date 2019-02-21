@@ -18,7 +18,7 @@ void SkimTree_Event(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname = "Oniatree_addvn_997.root";
+  TString fname = "Oniatree_VN_merge.root";
   
   TChain *mytree = new TChain("hionia/myTree");
   mytree->Add(fname.Data());
@@ -30,9 +30,9 @@ void SkimTree_Event(int nevt=-1)
   Int_t           Centrality;
   ULong64_t       HLTriggers;
   Int_t           Reco_QQ_size;
+  Int_t           Reco_mu_size;
   TClonesArray    *Reco_QQ_4mom;
-  TClonesArray    *Reco_QQ_mupl_4mom;
-  TClonesArray    *Reco_QQ_mumi_4mom;
+  TClonesArray    *Reco_mu_4mom;
   ULong64_t       Reco_QQ_trig[200];   //[Reco_QQ_size]
   Float_t         Reco_QQ_VtxProb[200];   //[Reco_QQ_size]
   TBranch        *b_runNb;   //!
@@ -42,22 +42,18 @@ void SkimTree_Event(int nevt=-1)
   TBranch        *b_Centrality;   //!
   TBranch        *b_HLTriggers;   //!
   TBranch        *b_Reco_QQ_size;   //!
+  TBranch        *b_Reco_mu_size;   //!
   TBranch        *b_Reco_QQ_4mom;   //!
-  TBranch        *b_Reco_QQ_mupl_4mom;   //!
-  TBranch        *b_Reco_QQ_mumi_4mom;   //!
+  TBranch        *b_Reco_mu_4mom;   //!
   TBranch        *b_Reco_QQ_trig;   //!
   TBranch        *b_Reco_QQ_VtxProb;   //!
 
-  Bool_t          Reco_QQ_mupl_highPurity[200];   //[Reco_QQ_size]
-  Bool_t          Reco_QQ_mumi_highPurity[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_highPurity;   //!
-  TBranch        *b_Reco_QQ_mumi_highPurity;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_highPurity", Reco_QQ_mupl_highPurity, &b_Reco_QQ_mupl_highPurity);
-  mytree->SetBranchAddress("Reco_QQ_mumi_highPurity", Reco_QQ_mumi_highPurity, &b_Reco_QQ_mumi_highPurity);
+  Bool_t          Reco_mu_highPurity[200];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_highPurity;   //!
+  mytree->SetBranchAddress("Reco_mu_highPurity", Reco_mu_highPurity, &b_Reco_mu_highPurity);
 
   Reco_QQ_4mom = 0;
-  Reco_QQ_mupl_4mom = 0;
-  Reco_QQ_mumi_4mom = 0;
+  Reco_mu_4mom = 0;
   mytree->SetBranchAddress("runNb", &runNb, &b_runNb);
   mytree->SetBranchAddress("LS", &LS, &b_LS);
   mytree->SetBranchAddress("eventNb", &eventNb, &b_eventNb);
@@ -65,114 +61,53 @@ void SkimTree_Event(int nevt=-1)
   mytree->SetBranchAddress("Centrality", &Centrality, &b_Centrality);
   mytree->SetBranchAddress("HLTriggers", &HLTriggers, &b_HLTriggers);
   mytree->SetBranchAddress("Reco_QQ_size", &Reco_QQ_size, &b_Reco_QQ_size);
+  mytree->SetBranchAddress("Reco_mu_size", &Reco_mu_size, &b_Reco_mu_size);
   mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
-  //  mytree->GetBranch("Reco_QQ_mupl_4mom")->SetAutoDelete(kFALSE);
-  mytree->SetBranchAddress("Reco_QQ_mupl_4mom", &Reco_QQ_mupl_4mom, &b_Reco_QQ_mupl_4mom);
-  //  mytree->GetBranch("Reco_QQ_mumi_4mom")->SetAutoDelete(kFALSE);
-  mytree->SetBranchAddress("Reco_QQ_mumi_4mom", &Reco_QQ_mumi_4mom, &b_Reco_QQ_mumi_4mom);
+  mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
   mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
   mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
 
   //  muon id 
-  Int_t           Reco_QQ_mupl_nTrkHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nTrkHits[200];   //[Reco_QQ_size]
+  Int_t           Reco_QQ_mupl_idx[200];
+  Int_t           Reco_QQ_mumi_idx[200];
+  TBranch        *b_Reco_QQ_mupl_idx;
+  TBranch        *b_Reco_QQ_mumi_idx;
+  mytree->SetBranchAddress("Reco_QQ_mupl_idx",Reco_QQ_mupl_idx,&b_Reco_QQ_mupl_idx);
+  mytree->SetBranchAddress("Reco_QQ_mumi_idx",Reco_QQ_mumi_idx,&b_Reco_QQ_mumi_idx);
+
   Int_t           Reco_mu_nTrkHits[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nTrkHits;   //!
-  TBranch        *b_Reco_QQ_mumi_nTrkHits;   //!
   TBranch        *b_Reco_mu_nTrkHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nTrkHits", Reco_QQ_mupl_nTrkHits, &b_Reco_QQ_mupl_nTrkHits);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nTrkHits", Reco_QQ_mumi_nTrkHits, &b_Reco_QQ_mumi_nTrkHits);
   mytree->SetBranchAddress("Reco_mu_nTrkHits", Reco_mu_nTrkHits, &b_Reco_mu_nTrkHits);
-  Float_t         Reco_QQ_mupl_normChi2_global[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_normChi2_global[200];   //[Reco_QQ_size]
   Float_t         Reco_mu_normChi2_global[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_normChi2_global;   //!
-  TBranch        *b_Reco_QQ_mumi_normChi2_global;   //!
   TBranch        *b_Reco_mu_normChi2_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_normChi2_global", Reco_QQ_mupl_normChi2_global, &b_Reco_QQ_mupl_normChi2_global);
-  mytree->SetBranchAddress("Reco_QQ_mumi_normChi2_global", Reco_QQ_mumi_normChi2_global, &b_Reco_QQ_mumi_normChi2_global);
   mytree->SetBranchAddress("Reco_mu_normChi2_global", Reco_mu_normChi2_global, &b_Reco_mu_normChi2_global);
-  Int_t           Reco_QQ_mupl_nMuValHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nMuValHits[200];   //[Reco_QQ_size]
   Int_t           Reco_mu_nMuValHits[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nMuValHits;   //!
-  TBranch        *b_Reco_QQ_mumi_nMuValHits;   //!
   TBranch        *b_Reco_mu_nMuValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nMuValHits", Reco_QQ_mupl_nMuValHits, &b_Reco_QQ_mupl_nMuValHits);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nMuValHits", Reco_QQ_mumi_nMuValHits, &b_Reco_QQ_mumi_nMuValHits);
   mytree->SetBranchAddress("Reco_mu_nMuValHits", Reco_mu_nMuValHits, &b_Reco_mu_nMuValHits);
-  Int_t           Reco_QQ_mupl_StationsMatched[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_StationsMatched[200];   //[Reco_QQ_size]
   Int_t           Reco_mu_StationsMatched[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_StationsMatched;   //!
-  TBranch        *b_Reco_QQ_mumi_StationsMatched;   //!
   TBranch        *b_Reco_mu_StationsMatched;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_StationsMatched", Reco_QQ_mupl_StationsMatched, &b_Reco_QQ_mupl_StationsMatched);
-  mytree->SetBranchAddress("Reco_QQ_mumi_StationsMatched", Reco_QQ_mumi_StationsMatched, &b_Reco_QQ_mumi_StationsMatched);
   mytree->SetBranchAddress("Reco_mu_StationsMatched", Reco_mu_StationsMatched, &b_Reco_mu_StationsMatched);
-  Float_t         Reco_QQ_mupl_dxy[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dxy[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mupl_dxyErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dxyErr[200];   //[Reco_QQ_size]
   Float_t         Reco_mu_dxy[200];   //[Reco_mu_size]
   Float_t         Reco_mu_dxyErr[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_dxy;   //!
-  TBranch        *b_Reco_QQ_mumi_dxy;   //!
-  TBranch        *b_Reco_QQ_mupl_dxyErr;   //!
-  TBranch        *b_Reco_QQ_mumi_dxyErr;   //!
   TBranch        *b_Reco_mu_dxy;   //!
   TBranch        *b_Reco_mu_dxyErr;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_dxy", Reco_QQ_mupl_dxy, &b_Reco_QQ_mupl_dxy);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dxy", Reco_QQ_mumi_dxy, &b_Reco_QQ_mumi_dxy);
-  mytree->SetBranchAddress("Reco_QQ_mupl_dxyErr", Reco_QQ_mupl_dxyErr, &b_Reco_QQ_mupl_dxyErr);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dxyErr", Reco_QQ_mumi_dxyErr, &b_Reco_QQ_mumi_dxyErr);
   mytree->SetBranchAddress("Reco_mu_dxy", Reco_mu_dxy, &b_Reco_mu_dxy);
   mytree->SetBranchAddress("Reco_mu_dxyErr", Reco_mu_dxyErr, &b_Reco_mu_dxyErr);
-  Float_t         Reco_QQ_mupl_dz[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dz[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mupl_dzErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dzErr[200];   //[Reco_QQ_size]
   Float_t         Reco_mu_dz[200];   //[Reco_mu_size]
   Float_t         Reco_mu_dzErr[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_dz;   //!
-  TBranch        *b_Reco_QQ_mumi_dz;   //!
-  TBranch        *b_Reco_QQ_mupl_dzErr;   //!
-  TBranch        *b_Reco_QQ_mumi_dzErr;   //!
   TBranch        *b_Reco_mu_dz;   //!
   TBranch        *b_Reco_mu_dzErr;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_dz", Reco_QQ_mupl_dz, &b_Reco_QQ_mupl_dz);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dz", Reco_QQ_mumi_dz, &b_Reco_QQ_mumi_dz);
-  mytree->SetBranchAddress("Reco_QQ_mupl_dzErr", Reco_QQ_mupl_dzErr, &b_Reco_QQ_mupl_dzErr);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dzErr", Reco_QQ_mumi_dzErr, &b_Reco_QQ_mumi_dzErr);
   mytree->SetBranchAddress("Reco_mu_dz", Reco_mu_dz, &b_Reco_mu_dz);
   mytree->SetBranchAddress("Reco_mu_dzErr", Reco_mu_dzErr, &b_Reco_mu_dzErr);
-  Int_t           Reco_QQ_mupl_nTrkWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nTrkWMea[200];   //[Reco_QQ_size]
   Int_t           Reco_mu_nTrkWMea[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nTrkWMea;   //!
-  TBranch        *b_Reco_QQ_mumi_nTrkWMea;   //!
   TBranch        *b_Reco_mu_nTrkWMea;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nTrkWMea", Reco_QQ_mupl_nTrkWMea, &b_Reco_QQ_mupl_nTrkWMea);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nTrkWMea", Reco_QQ_mumi_nTrkWMea, &b_Reco_QQ_mumi_nTrkWMea);
   mytree->SetBranchAddress("Reco_mu_nTrkWMea", Reco_mu_nTrkWMea, &b_Reco_mu_nTrkWMea);
-  Bool_t          Reco_QQ_mupl_TMOneStaTight[200];   //[Reco_QQ_size]
-  Bool_t          Reco_QQ_mumi_TMOneStaTight[200];   //[Reco_QQ_size]
   Bool_t          Reco_mu_TMOneStaTight[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_TMOneStaTight;   //!
-  TBranch        *b_Reco_QQ_mumi_TMOneStaTight;   //!
   TBranch        *b_Reco_mu_TMOneStaTight;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_TMOneStaTight", Reco_QQ_mupl_TMOneStaTight, &b_Reco_QQ_mupl_TMOneStaTight);
-  mytree->SetBranchAddress("Reco_QQ_mumi_TMOneStaTight", Reco_QQ_mumi_TMOneStaTight, &b_Reco_QQ_mumi_TMOneStaTight);
 
   mytree->SetBranchAddress("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, &b_Reco_mu_TMOneStaTight);
-  Int_t           Reco_QQ_mupl_nPixWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nPixWMea[200];   //[Reco_QQ_size]
   Int_t           Reco_mu_nPixWMea[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nPixWMea;   //!
-  TBranch        *b_Reco_QQ_mumi_nPixWMea;   //!
   TBranch        *b_Reco_mu_nPixWMea;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nPixWMea", Reco_QQ_mupl_nPixWMea, &b_Reco_QQ_mupl_nPixWMea);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nPixWMea", Reco_QQ_mumi_nPixWMea, &b_Reco_QQ_mumi_nPixWMea);
   mytree->SetBranchAddress("Reco_mu_nPixWMea", Reco_mu_nPixWMea, &b_Reco_mu_nPixWMea);
   Int_t           Reco_QQ_sign[200];   //[Reco_QQ_size]
   TBranch        *b_Reco_QQ_sign;   //!
@@ -181,25 +116,16 @@ void SkimTree_Event(int nevt=-1)
   TBranch        *b_rpAng;   //!
   mytree->SetBranchAddress("rpAng", rpAng, &b_rpAng);
 
-  Int_t           Reco_QQ_mupl_nPixValHits[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_nPixValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nPixValHits", Reco_QQ_mupl_nPixValHits, &b_Reco_QQ_mupl_nPixValHits);
-  Int_t           Reco_QQ_mumi_nPixValHits[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mumi_nPixValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mumi_nPixValHits", Reco_QQ_mumi_nPixValHits, &b_Reco_QQ_mumi_nPixValHits);
-  Float_t         Reco_QQ_mupl_ptErr_global[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_ptErr_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_ptErr_global", Reco_QQ_mupl_ptErr_global, &b_Reco_QQ_mupl_ptErr_global);
-  Float_t         Reco_QQ_mumi_ptErr_global[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mumi_ptErr_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mumi_ptErr_global", Reco_QQ_mumi_ptErr_global, &b_Reco_QQ_mumi_ptErr_global);
+  Int_t           Reco_mu_nPixValHits[200];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_nPixValHits;   //!
+  mytree->SetBranchAddress("Reco_mu_nPixValHits", Reco_mu_nPixValHits, &b_Reco_mu_nPixValHits);
+  Float_t         Reco_mu_ptErr_global[200];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_ptErr_global;   //!
+  mytree->SetBranchAddress("Reco_mu_ptErr_global", Reco_mu_ptErr_global, &b_Reco_mu_ptErr_global);
 
-  ULong64_t           Reco_QQ_mupl_SelectionType[200];
-  ULong64_t           Reco_QQ_mumi_SelectionType[200];
-  TBranch        *b_Reco_QQ_mupl_SelectionType;
-  TBranch        *b_Reco_QQ_mumi_SelectionType;
-  mytree->SetBranchAddress("Reco_QQ_mupl_SelectionType", Reco_QQ_mupl_SelectionType, &b_Reco_QQ_mupl_SelectionType);
-  mytree->SetBranchAddress("Reco_QQ_mumi_SelectionType", Reco_QQ_mumi_SelectionType, &b_Reco_QQ_mumi_SelectionType);
+  ULong64_t           Reco_mu_SelectionType[200];
+  TBranch        *b_Reco_mu_SelectionType;
+  mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
 
 
@@ -233,8 +159,6 @@ void SkimTree_Event(int nevt=-1)
   float pt[nMaxDimu];
   float y[nMaxDimu];
   float phi[nMaxDimu];
-  float phi1[nMaxDimu];
-  float phi2[nMaxDimu];
   float eta[nMaxDimu];
   float eta1[nMaxDimu];
   float eta2[nMaxDimu];
@@ -321,41 +245,24 @@ void SkimTree_Event(int nevt=-1)
 
 
       JP_Reco = (TLorentzVector*) Reco_QQ_4mom->At(irqq);
-      mupl_Reco = (TLorentzVector*) Reco_QQ_mupl_4mom->At(irqq);
-      mumi_Reco = (TLorentzVector*) Reco_QQ_mumi_4mom->At(irqq);
+      mupl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
+      mumi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
 
-      bool muplSoft = ( (Reco_QQ_mupl_TMOneStaTight[irqq]==true) &&
-          (Reco_QQ_mupl_nTrkWMea[irqq] > 5) &&
-          (Reco_QQ_mupl_nPixWMea[irqq] > 0) &&
-          (fabs(Reco_QQ_mupl_dxy[irqq])<0.3) &&
-          (fabs(Reco_QQ_mupl_dz[irqq])<20.) &&
-          ((Reco_QQ_mupl_SelectionType[irqq]&1)>0)        //			 &&  (Reco_QQ_mupl_highPurity[irqq]==true) 
+      bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
+          (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.) &&
+          ((Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
-      bool mumiSoft = ( (Reco_QQ_mumi_TMOneStaTight[irqq]==true) &&
-          (Reco_QQ_mumi_nTrkWMea[irqq] > 5) &&
-          (Reco_QQ_mumi_nPixWMea[irqq] > 0) &&
-          (fabs(Reco_QQ_mumi_dxy[irqq])<0.3) &&
-          (fabs(Reco_QQ_mumi_dz[irqq])<20.)  && 
-          ((Reco_QQ_mumi_SelectionType[irqq]&1)>0)        //			 &&  (Reco_QQ_mupl_highPurity[irqq]==true) 
+      bool mumiSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
+          (Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.)  && 
+          ((Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
-
-      bool muplHighPtCut = ( (Reco_QQ_mupl_nMuValHits[irqq]>0) &&
-          (Reco_QQ_mupl_StationsMatched[irqq]>1) &&
-          (Reco_QQ_mupl_ptErr_global[irqq]/mupl_Reco->Pt() < 0.3 ) && 
-          (Reco_QQ_mupl_dxy[irqq]<0.2) &&
-          (Reco_QQ_mupl_dz[irqq] <0.5) &&
-          (Reco_QQ_mupl_nPixValHits[irqq] > 0 ) &&
-          (Reco_QQ_mupl_nTrkWMea[irqq] > 5) 
-          );
-      bool mumiHighPtCut = ( (Reco_QQ_mumi_nMuValHits[irqq]>0) &&
-          (Reco_QQ_mumi_StationsMatched[irqq]>1) &&
-          (Reco_QQ_mumi_ptErr_global[irqq]/mumi_Reco->Pt() < 0.3 ) && 
-          (Reco_QQ_mumi_dxy[irqq]<0.2) &&
-          (Reco_QQ_mumi_dz[irqq] <0.5) &&
-          (Reco_QQ_mumi_nPixValHits[irqq] > 0 ) &&
-          (Reco_QQ_mumi_nTrkWMea[irqq] > 5) 
-          );
 
       if ( !(muplSoft && mumiSoft) ) 
         continue;   
