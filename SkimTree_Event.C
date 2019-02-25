@@ -218,6 +218,9 @@ void SkimTree_Event(int nevt=-1)
   TLorentzVector* mupl_Reco = new TLorentzVector;
   TLorentzVector* mumi_Reco = new TLorentzVector;
 
+
+  int kTrigSel = 13;
+
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
 
@@ -232,6 +235,8 @@ void SkimTree_Event(int nevt=-1)
   
     nDimu = 0;
     
+    if(!( (HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
+
     for (Int_t irqq=0; irqq<Reco_QQ_size; ++irqq) 
     {
       dm.clear();      // clear the output tree: 
@@ -251,6 +256,8 @@ void SkimTree_Event(int nevt=-1)
       mupl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
       mumi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
 
+      if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
+      
       bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
@@ -334,7 +341,7 @@ void SkimTree_Event(int nevt=-1)
       dm.qxdimu = TMath::Cos(2*dm.phi);
       dm.qydimu = TMath::Sin(2*dm.phi);
       
-      mmtree->Fill();
+      //mmtree->Fill();
 
       mass[nDimu] = JP_Reco->M();
       phi[nDimu] = JP_Reco->Phi();
