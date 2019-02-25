@@ -18,10 +18,12 @@ void SkimTree_Event(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname = "Oniatree_VN_merge.root";
+  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DolubleMuonPD/v1/Oniatree_addvn_000*_all.root";
+  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DolubleMuonPD/v2/output_L1v*.root";
   
-  TChain *mytree = new TChain("hionia/myTree");
-  mytree->Add(fname.Data());
+  TChain *mytree = new TChain("myTree");
+  mytree->Add(fname1.Data());
+  mytree->Add(fname2.Data());
 
 
   UInt_t          runNb;
@@ -129,8 +131,9 @@ void SkimTree_Event(int nevt=-1)
 
 
 
-  TChain *eptree = new TChain("vnanalyzer/tree");
-  eptree->Add(fname.Data());
+  TChain *eptree = new TChain("tree");
+  eptree->Add(fname1.Data());
+  eptree->Add(fname2.Data());
   
   
   const int nEP = 29;  // number of event planes in the tree
@@ -142,7 +145,7 @@ void SkimTree_Event(int nevt=-1)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile("TEST.root","recreate");
+  newfile = new TFile("OniaSkim_UpsTrig_99perc.root","recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
