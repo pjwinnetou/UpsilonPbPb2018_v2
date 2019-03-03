@@ -3,25 +3,29 @@
 #include "cutsAndBinUpsilonV2.h"
 #include "HiEvtPlaneList.h"
 #include "Style_jaebeom.h"
+#include "tdrstyle.C"
+#include "CMS_lumi_square.C"
 
 using namespace std;
 using namespace hi;
 
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void draw_Q_spectra(int cLow = 20, int cHigh = 80,
+void draw_Q_spectra(int cLow = 20, int cHigh = 120,
                 float ptLow = 0, float ptHigh = 30, 
                 float yLow = 0, float yHigh=2.4,
                 float SiMuPtCut = 4)
 {
   gStyle->SetOptStat(0);
-  TFile *rf = new TFile("TEST.root","read");
+  setTDRStyle();
+  TFile *rf = new TFile("OniaSkim_UpsTrig_99perc.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   TH1::SetDefaultSumw2();
   
   const int nMaxDimu = 1000;
   float mass[nMaxDimu];
+  float vz;
   float qxa[nMaxDimu];
   float qya[nMaxDimu];
   float qxb[nMaxDimu]; 
@@ -37,12 +41,17 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   float eta[nMaxDimu];
   float eta1[nMaxDimu];
   float eta2[nMaxDimu];
+  float qxmupl[nMaxDimu];
+  float qymupl[nMaxDimu];
+  float qxmumi[nMaxDimu];
+  float qymumi[nMaxDimu];
   Int_t cBin;
   Int_t event; 
   Int_t nDimu; 
 
   TBranch *b_event;
   TBranch *b_cBin;
+  TBranch *b_vz;
   TBranch *b_nDimu;
   TBranch *b_mass;
   TBranch *b_pt;
@@ -60,11 +69,16 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   TBranch *b_qyb;
   TBranch *b_qyc;
   TBranch *b_qydimu;
+  TBranch *b_qxmupl;
+  TBranch *b_qxmumi;
+  TBranch *b_qymupl;
+  TBranch *b_qymumi;
   
 
   tree -> SetBranchAddress("event", &event, &b_event);
   tree -> SetBranchAddress("cBin", &cBin, &b_cBin);
   tree -> SetBranchAddress("nDimu", &nDimu, &b_nDimu);
+  tree -> SetBranchAddress("vz", &vz, &b_vz);
   tree -> SetBranchAddress("mass", mass, &b_mass);
   tree -> SetBranchAddress("y", y, &b_y);
   tree -> SetBranchAddress("pt", pt, &b_pt);
@@ -81,6 +95,10 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   tree -> SetBranchAddress("qyb", qyb, &b_qyb);
   tree -> SetBranchAddress("qyc", qyc, &b_qyc);
   tree -> SetBranchAddress("qydimu", qydimu, &b_qydimu);
+  tree -> SetBranchAddress("qxmupl", qxmupl, &b_qxmupl);
+  tree -> SetBranchAddress("qxmumi", qxmumi, &b_qxmumi);
+  tree -> SetBranchAddress("qymupl", qymupl, &b_qymupl);
+  tree -> SetBranchAddress("qymumi", qymumi, &b_qymumi);
   
 
   const int nMassBin = 10;
@@ -101,7 +119,9 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   TH2D* h_qb_2D = new TH2D("h_qb_2D",";Q_{xB};Q_{yB}",nQ2DBin,q2Dlow,q2Dhigh,nQ2DBin,q2Dlow,q2Dhigh);
   TH2D* h_qc_2D = new TH2D("h_qc_2D",";Q_{xC};Q_{yC}",nQ2DBin,q2Dlow,q2Dhigh,nQ2DBin,q2Dlow,q2Dhigh);
   TH2D* h_q_2D = new TH2D("h_q_2D",";Q_{x};Q_{y}",nQ2DBin,-1.1,1.1,nQ2DBin,-1.1,1.1);
-  
+ 
+  TH1D* h_qx_mu = new TH1D("h_qx_mu","Q_{x}^{#mu};Counts",50,-1.1,1.1); 
+  TH1D* h_qy_mu = new TH1D("h_qy_mu","Q_{y}^{#mu};Counts",50,-1.1,1.1); 
 
   double mass_low_SB1 = 8; 
   double mass_high_SB1 = 9; 
@@ -143,6 +163,7 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
     nDimuPass=0;
     
     if(!(cBin>cLow&&cBin<cHigh)) continue; 
+    if(fabs(vz)>=15) continue;
 
     for(int j=0; j<nDimu; j++){
       if(mass[j]<massLow || mass[j]>massHigh) continue;
@@ -153,6 +174,7 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
 
     if(nDimuPass>1) continue;
     
+
     for(int j=0; j<nDimu; j++){
       if(mass[j]<massLow || mass[j]>massHigh) continue;
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
@@ -160,6 +182,10 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
         h_qb_2D -> Fill(qxb[j],qyb[j]);
         h_qc_2D -> Fill(qxc[j],qyc[j]);
         h_q_2D -> Fill(qxdimu[j],qydimu[j]);
+        h_qx_mu->Fill(qxmupl[j]);
+        //h_qx_mu->Fill(qxmumi[j]);
+        //h_qy_mu->Fill(qymupl[j]);
+        h_qy_mu->Fill(qymumi[j]);
         if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
           h_qxa[0]->Fill(qxa[j]);
           h_qya[0]->Fill(qya[j]);
@@ -218,6 +244,12 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   gPad->SetLeftMargin(0.17);
   c_Q2D->cd();
   h_q_2D->Draw("colz");
+  TH1D* h_q_2DX = (TH1D*)h_q_2D->ProjectionX();
+  TH1D* h_q_2DY = (TH1D*)h_q_2D->ProjectionY();
+  cout << "h_q_2DX Mean : " << h_q_2DX->GetMean() << endl;
+  cout << "h_q_2DX Mean error : " << h_q_2DX->GetMeanError() << endl;
+  cout << "h_q_2DY Mean : " << h_q_2DY->GetMean() << endl;
+  cout << "h_q_2DY Mean error : " << h_q_2DY->GetMeanError() << endl;
 
   c_Q2D_A->SaveAs("plots/c_Q2D_A.pdf");
   c_Q2D_B->SaveAs("plots/c_Q2D_B.pdf");
@@ -315,6 +347,22 @@ void draw_Q_spectra(int cLow = 20, int cHigh = 80,
   c_qyB->SaveAs("plots/c_qyB.pdf");
   c_qyC->SaveAs("plots/c_qyC.pdf");
   c_qydimu->SaveAs("plots/c_qydimu.pdf");
+
+
+  TCanvas* c_qxmu = new TCanvas("c_qxmu","",600,600);
+  c_qxmu->cd();
+  h_qx_mu->Draw();
+  cout << " h_qx_mu->GetMean() : << " <<  h_qx_mu->GetMean() << endl;
+  cout << " h_qx_mu->GetMeanError() : << " <<  h_qx_mu->GetMeanError() << endl;
+  c_qxmu->SaveAs("plots/c_qxmu.pdf");
+
+  TCanvas* c_qymu = new TCanvas("c_qymu","",600,600);
+  c_qymu->cd();
+  h_qy_mu->Draw();
+  cout << " h_qy_mu->GetMean() : << " <<  h_qy_mu->GetMean() << endl;
+  cout << " h_qy_mu->GetMeanError() : << " <<  h_qy_mu->GetMeanError() << endl;
+  c_qymu->SaveAs("plots/c_qymu.pdf");
+
 
 }
     

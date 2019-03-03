@@ -169,7 +169,7 @@ void SetLegendStyle(TLegend* l) {
   l->SetFillStyle(4000);
   l->SetBorderSize(0);
   l->SetMargin(0.2);
-  l->SetTextSize(0.036);
+  l->SetTextSize(0.029);
   l->SetTextFont(42);
 }
 
