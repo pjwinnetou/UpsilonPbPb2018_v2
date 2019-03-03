@@ -18,8 +18,8 @@ void SkimTree_Event(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DolubleMuonPD/v1/Oniatree_addvn_000*_all.root";
-  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DolubleMuonPD/v2/output_L1v*.root";
+  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
+  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   
   TChain *mytree = new TChain("myTree");
   mytree->Add(fname1.Data());
@@ -145,7 +145,7 @@ void SkimTree_Event(int nevt=-1)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile("OniaSkim_UpsTrig_99perc.root","recreate");
+  newfile = new TFile("OniaFlowSkim_UpsTrig_90perc.root","recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
@@ -180,7 +180,10 @@ void SkimTree_Event(int nevt=-1)
   float qxdimu[nMaxDimu];
   float qydimu[nMaxDimu];
   float qxmupl[nMaxDimu];
+  float qxmumi[nMaxDimu];
+  float qymupl[nMaxDimu];
   float qymumi[nMaxDimu];
+  int recoQQsign[nMaxDimu];
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
   mmevttree->SetMaxTreeSize(MAXTREESIZE);
@@ -208,7 +211,10 @@ void SkimTree_Event(int nevt=-1)
   mmevttree->Branch("qxdimu",qxdimu,"qxdimu[nDimu]/F");
   mmevttree->Branch("qydimu",qydimu,"qydimu[nDimu]/F");
   mmevttree->Branch("qxmupl",qxmupl,"qxmupl[nDimu]/F");
+  mmevttree->Branch("qxmumi",qxmumi,"qxmumi[nDimu]/F");
+  mmevttree->Branch("qymupl",qymupl,"qymupl[nDimu]/F");
   mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
+  mmevttree->Branch("recoQQsign",recoQQsign,"recoQQsign[nDimu]/I");
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -224,7 +230,7 @@ void SkimTree_Event(int nevt=-1)
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
 
-  cout << "Total events = " << nevt<<endl;
+  cout << "Total events = " << nevt << ", : " << eptree->GetEntries() << endl;
 
   for(int iev=0; iev<nevt ; ++iev)
   {
@@ -279,8 +285,8 @@ void SkimTree_Event(int nevt=-1)
       
       if ( Reco_QQ_VtxProb[irqq]  < 0.01 ) 
         continue;
-        
-      if( Reco_QQ_sign[irqq] != 0) continue;
+   
+      recoQQsign[irqq] = Reco_QQ_sign[irqq];     
 
 
      /* cout << "Event #: " << iev<<endl;
@@ -357,6 +363,8 @@ void SkimTree_Event(int nevt=-1)
       qxdimu[nDimu] = TMath::Cos(2*phi[nDimu]);
       qydimu[nDimu] = TMath::Sin(2*phi[nDimu]);
       qxmupl[nDimu] = TMath::Cos(2*phi1[nDimu]);
+      qxmumi[nDimu] = TMath::Cos(2*phi2[nDimu]);
+      qymupl[nDimu] = TMath::Sin(2*phi1[nDimu]);
       qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
       nDimu++;
 
@@ -365,7 +373,7 @@ void SkimTree_Event(int nevt=-1)
     if(nDimu>0) mmevttree->Fill();  
     
   } //end of event loop
-  mmtree->Write();  // Don't need to call Write() for trees
+//  mmtree->Write();  // Don't need to call Write() for trees
   mmevttree->Write();
   newfile->Close();
   
