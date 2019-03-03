@@ -4,7 +4,8 @@
 #include "HiEvtPlaneList.h"
 #include "Style_jaebeom.h"
 #include "tdrstyle.C"
-#include "CMS_lumi_square.C"
+//#include "CMS_lumi_square.C"
+#include "CMS_lumi_v2mass.C"
 
 
 using namespace std;
@@ -15,7 +16,7 @@ void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 void makeV2Hist(int cLow = 20, int cHigh = 120,
                 float ptLow = 0, float ptHigh = 30, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 4)
+                float SiMuPtCut = 3.5, float massLow = 7, float massHigh =14)
 {
   gStyle->SetOptStat(0);
   setTDRStyle();
@@ -23,7 +24,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   int iPeriod = 2;
   int iPos = 33;
 
-  TFile *rf = new TFile("OniaFlow_skim_1st_UpsTrig.root","read");
+  TFile *rf = new TFile("OniaSkim_UpsTrig_99perc.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   TH1::SetDefaultSumw2();
@@ -96,17 +97,37 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   tree -> SetBranchAddress("qydimu", qydimu, &b_qydimu);
   
 
-  const int nMassBin = 13;
-  float massLow = 8;
+  const int nMassBin_7 = 18;
+  const int nMassBin_8 = 15;
+  
+  float massBinDiff_7[nMassBin_7+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
+  float massBinDiff_8[nMassBin_8+1]={0, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
+
+/*
+  const int nMassBin = 18;
+  float massLow = 7;
   float massHigh = 14;
+  float massBinDiff[nMassBin+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 31, 32, 33, 35, 41, 48, 56, 77, 98, 120};
+*/
+
+  float massBin_7[nMassBin_7+1];
+  float massBin_8[nMassBin_8+1];
   
   kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh);
-
-  float massBinDiff[nMassBin+1]={0, 7, 15, 23, 26, 29, 32, 35, 41, 48, 56, 77, 98, 120};
-  float massBin[nMassBin+1];
-  for(int i=0; i<=nMassBin; i++){
-    massBin[i] = massLow + massBinDiff[i]*0.05;
+  
+  for(int i=0; i<=nMassBin_7; i++){
+    if(i<=3) massBin_7[i] = 7 + massBinDiff_7[i]*0.05;
+    else if(i>3) massBin_7[i] = 8 + massBinDiff_7[i]*0.05;
   }
+  for(int i=0; i<=nMassBin_8; i++){
+    massBin_8[i] = 8 + massBinDiff_8[i]*0.05;
+  }
+
+  float* massBin;
+  int nMassBin_;
+  if(massLow ==7){massBin = massBin_7; nMassBin_ = nMassBin_7;}
+  else if(massLow ==8){massBin = massBin_8; nMassBin_ = nMassBin_8;}
+  const int nMassBin = nMassBin_; 
 
   int bfevt =-1;
   int afevt =-1;
@@ -147,26 +168,18 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_mass = new TH1D("h_mass",";m_{#mu^{+}#mu^{-}};Counts",60,massLow,massHigh);
 
   const static int countMax = 1000000;
-  double static v2_1[nMassBin][countMax];
-  double static v2_2[nMassBin][countMax];
-  double static v2_3[nMassBin][countMax];
-  double static v2_4[nMassBin][countMax];
-  for(int i=0;i<nMassBin;i++){
-    for(int j=0;j<countMax;j++){
-      v2_1[i][j]=0;
-      v2_2[i][j]=0;
-      v2_3[i][j]=0;
-      v2_4[i][j]=0;
-    }
-  }
+  vector<vector<double>> v2_1(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_2(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_3(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_4(nMassBin,vector<double> (countMax,0));
 
-  double v2_1_avg[nMassBin]={0.};
-  double v2_2_avg[nMassBin]={0.};
-  double v2_3_avg[nMassBin]={0.};
-  double v2_4_avg[nMassBin]={0.};
+  vector<double> v2_1_avg(nMassBin,0);
+  vector<double> v2_2_avg(nMassBin,0);
+  vector<double> v2_3_avg(nMassBin,0);
+  vector<double> v2_4_avg(nMassBin,0);
    
   int dbcount=0;
-  int count[nMassBin] = {0};
+  vector<unsigned int> count(nMassBin,0);
 
   int nDimuPass=0;
   int nDimu_one=0;
@@ -235,10 +248,10 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   cout << "more than one dimuon : " << nDimu_more << endl;
   cout << "one dimuon : " << nDimu_one << endl;
 
-  double v2_1_err[nMassBin] = {0.};
-  double v2_2_err[nMassBin] = {0.};
-  double v2_3_err[nMassBin] = {0.};
-  double v2_4_err[nMassBin] = {0.};
+  vector<double> v2_1_err(nMassBin,0);
+  vector<double> v2_2_err(nMassBin,0);
+  vector<double> v2_3_err(nMassBin,0);
+  vector<double> v2_4_err(nMassBin,0);
 
   for(int ibin=0; ibin<nMassBin; ibin++){
     v2_1_avg[ibin] = v2_1_avg[ibin]/count[ibin];
@@ -252,6 +265,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
       v2_3_err[ibin] += (v2_3[ibin][icount]-v2_3_avg[ibin])*(v2_3[ibin][icount]-v2_3_avg[ibin]);
       v2_4_err[ibin] += (v2_4[ibin][icount]-v2_4_avg[ibin])*(v2_4[ibin][icount]-v2_4_avg[ibin]);
     }
+
     v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin]/(count[ibin]*(count[ibin]-1)));
     v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin]/(count[ibin]*(count[ibin]-1)));
     v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin]/(count[ibin]*(count[ibin]-1)));
@@ -281,6 +295,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_v2_den_ = (TH1D*)h_v2_den_q2->Clone("h_v2_den_");
   h_v2_den_->Multiply(h_v2_den_q3);
   h_v2_den_->Divide(h_v2_den_q4);
+  cout << "OK: " << endl;
 
   TH1D* h_v2_den = (TH1D*) h_v2_den_->Clone("h_v2_den"); h_v2_den->Reset();
   GetHistSqrt(h_v2_den_,h_v2_den);
@@ -288,20 +303,28 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_v2_final = (TH1D*) h_v2_num_q1 -> Clone("h_v2_SplusB");
   h_v2_final->Divide(h_v2_den);
 
-  h_v2_final->GetYaxis()->SetRangeUser(-0.15,0.2);
+  h_v2_final->GetYaxis()->SetRangeUser(-0.17,0.17);
   h_v2_final->GetYaxis()->SetTitle("v_{2}^{S+B}");
-  h_v2_final->GetYaxis()->SetLabelSize(0.04);
-  h_v2_final->GetXaxis()->SetLabelSize(0.04);
+  h_v2_final->GetXaxis()->SetTitle("m_{#mu^{+}#mu^{-}} (GeV)");
+  h_v2_final->GetYaxis()->SetLabelSize(0.055);
+  h_v2_final->GetXaxis()->SetLabelSize(0.055);
+  h_v2_final->GetXaxis()->SetTitleSize(0.07);
+  h_v2_final->GetYaxis()->SetTitleSize(0.07);
+  h_v2_final->GetYaxis()->SetTitleOffset(1.2);
+  h_v2_final->GetXaxis()->SetTitleOffset(1.0);
+  h_v2_final->GetXaxis()->SetLabelOffset(0.011);
 //  stripErr(h_v2_final);
   SetHistStyle(h_v2_final,0,0);
   SetHistStyle(h_mass,0,0);
+  cout << "OK: " << endl;
   h_mass->GetYaxis()->SetLimits(0,14000);
-  h_mass->GetYaxis()->SetLabelSize(0.04);
+  h_mass->GetYaxis()->SetLabelSize(0.055);
   h_mass->GetXaxis()->SetLabelSize(0.04);
-  h_mass->GetYaxis()->SetTitleSize(0.04);
-  h_mass->GetYaxis()->SetTitleOffset(1.8);
-  h_mass->GetXaxis()->SetTitleSize(0.05);
+  h_mass->GetYaxis()->SetTitleSize(0.055);
+  h_mass->GetYaxis()->SetTitleOffset(1.7);
+  h_mass->GetXaxis()->SetTitleSize(0.065);
 //  h2->GetYaxis()->SetRangeUser(0,14000);
+  cout << "OK: " << endl;
   TCanvas *c1 = new TCanvas("c1","",600,600);
   gPad->SetLeftMargin(0.17);
   gPad->SetTopMargin(0.06);
@@ -314,9 +337,9 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_final->Draw("P");
   
   float pos_x = 0.23;
-  float pos_x_mass = 0.45;
-  float pos_y = 0.82;
-  float pos_y_diff = 0.052;
+  float pos_x_mass = 0.53;
+  float pos_y = 0.76;
+  float pos_y_diff = 0.071;
   int text_color = 1;
   float text_size = 16;
   TString perc = "%";
@@ -326,7 +349,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x,pos_y,text_color,text_size);
   if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
   else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
-  drawText(Form("p_{T}^{#mu} > %.f GeV/c", SiMuPtCut ), pos_x,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x,pos_y-pos_y_diff*2,text_color,text_size);
   drawText("|#eta^{#mu}| < 2.4", pos_x,pos_y-pos_y_diff*3,text_color,text_size);
   drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x,pos_y-pos_y_diff*4,text_color,text_size);
 
@@ -339,17 +362,56 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
   if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
   else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
-  drawText(Form("p_{T}^{#mu} > %.f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
   drawText("|#eta^{#mu}| < 2.4", pos_x_mass,pos_y-pos_y_diff*3,text_color,text_size);
   drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
   
-  CMS_lumi_square( c1, iPeriod, iPos );
+/*  CMS_lumi_square( c1, iPeriod, iPos );
   c1->Update();
   c1->SaveAs(Form("plots/v2_SplusB_%s.pdf",kineLabel.Data()));
   
   CMS_lumi_square( c2, iPeriod, iPos );
   c2->Update();
   c2->SaveAs(Form("plots/MassDist_%s.pdf",kineLabel.Data()));
+*/
+
+
+  TCanvas* c_mass_v2 = new TCanvas("c_mass_v2","",590,750);
+  TPad* pad1 = new TPad("pad1","pad1",0,0.5,1.0,1.0);
+  TPad* pad2 = new TPad("pad2","pad2",0,0.0,1.0,0.5);
+  c_mass_v2->cd();
+  pad1->SetTicks(1,1);
+  pad1->SetBottomMargin(0);
+  pad1->SetLeftMargin(0.19);
+  pad1->SetTopMargin(0.08);
+  pad1->Draw();
+  pad1->cd();
+  h_mass->GetXaxis()->SetTitleSize(0);
+  h_mass->GetXaxis()->SetLabelSize(0);
+  h_mass->Draw("P");
+  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText("|#eta^{#mu}| < 2.4", pos_x_mass,pos_y-pos_y_diff*3,text_color,text_size);
+  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
+  pad2->SetTopMargin(0);
+  pad2->SetBottomMargin(0.17);
+  pad2->SetLeftMargin(0.19);
+  pad2->SetTicks();
+  pad2->cd();
+  h_v2_final->Draw("P");
+
+  CMS_lumi_v2mass(pad1,iPeriod,iPos);  
+  pad1->Update();
+  pad2->Update();
+  c_mass_v2->cd();
+  pad1->Draw();
+  pad2->Draw();
+
+  c_mass_v2->SaveAs(Form("plots/v2Mass_%s.pdf",kineLabel.Data()));
+
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
   TLegend *leg_v2_2 = new TLegend(0.38,0.64,0.77,0.9);
