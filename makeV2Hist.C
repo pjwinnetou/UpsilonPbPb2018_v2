@@ -4,7 +4,6 @@
 #include "HiEvtPlaneList.h"
 #include "Style_jaebeom.h"
 #include "tdrstyle.C"
-//#include "CMS_lumi_square.C"
 #include "CMS_lumi_v2mass.C"
 
 
@@ -16,7 +15,7 @@ void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 void makeV2Hist(int cLow = 20, int cHigh = 120,
                 float ptLow = 0, float ptHigh = 30, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 7, float massHigh =14)
+                float SiMuPtCut = 3.5, float massLow = 7, float massHigh =14, bool dimusign=true)
 {
   gStyle->SetOptStat(0);
   setTDRStyle();
@@ -24,13 +23,16 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   int iPeriod = 2;
   int iPos = 33;
 
-  TFile *rf = new TFile("OniaSkim_UpsTrig_99perc.root","read");
+  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/skimmedFiles/OniaFlowSkim_UpsTrig_190306.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   TH1::SetDefaultSumw2();
 
   TString kineLabel = getKineLabel (ptLow, ptHigh, yLow, yHigh, SiMuPtCut, cLow, cHigh) ;
-  
+  TString dimusignString;
+  if(dimusign) dimusignString = "OS";
+  else if(!dimusign) dimusignString = "SS";
+
   const int nMaxDimu = 1000;
   float mass[nMaxDimu];
   float qxa[nMaxDimu];
@@ -52,12 +54,14 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   Int_t event; 
   Int_t nDimu; 
   float vz;
+  int recoQQsign[nMaxDimu];
 
   TBranch *b_event;
   TBranch *b_cBin;
   TBranch *b_nDimu;
   TBranch *b_vz;
   TBranch *b_mass;
+  TBranch *b_recoQQsign;
   TBranch *b_pt;
   TBranch *b_y;
   TBranch *b_eta;
@@ -79,6 +83,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   tree -> SetBranchAddress("cBin", &cBin, &b_cBin);
   tree -> SetBranchAddress("nDimu", &nDimu, &b_nDimu);
   tree -> SetBranchAddress("vz", &vz, &b_vz);
+  tree -> SetBranchAddress("recoQQsign", recoQQsign, &b_recoQQsign);
   tree -> SetBranchAddress("mass", mass, &b_mass);
   tree -> SetBranchAddress("y", y, &b_y);
   tree -> SetBranchAddress("pt", pt, &b_pt);
@@ -113,7 +118,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   float massBin_7[nMassBin_7+1];
   float massBin_8[nMassBin_8+1];
   
-  kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh);
+  kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh) + "_" + dimusignString;
   
   for(int i=0; i<=nMassBin_7; i++){
     if(i<=3) massBin_7[i] = 7 + massBinDiff_7[i]*0.05;
@@ -180,6 +185,9 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
    
   int dbcount=0;
   vector<unsigned int> count(nMassBin,0);
+  vector<unsigned int> count_ss(nMassBin,0);
+
+  bool dimusignPass = true;
 
   int nDimuPass=0;
   int nDimu_one=0;
@@ -194,7 +202,11 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
     if(fabs(vz)>=15) continue;
 
     for(int j=0; j<nDimu; j++){
-      if(mass[j]<massLow || mass[j]>massHigh) continue;
+      if(dimusign) {dimusignPass = (recoQQsign[j] == 0) ? true : false;}
+      else if(!dimusign) {dimusignPass = (recoQQsign[j] == 0) ? false : true;}
+      if(dimusignPass == false) continue; // dimuon charge selection
+      
+      if( (mass[j]<massLow) || (mass[j]>massHigh) ) continue; // dimuon mass range
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
         nDimuPass++;
       }
@@ -204,21 +216,24 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
     nDimu_one++;
 
     for(int j=0; j<nDimu; j++){
-      if(mass[j]<massLow || mass[j]>massHigh) continue;
+      if(dimusign) {dimusignPass = (recoQQsign[j] == 0) ? true : false;}
+      else if(!dimusign) {dimusignPass = (recoQQsign[j] == 0) ? false : true;}
+      if(dimusignPass == false) continue; // dimuon charge selection
+
+      if(mass[j]<massLow || mass[j]>massHigh) continue; // dimuon mass range
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
         for(int imbin=0; imbin<nMassBin; imbin++){
           if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
-            v2_1[imbin][count[imbin]] = qxa[j]*qxdimu[j] + qya[j]*qydimu[j];
-            v2_2[imbin][count[imbin]] = qxa[j]*qxb[j] + qya[j]*qyb[j];
-            v2_3[imbin][count[imbin]] = qxa[j]*qxc[j] + qya[j]*qyc[j];
-            v2_4[imbin][count[imbin]] = qxb[j]*qxc[j] + qyb[j]*qyc[j];
+              v2_1[imbin][count[imbin]] = qxa[j]*qxdimu[j] + qya[j]*qydimu[j];
+              v2_2[imbin][count[imbin]] = qxa[j]*qxb[j] + qya[j]*qyb[j];
+              v2_3[imbin][count[imbin]] = qxa[j]*qxc[j] + qya[j]*qyc[j];
+              v2_4[imbin][count[imbin]] = qxb[j]*qxc[j] + qyb[j]*qyc[j];
 
-            v2_1_avg[imbin] += v2_1[imbin][count[imbin]];
-            v2_2_avg[imbin] += v2_2[imbin][count[imbin]];
-            v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
-            v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
-            count[imbin]++;
-
+              v2_1_avg[imbin] += v2_1[imbin][count[imbin]];
+              v2_2_avg[imbin] += v2_2[imbin][count[imbin]];
+              v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
+              v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
+              count[imbin]++;
           }
         }
         if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
@@ -295,7 +310,6 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TH1D* h_v2_den_ = (TH1D*)h_v2_den_q2->Clone("h_v2_den_");
   h_v2_den_->Multiply(h_v2_den_q3);
   h_v2_den_->Divide(h_v2_den_q4);
-  cout << "OK: " << endl;
 
   TH1D* h_v2_den = (TH1D*) h_v2_den_->Clone("h_v2_den"); h_v2_den->Reset();
   GetHistSqrt(h_v2_den_,h_v2_den);
@@ -313,28 +327,14 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_final->GetYaxis()->SetTitleOffset(1.2);
   h_v2_final->GetXaxis()->SetTitleOffset(1.0);
   h_v2_final->GetXaxis()->SetLabelOffset(0.011);
-//  stripErr(h_v2_final);
   SetHistStyle(h_v2_final,0,0);
   SetHistStyle(h_mass,0,0);
-  cout << "OK: " << endl;
   h_mass->GetYaxis()->SetLimits(0,14000);
   h_mass->GetYaxis()->SetLabelSize(0.055);
   h_mass->GetXaxis()->SetLabelSize(0.04);
   h_mass->GetYaxis()->SetTitleSize(0.055);
   h_mass->GetYaxis()->SetTitleOffset(1.7);
   h_mass->GetXaxis()->SetTitleSize(0.065);
-//  h2->GetYaxis()->SetRangeUser(0,14000);
-  cout << "OK: " << endl;
-  TCanvas *c1 = new TCanvas("c1","",600,600);
-  gPad->SetLeftMargin(0.17);
-  gPad->SetTopMargin(0.06);
-  TCanvas *c2 = new TCanvas("c2","",600,600);
-  gPad->SetTopMargin(0.06);
-  gPad->SetLeftMargin(0.17);
-
-  c1->cd();
-  c1->SetTicks(1,1);
-  h_v2_final->Draw("P");
   
   float pos_x = 0.23;
   float pos_x_mass = 0.53;
@@ -343,37 +343,6 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   int text_color = 1;
   float text_size = 16;
   TString perc = "%";
-  jumSun(massLow,0,massHigh,0,1,1);
-
-  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x,pos_y,text_color,text_size);
-  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x,pos_y,text_color,text_size);
-  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
-  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x,pos_y-pos_y_diff,text_color,text_size);
-  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x,pos_y-pos_y_diff*2,text_color,text_size);
-  drawText("|#eta^{#mu}| < 2.4", pos_x,pos_y-pos_y_diff*3,text_color,text_size);
-  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x,pos_y-pos_y_diff*4,text_color,text_size);
-
-
-  c2->cd();
-  c2->SetTicks(1,1);
-  h_mass->Draw("P");
-
-  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x_mass,pos_y,text_color,text_size);
-  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
-  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
-  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
-  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
-  drawText("|#eta^{#mu}| < 2.4", pos_x_mass,pos_y-pos_y_diff*3,text_color,text_size);
-  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
-  
-/*  CMS_lumi_square( c1, iPeriod, iPos );
-  c1->Update();
-  c1->SaveAs(Form("plots/v2_SplusB_%s.pdf",kineLabel.Data()));
-  
-  CMS_lumi_square( c2, iPeriod, iPos );
-  c2->Update();
-  c2->SaveAs(Form("plots/MassDist_%s.pdf",kineLabel.Data()));
-*/
 
 
   TCanvas* c_mass_v2 = new TCanvas("c_mass_v2","",590,750);
@@ -401,6 +370,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   pad2->SetLeftMargin(0.19);
   pad2->SetTicks();
   pad2->cd();
+  jumSun(massLow,0,massHigh,0,1,1);
   h_v2_final->Draw("P");
 
   CMS_lumi_v2mass(pad1,iPeriod,iPos);  
@@ -410,7 +380,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   pad1->Draw();
   pad2->Draw();
 
-  c_mass_v2->SaveAs(Form("plots/v2Mass_%s.pdf",kineLabel.Data()));
+  c_mass_v2->SaveAs(Form("v2Mass_%s.pdf",kineLabel.Data()));
 
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
@@ -464,7 +434,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_1[1]->Draw("hist same");
   h_v2_1[2]->Draw("hist same");
   leg_v2_1->Draw("same");
-  c_qq_1->SaveAs(Form("plots/c_qqa_%s.pdf",kineLabel.Data()));
+  c_qq_1->SaveAs(Form("c_qqa_%s.pdf",kineLabel.Data()));
 
   TCanvas *c_qq_2 = new TCanvas("c_qaqb","",600,600);
   c_qq_2->cd();
@@ -472,7 +442,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_2[1]->Draw("hist same");
   h_v2_2[2]->Draw("hist same");
   leg_v2_2->Draw("same");
-  c_qq_2->SaveAs(Form("plots/c_qaqb_%s.pdf",kineLabel.Data()));
+  c_qq_2->SaveAs(Form("c_qaqb_%s.pdf",kineLabel.Data()));
 
   TCanvas *c_qq_3 = new TCanvas("c_qaqc","",600,600);
   c_qq_3->cd();
@@ -480,7 +450,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_3[1]->Draw("hist same");
   h_v2_3[2]->Draw("hist same");
   leg_v2_3->Draw("same");
-  c_qq_3->SaveAs(Form("plots/c_qaqc_%s.pdf",kineLabel.Data()));
+  c_qq_3->SaveAs(Form("c_qaqc_%s.pdf",kineLabel.Data()));
 
   TCanvas *c_qq_4 = new TCanvas("c_qbqc","",600,600);
   c_qq_4->cd();
@@ -488,9 +458,9 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_4[1]->Draw("hist same");
   h_v2_4[2]->Draw("hist same");
   leg_v2_4->Draw("same");
-  c_qq_4->SaveAs(Form("plots/c_qbqc_%s.pdf",kineLabel.Data()));
+  c_qq_4->SaveAs(Form("c_qbqc_%s.pdf",kineLabel.Data()));
   
-  TFile *wf = new TFile(Form("BinHist/Ups_%s.root",kineLabel.Data()),"recreate");
+  TFile *wf = new TFile(Form("Ups_%s.root",kineLabel.Data()),"recreate");
   wf->cd();
   h_v2_final->Write();
   h_mass->Write();
