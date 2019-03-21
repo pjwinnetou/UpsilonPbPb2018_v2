@@ -155,7 +155,7 @@ void SkimTree_Event(int nevt=-1)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile("OniaFlowSkim_UpsTrig_90perc.root","recreate");
+  newfile = new TFile("OniaFlowSkim_UpsTrig_190321.root","recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
@@ -274,12 +274,20 @@ void SkimTree_Event(int nevt=-1)
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
+      bool passMuonTypePl = true;
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,1)));
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,3)));
+
+      bool passMuonTypeMi = true;
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,1)));
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,3)));
+
       bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
           (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.) &&
-          ((Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
+          passMuonTypePl        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
       bool mumiSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
@@ -287,7 +295,7 @@ void SkimTree_Event(int nevt=-1)
           (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
           (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.)  && 
-          ((Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
+          passMuonTypeMi       //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
       if ( !(muplSoft && mumiSoft) ) 
