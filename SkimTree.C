@@ -18,11 +18,12 @@ void SkimTree(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname = "/eos/cms/store/group/phys_heavyions/dileptons/goni/HIDoubleMu_Run2018A_PromptAOD_v1_OniaTree_v2Ana_Cert_Run_326381_327560_48per_190130.root";
+  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
+  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   
   TChain *mytree = new TChain("hionia/myTree");
-  mytree->Add(fname.Data());
-
+  mytree->Add(fname1.Data());
+  mytree->Add(fname2.Data());
 
   UInt_t          runNb;
   UInt_t          eventNb, LS;
@@ -30,11 +31,11 @@ void SkimTree(int nevt=-1)
   Int_t           Centrality;
   ULong64_t       HLTriggers;
   Int_t           Reco_QQ_size;
+  Int_t           Reco_mu_size;
   TClonesArray    *Reco_QQ_4mom;
-  TClonesArray    *Reco_QQ_mupl_4mom;
-  TClonesArray    *Reco_QQ_mumi_4mom;
-  ULong64_t       Reco_QQ_trig[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_VtxProb[200];   //[Reco_QQ_size]
+  TClonesArray    *Reco_mu_4mom;
+  ULong64_t       Reco_QQ_trig[maxBranchSize];   //[Reco_QQ_size]
+  Float_t         Reco_QQ_VtxProb[maxBranchSize];   //[Reco_QQ_size]
   TBranch        *b_runNb;   //!
   TBranch        *b_eventNb;   //!
   TBranch        *b_LS;
@@ -42,22 +43,18 @@ void SkimTree(int nevt=-1)
   TBranch        *b_Centrality;   //!
   TBranch        *b_HLTriggers;   //!
   TBranch        *b_Reco_QQ_size;   //!
+  TBranch        *b_Reco_mu_size;   //!
   TBranch        *b_Reco_QQ_4mom;   //!
-  TBranch        *b_Reco_QQ_mupl_4mom;   //!
-  TBranch        *b_Reco_QQ_mumi_4mom;   //!
+  TBranch        *b_Reco_mu_4mom;   //!
   TBranch        *b_Reco_QQ_trig;   //!
   TBranch        *b_Reco_QQ_VtxProb;   //!
 
-  Bool_t          Reco_QQ_mupl_highPurity[200];   //[Reco_QQ_size]
-  Bool_t          Reco_QQ_mumi_highPurity[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_highPurity;   //!
-  TBranch        *b_Reco_QQ_mumi_highPurity;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_highPurity", Reco_QQ_mupl_highPurity, &b_Reco_QQ_mupl_highPurity);
-  mytree->SetBranchAddress("Reco_QQ_mumi_highPurity", Reco_QQ_mumi_highPurity, &b_Reco_QQ_mumi_highPurity);
+  Bool_t          Reco_mu_highPurity[maxBranchSize];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_highPurity;   //!
+  mytree->SetBranchAddress("Reco_mu_highPurity", Reco_mu_highPurity, &b_Reco_mu_highPurity);
 
   Reco_QQ_4mom = 0;
-  Reco_QQ_mupl_4mom = 0;
-  Reco_QQ_mumi_4mom = 0;
+  Reco_mu_4mom = 0;
   mytree->SetBranchAddress("runNb", &runNb, &b_runNb);
   mytree->SetBranchAddress("LS", &LS, &b_LS);
   mytree->SetBranchAddress("eventNb", &eventNb, &b_eventNb);
@@ -65,146 +62,77 @@ void SkimTree(int nevt=-1)
   mytree->SetBranchAddress("Centrality", &Centrality, &b_Centrality);
   mytree->SetBranchAddress("HLTriggers", &HLTriggers, &b_HLTriggers);
   mytree->SetBranchAddress("Reco_QQ_size", &Reco_QQ_size, &b_Reco_QQ_size);
+  mytree->SetBranchAddress("Reco_mu_size", &Reco_mu_size, &b_Reco_mu_size);
   mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
-  //  mytree->GetBranch("Reco_QQ_mupl_4mom")->SetAutoDelete(kFALSE);
-  mytree->SetBranchAddress("Reco_QQ_mupl_4mom", &Reco_QQ_mupl_4mom, &b_Reco_QQ_mupl_4mom);
-  //  mytree->GetBranch("Reco_QQ_mumi_4mom")->SetAutoDelete(kFALSE);
-  mytree->SetBranchAddress("Reco_QQ_mumi_4mom", &Reco_QQ_mumi_4mom, &b_Reco_QQ_mumi_4mom);
+  mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
   mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
   mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
 
+
   //  muon id 
-  Int_t           Reco_QQ_mupl_nTrkHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nTrkHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_mu_nTrkHits[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nTrkHits;   //!
-  TBranch        *b_Reco_QQ_mumi_nTrkHits;   //!
+  Int_t           Reco_QQ_mupl_idx[maxBranchSize];
+  Int_t           Reco_QQ_mumi_idx[maxBranchSize];
+  TBranch        *b_Reco_QQ_mupl_idx;
+  TBranch        *b_Reco_QQ_mumi_idx;
+  mytree->SetBranchAddress("Reco_QQ_mupl_idx",Reco_QQ_mupl_idx,&b_Reco_QQ_mupl_idx);
+  mytree->SetBranchAddress("Reco_QQ_mumi_idx",Reco_QQ_mumi_idx,&b_Reco_QQ_mumi_idx);
+
+  Int_t           Reco_mu_nTrkHits[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_nTrkHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nTrkHits", Reco_QQ_mupl_nTrkHits, &b_Reco_QQ_mupl_nTrkHits);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nTrkHits", Reco_QQ_mumi_nTrkHits, &b_Reco_QQ_mumi_nTrkHits);
   mytree->SetBranchAddress("Reco_mu_nTrkHits", Reco_mu_nTrkHits, &b_Reco_mu_nTrkHits);
-  Float_t         Reco_QQ_mupl_normChi2_global[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_normChi2_global[200];   //[Reco_QQ_size]
-  Float_t         Reco_mu_normChi2_global[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_normChi2_global;   //!
-  TBranch        *b_Reco_QQ_mumi_normChi2_global;   //!
+  Float_t         Reco_mu_normChi2_global[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_normChi2_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_normChi2_global", Reco_QQ_mupl_normChi2_global, &b_Reco_QQ_mupl_normChi2_global);
-  mytree->SetBranchAddress("Reco_QQ_mumi_normChi2_global", Reco_QQ_mumi_normChi2_global, &b_Reco_QQ_mumi_normChi2_global);
   mytree->SetBranchAddress("Reco_mu_normChi2_global", Reco_mu_normChi2_global, &b_Reco_mu_normChi2_global);
-  Int_t           Reco_QQ_mupl_nMuValHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nMuValHits[200];   //[Reco_QQ_size]
-  Int_t           Reco_mu_nMuValHits[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nMuValHits;   //!
-  TBranch        *b_Reco_QQ_mumi_nMuValHits;   //!
+  Int_t           Reco_mu_nMuValHits[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_nMuValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nMuValHits", Reco_QQ_mupl_nMuValHits, &b_Reco_QQ_mupl_nMuValHits);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nMuValHits", Reco_QQ_mumi_nMuValHits, &b_Reco_QQ_mumi_nMuValHits);
   mytree->SetBranchAddress("Reco_mu_nMuValHits", Reco_mu_nMuValHits, &b_Reco_mu_nMuValHits);
-  Int_t           Reco_QQ_mupl_StationsMatched[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_StationsMatched[200];   //[Reco_QQ_size]
-  Int_t           Reco_mu_StationsMatched[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_StationsMatched;   //!
-  TBranch        *b_Reco_QQ_mumi_StationsMatched;   //!
+  Int_t           Reco_mu_StationsMatched[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_StationsMatched;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_StationsMatched", Reco_QQ_mupl_StationsMatched, &b_Reco_QQ_mupl_StationsMatched);
-  mytree->SetBranchAddress("Reco_QQ_mumi_StationsMatched", Reco_QQ_mumi_StationsMatched, &b_Reco_QQ_mumi_StationsMatched);
   mytree->SetBranchAddress("Reco_mu_StationsMatched", Reco_mu_StationsMatched, &b_Reco_mu_StationsMatched);
-  Float_t         Reco_QQ_mupl_dxy[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dxy[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mupl_dxyErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dxyErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_mu_dxy[200];   //[Reco_mu_size]
-  Float_t         Reco_mu_dxyErr[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_dxy;   //!
-  TBranch        *b_Reco_QQ_mumi_dxy;   //!
-  TBranch        *b_Reco_QQ_mupl_dxyErr;   //!
-  TBranch        *b_Reco_QQ_mumi_dxyErr;   //!
+  Float_t         Reco_mu_dxy[maxBranchSize];   //[Reco_mu_size]
+  Float_t         Reco_mu_dxyErr[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_dxy;   //!
   TBranch        *b_Reco_mu_dxyErr;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_dxy", Reco_QQ_mupl_dxy, &b_Reco_QQ_mupl_dxy);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dxy", Reco_QQ_mumi_dxy, &b_Reco_QQ_mumi_dxy);
-  mytree->SetBranchAddress("Reco_QQ_mupl_dxyErr", Reco_QQ_mupl_dxyErr, &b_Reco_QQ_mupl_dxyErr);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dxyErr", Reco_QQ_mumi_dxyErr, &b_Reco_QQ_mumi_dxyErr);
   mytree->SetBranchAddress("Reco_mu_dxy", Reco_mu_dxy, &b_Reco_mu_dxy);
   mytree->SetBranchAddress("Reco_mu_dxyErr", Reco_mu_dxyErr, &b_Reco_mu_dxyErr);
-  Float_t         Reco_QQ_mupl_dz[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dz[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mupl_dzErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_QQ_mumi_dzErr[200];   //[Reco_QQ_size]
-  Float_t         Reco_mu_dz[200];   //[Reco_mu_size]
-  Float_t         Reco_mu_dzErr[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_dz;   //!
-  TBranch        *b_Reco_QQ_mumi_dz;   //!
-  TBranch        *b_Reco_QQ_mupl_dzErr;   //!
-  TBranch        *b_Reco_QQ_mumi_dzErr;   //!
+  Float_t         Reco_mu_dz[maxBranchSize];   //[Reco_mu_size]
+  Float_t         Reco_mu_dzErr[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_dz;   //!
   TBranch        *b_Reco_mu_dzErr;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_dz", Reco_QQ_mupl_dz, &b_Reco_QQ_mupl_dz);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dz", Reco_QQ_mumi_dz, &b_Reco_QQ_mumi_dz);
-  mytree->SetBranchAddress("Reco_QQ_mupl_dzErr", Reco_QQ_mupl_dzErr, &b_Reco_QQ_mupl_dzErr);
-  mytree->SetBranchAddress("Reco_QQ_mumi_dzErr", Reco_QQ_mumi_dzErr, &b_Reco_QQ_mumi_dzErr);
   mytree->SetBranchAddress("Reco_mu_dz", Reco_mu_dz, &b_Reco_mu_dz);
   mytree->SetBranchAddress("Reco_mu_dzErr", Reco_mu_dzErr, &b_Reco_mu_dzErr);
-  Int_t           Reco_QQ_mupl_nTrkWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nTrkWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_mu_nTrkWMea[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nTrkWMea;   //!
-  TBranch        *b_Reco_QQ_mumi_nTrkWMea;   //!
+  Int_t           Reco_mu_nTrkWMea[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_nTrkWMea;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nTrkWMea", Reco_QQ_mupl_nTrkWMea, &b_Reco_QQ_mupl_nTrkWMea);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nTrkWMea", Reco_QQ_mumi_nTrkWMea, &b_Reco_QQ_mumi_nTrkWMea);
   mytree->SetBranchAddress("Reco_mu_nTrkWMea", Reco_mu_nTrkWMea, &b_Reco_mu_nTrkWMea);
-  Bool_t          Reco_QQ_mupl_TMOneStaTight[200];   //[Reco_QQ_size]
-  Bool_t          Reco_QQ_mumi_TMOneStaTight[200];   //[Reco_QQ_size]
-  Bool_t          Reco_mu_TMOneStaTight[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_TMOneStaTight;   //!
-  TBranch        *b_Reco_QQ_mumi_TMOneStaTight;   //!
+  Bool_t          Reco_mu_TMOneStaTight[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_TMOneStaTight;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_TMOneStaTight", Reco_QQ_mupl_TMOneStaTight, &b_Reco_QQ_mupl_TMOneStaTight);
-  mytree->SetBranchAddress("Reco_QQ_mumi_TMOneStaTight", Reco_QQ_mumi_TMOneStaTight, &b_Reco_QQ_mumi_TMOneStaTight);
-
+  
   mytree->SetBranchAddress("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, &b_Reco_mu_TMOneStaTight);
-  Int_t           Reco_QQ_mupl_nPixWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_QQ_mumi_nPixWMea[200];   //[Reco_QQ_size]
-  Int_t           Reco_mu_nPixWMea[200];   //[Reco_mu_size]
-  TBranch        *b_Reco_QQ_mupl_nPixWMea;   //!
-  TBranch        *b_Reco_QQ_mumi_nPixWMea;   //!
+  Int_t           Reco_mu_nPixWMea[maxBranchSize];   //[Reco_mu_size]
   TBranch        *b_Reco_mu_nPixWMea;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nPixWMea", Reco_QQ_mupl_nPixWMea, &b_Reco_QQ_mupl_nPixWMea);
-  mytree->SetBranchAddress("Reco_QQ_mumi_nPixWMea", Reco_QQ_mumi_nPixWMea, &b_Reco_QQ_mumi_nPixWMea);
   mytree->SetBranchAddress("Reco_mu_nPixWMea", Reco_mu_nPixWMea, &b_Reco_mu_nPixWMea);
-  Int_t           Reco_QQ_sign[200];   //[Reco_QQ_size]
+  Int_t           Reco_QQ_sign[maxBranchSize];   //[Reco_QQ_size]
   TBranch        *b_Reco_QQ_sign;   //!
   mytree->SetBranchAddress("Reco_QQ_sign", Reco_QQ_sign, &b_Reco_QQ_sign);
   Float_t         rpAng[29];   //[nEP]
   TBranch        *b_rpAng;   //!
-  mytree->SetBranchAddress("rpAng", rpAng, &b_rpAng);
+//  mytree->SetBranchAddress("rpAng", rpAng, &b_rpAng);
 
-  Int_t           Reco_QQ_mupl_nPixValHits[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_nPixValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_nPixValHits", Reco_QQ_mupl_nPixValHits, &b_Reco_QQ_mupl_nPixValHits);
-  Int_t           Reco_QQ_mumi_nPixValHits[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mumi_nPixValHits;   //!
-  mytree->SetBranchAddress("Reco_QQ_mumi_nPixValHits", Reco_QQ_mumi_nPixValHits, &b_Reco_QQ_mumi_nPixValHits);
-  Float_t         Reco_QQ_mupl_ptErr_global[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mupl_ptErr_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mupl_ptErr_global", Reco_QQ_mupl_ptErr_global, &b_Reco_QQ_mupl_ptErr_global);
-  Float_t         Reco_QQ_mumi_ptErr_global[200];   //[Reco_QQ_size]
-  TBranch        *b_Reco_QQ_mumi_ptErr_global;   //!
-  mytree->SetBranchAddress("Reco_QQ_mumi_ptErr_global", Reco_QQ_mumi_ptErr_global, &b_Reco_QQ_mumi_ptErr_global);
+  Int_t           Reco_mu_nPixValHits[maxBranchSize];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_nPixValHits;   //!
+  mytree->SetBranchAddress("Reco_mu_nPixValHits", Reco_mu_nPixValHits, &b_Reco_mu_nPixValHits);
+  Float_t         Reco_mu_ptErr_global[maxBranchSize];   //[Reco_QQ_size]
+  TBranch        *b_Reco_mu_ptErr_global;   //!
+  mytree->SetBranchAddress("Reco_mu_ptErr_global", Reco_mu_ptErr_global, &b_Reco_mu_ptErr_global);
 
-  ULong64_t           Reco_QQ_mupl_SelectionType[200];
-  ULong64_t           Reco_QQ_mumi_SelectionType[200];
-  TBranch        *b_Reco_QQ_mupl_SelectionType;
-  TBranch        *b_Reco_QQ_mumi_SelectionType;
-  mytree->SetBranchAddress("Reco_QQ_mupl_SelectionType", Reco_QQ_mupl_SelectionType, &b_Reco_QQ_mupl_SelectionType);
-  mytree->SetBranchAddress("Reco_QQ_mumi_SelectionType", Reco_QQ_mumi_SelectionType, &b_Reco_QQ_mumi_SelectionType);
-
+  ULong64_t           Reco_mu_SelectionType[maxBranchSize];
+  TBranch        *b_Reco_mu_SelectionType;
+  mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
 
   TChain *eptree = new TChain("vnanalyzer/tree");
-  eptree->Add(fname.Data());
+  eptree->Add(fname1.Data());
+  eptree->Add(fname2.Data());
   
   
   const int nEP = 29;  // number of event planes in the tree
@@ -222,6 +150,24 @@ void SkimTree(int nevt=-1)
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
   mmtree->SetMaxTreeSize(MAXTREESIZE);
   mmtree->Branch("mm",&dm.run,branchString.Data());
+  
+  //Make RooDataSet
+  RooRealVar* massVar  = new RooRealVar("mass","mass variable",0,200,"GeV/c^{2}");
+  RooRealVar* ptVar    = new RooRealVar("pt","pt variable", 0,100,"GeV/c");
+  RooRealVar* yVar     = new RooRealVar("y","rapidity of the dimuon pair", -5,5,"");
+  RooRealVar* pt1Var   = new RooRealVar("pt1","pt of muon+", 0,500,"GeV/c");
+  RooRealVar* eta1Var  = new RooRealVar("eta1","eta of muon+", -4,4,"");
+  RooRealVar* pt2Var   = (RooRealVar*)pt1Var->Clone("pt2");
+  RooRealVar* eta2Var  = (RooRealVar*)eta1Var->Clone("eta2");
+  RooRealVar* cBinVar   = new RooRealVar("cBin","Centrality bin", -100,500,"");
+  RooRealVar* ep2Var   = new RooRealVar("ep2","2nd order event plane", -100,100,"");
+  RooRealVar* dphiEp2Var   = new RooRealVar("dphiEp2","Delta Phi from 2nd order event plane", -100,100,"");
+  RooRealVar* evtWeight = new RooRealVar("weight","pt weight", 0, 10000,"");
+  RooArgSet* argSet    = new RooArgSet(*massVar, *ptVar, *yVar, *pt1Var, *pt2Var, *eta1Var, *eta2Var,*evtWeight);
+  argSet->add(*cBinVar);argSet->add(*ep2Var); argSet->add(*dphiEp2Var);
+  
+  RooDataSet* dataSet  = new RooDataSet("dataset", " a dataset", *argSet);
+
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -231,6 +177,8 @@ void SkimTree(int nevt=-1)
   TLorentzVector* mupl_Reco = new TLorentzVector;
   TLorentzVector* mumi_Reco = new TLorentzVector;
 
+  
+  int kTrigSel = 13; // 13: for Upsilon Trigger
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
 
@@ -258,39 +206,33 @@ void SkimTree(int nevt=-1)
       double mass = JP_Reco->M();
       double phi = JP_Reco->Phi();
       double eta = JP_Reco->Eta();
+      
+      if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
+      
+      bool passMuonTypePl = true;
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,1)));
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,3)));
 
-      bool muplSoft = ( (Reco_QQ_mupl_TMOneStaTight[irqq]==true) &&
-          (Reco_QQ_mupl_nTrkWMea[irqq] > 5) &&
-          (Reco_QQ_mupl_nPixWMea[irqq] > 0) &&
-          (fabs(Reco_QQ_mupl_dxy[irqq])<0.3) &&
-          (fabs(Reco_QQ_mupl_dz[irqq])<20.) &&
-          ((Reco_QQ_mupl_SelectionType[irqq]&1)>0)        //			 &&  (Reco_QQ_mupl_highPurity[irqq]==true) 
+      bool passMuonTypeMi = true;
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,1)));
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,3)));
+
+      bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
+          (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.) &&
+          passMuonTypePl        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
-      bool mumiSoft = ( (Reco_QQ_mumi_TMOneStaTight[irqq]==true) &&
-          (Reco_QQ_mumi_nTrkWMea[irqq] > 5) &&
-          (Reco_QQ_mumi_nPixWMea[irqq] > 0) &&
-          (fabs(Reco_QQ_mumi_dxy[irqq])<0.3) &&
-          (fabs(Reco_QQ_mumi_dz[irqq])<20.)  && 
-          ((Reco_QQ_mumi_SelectionType[irqq]&1)>0)        //			 &&  (Reco_QQ_mupl_highPurity[irqq]==true) 
+      bool mumiSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
+          (Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.)  && 
+          passMuonTypeMi       //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
-      bool muplHighPtCut = ( (Reco_QQ_mupl_nMuValHits[irqq]>0) &&
-          (Reco_QQ_mupl_StationsMatched[irqq]>1) &&
-          (Reco_QQ_mupl_ptErr_global[irqq]/mupl_Reco->Pt() < 0.3 ) && 
-          (Reco_QQ_mupl_dxy[irqq]<0.2) &&
-          (Reco_QQ_mupl_dz[irqq] <0.5) &&
-          (Reco_QQ_mupl_nPixValHits[irqq] > 0 ) &&
-          (Reco_QQ_mupl_nTrkWMea[irqq] > 5) 
-          );
-      bool mumiHighPtCut = ( (Reco_QQ_mumi_nMuValHits[irqq]>0) &&
-          (Reco_QQ_mumi_StationsMatched[irqq]>1) &&
-          (Reco_QQ_mumi_ptErr_global[irqq]/mumi_Reco->Pt() < 0.3 ) && 
-          (Reco_QQ_mumi_dxy[irqq]<0.2) &&
-          (Reco_QQ_mumi_dz[irqq] <0.5) &&
-          (Reco_QQ_mumi_nPixValHits[irqq] > 0 ) &&
-          (Reco_QQ_mumi_nTrkWMea[irqq] > 5) 
-          );
 
       if ( !(muplSoft && mumiSoft) ) 
         continue;   
@@ -347,11 +289,27 @@ void SkimTree(int nevt=-1)
 
       mmtree->Fill();
       
+      
+      //Fill RooDataSet
+      massVar->setVal( (double)dm.mass ) ;
+      ptVar->setVal(   (double)dm.pt   ) ;
+      yVar->setVal(    (double)dm.y    ) ;
+      pt1Var->setVal(  (double)dm.pt1  ) ;
+      dphiEp2Var->setVal(   (double)dm.dphiEp2  ) ;
+      eta1Var->setVal( (double)dm.eta1 ) ;
+      pt2Var->setVal(  (double)dm.pt2  ) ;
+      eta2Var->setVal( (double)dm.eta2 ) ;
+      ep2Var->setVal( (double)dm.ep2 ) ;
+      cBinVar->setVal( (double)dm.cBin ) ;
+      evtWeight->setVal( (double)dm.weight ) ;
+      dataSet->add( *argSet);
+      
     } // end of dimuon loop
     
     
   } //end of event loop
   mmtree->Write();  // Don't need to call Write() for trees
+  dataSet->Write();
   newfile->Close();
   
 } 

@@ -18,17 +18,11 @@ void SkimTree_Event(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname1_1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part1.root";
-  TString fname1_2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part2.root";
-  TString fname1_3 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/Oniatree_addvn_part3_000*.root";
-  TString fname1_4 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/Oniatree_addvn_part4_000*.root";
+  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
   TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   
   TChain *mytree = new TChain("myTree");
-  mytree->Add(fname1_4.Data());
-  mytree->Add(fname1_1.Data());
-  mytree->Add(fname1_2.Data());
-  mytree->Add(fname1_3.Data());
+  mytree->Add(fname1.Data());
   mytree->Add(fname2.Data());
 
   const int maxBranchSize = 1000;
@@ -139,10 +133,7 @@ void SkimTree_Event(int nevt=-1)
 
 
   TChain *eptree = new TChain("tree");
-  eptree->Add(fname1_4.Data());
-  eptree->Add(fname1_1.Data());
-  eptree->Add(fname1_2.Data());
-  eptree->Add(fname1_3.Data());
+  eptree->Add(fname1.Data());
   eptree->Add(fname2.Data());
   
   
