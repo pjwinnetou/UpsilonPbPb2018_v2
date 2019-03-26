@@ -126,7 +126,7 @@ void SkimTree_Event(int nevt=-1)
   TBranch        *b_Reco_mu_ptErr_global;   //!
   mytree->SetBranchAddress("Reco_mu_ptErr_global", Reco_mu_ptErr_global, &b_Reco_mu_ptErr_global);
 
-  ULong64_t           Reco_mu_SelectionType[maxBranchSize];
+  Int_t           Reco_mu_SelectionType[maxBranchSize];
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
@@ -266,12 +266,12 @@ void SkimTree_Event(int nevt=-1)
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
       bool passMuonTypePl = true;
-      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,1)));
-      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2,3)));
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((int)pow(2,1)));
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((int)pow(2,3)));
 
       bool passMuonTypeMi = true;
-      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,1)));
-      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2,3)));
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,1)));
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,3)));
 
       bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
