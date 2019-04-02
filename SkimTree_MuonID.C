@@ -20,6 +20,10 @@ void SkimTree_MuonID(int nevt=-1)
   using namespace hi;
 
 
+  TString fname1_1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part1.root";
+  TString fname1_2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part2.root";
+  TString fname1_3 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part3.root";
+  TString fname1_4 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part4.root";
   TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
   TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   
@@ -27,6 +31,7 @@ void SkimTree_MuonID(int nevt=-1)
   mytree->Add(fname1.Data());
   mytree->Add(fname2.Data());
 
+  
   const int maxBranchSize = 1000;
 
   UInt_t          runNb;
@@ -132,14 +137,20 @@ void SkimTree_MuonID(int nevt=-1)
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
-  TTree* newMytree = (TTree*)mytree->CloneTree(0);
   TFile* newfile;
-  newfile = new TFile(Form("Onia_Muon_Skim_%s.root",muIdStr.Data()),"recreate");
+  newfile = new TFile(Form("Onia_Muon_Skim_%s_all.root",muIdStr.Data()),"recreate");
+
+  TTree* newMytree = new TTree("newTree","skimmedTree");
+  newMytree -> Branch("eventNb",&eventNb,"eventNb/i");
+  newMytree -> Branch("zVtx",&zVtx,"zVtx/F");
+  newMytree -> Branch("eventNb",&eventNb,"eventNb/I");
+  newMytree -> Branch("eventNb",&eventNb,"eventNb/I");
+
 
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
 
-  cout << "Total events = " << nevt << ", : " << eptree->GetEntries() << endl;
+  cout << "Total events = " << mytree->GetEntries() << endl;
 
   for(int iev=0; iev<nevt ; ++iev)
   {
@@ -183,7 +194,8 @@ void SkimTree_MuonID(int nevt=-1)
    
     if(nMuCand!=0) newMytree->Fill(); 
   } //end of event loop
-  
+ 
+  newfile->cd();
   newMytree->Write();
   newfile->Close();
   
