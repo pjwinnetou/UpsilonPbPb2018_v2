@@ -149,25 +149,25 @@ void SkimTree_MuonID(int nevt=-1)
   newMytree -> Branch("Reco_mu_size", &Reco_mu_size, "Reco_mu_size/I");
   newMytree -> Branch("Reco_QQ_4mom", &Reco_QQ_4mom);
   newMytree -> Branch("Reco_mu_4mom", &Reco_mu_4mom);
-  newMytree -> Branch("Reco_QQ_trig", Reco_QQ_trig, "Reco_QQ_trig/l");
-  newMytree -> Branch("Reco_QQ_VtxProb", Reco_QQ_VtxProb, "Reco_QQ_VtxProb/l");
-  newMytree -> Branch("Reco_QQ_mupl_idx",Reco_QQ_mupl_idx, "Reco_QQ_mupl_idx/I");
-  newMytree -> Branch("Reco_QQ_mumi_idx",Reco_QQ_mumi_idx, "Reco_QQ_mumi_idx/I");
-  newMytree -> Branch("Reco_mu_nTrkHits", Reco_mu_nTrkHits, "Reco_mu_nTrkHits/I");
-  newMytree -> Branch("Reco_mu_normChi2_global", Reco_mu_normChi2_global, "Reco_mu_normChi2_global/F");
-  newMytree -> Branch("Reco_mu_nMuValHits", Reco_mu_nMuValHits, "Reco_mu_nMuValHits/I");
-  newMytree -> Branch("Reco_mu_StationsMatched", Reco_mu_StationsMatched, "Reco_mu_StationsMatched/I");
-  newMytree -> Branch("Reco_mu_dxy", Reco_mu_dxy, "Reco_mu_dxy/F");
-  newMytree -> Branch("Reco_mu_dxyErr", Reco_mu_dxyErr, "Reco_mu_dxyErr/F");
-  newMytree -> Branch("Reco_mu_dz", Reco_mu_dz, "Reco_mu_dz/F");
-  newMytree -> Branch("Reco_mu_dzErr", Reco_mu_dzErr, "Reco_mu_dzErr/F");
-  newMytree -> Branch("Reco_mu_nTrkWMea", Reco_mu_nTrkWMea, "Reco_mu_nTrkWMea/I");
-  newMytree -> Branch("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, "Reco_mu_TMOneStaTight/O");
-  newMytree -> Branch("Reco_mu_nPixWMea", Reco_mu_nPixWMea, "Reco_mu_nPixWMea/I");
-  newMytree -> Branch("Reco_QQ_sign", Reco_QQ_sign, "Reco_QQ_sign/I");
-  newMytree -> Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits, "Reco_mu_nPixValHits/I");
-  newMytree -> Branch("Reco_mu_ptErr_global", Reco_mu_ptErr_global, "Reco_mu_ptErr_global/F");
-  newMytree -> Branch("Reco_mu_SelectionType", Reco_mu_SelectionType, "Reco_mu_SelectionType/I");
+  newMytree -> Branch("Reco_QQ_trig", Reco_QQ_trig, "Reco_QQ_trig[Reco_QQ_size]/l");
+  newMytree -> Branch("Reco_QQ_VtxProb", Reco_QQ_VtxProb, "Reco_QQ_VtxProb[Reco_QQ_size]/l");
+  newMytree -> Branch("Reco_QQ_mupl_idx",Reco_QQ_mupl_idx, "Reco_QQ_mupl_idx[Reco_QQ_size]/I");
+  newMytree -> Branch("Reco_QQ_mumi_idx",Reco_QQ_mumi_idx, "Reco_QQ_mumi_idx[Reco_QQ_size]/I");
+  newMytree -> Branch("Reco_mu_nTrkHits", Reco_mu_nTrkHits, "Reco_mu_nTrkHits[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_mu_normChi2_global", Reco_mu_normChi2_global, "Reco_mu_normChi2_global[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_nMuValHits", Reco_mu_nMuValHits, "Reco_mu_nMuValHits[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_mu_StationsMatched", Reco_mu_StationsMatched, "Reco_mu_StationsMatched[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_mu_dxy", Reco_mu_dxy, "Reco_mu_dxy[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_dxyErr", Reco_mu_dxyErr, "Reco_mu_dxyErr[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_dz", Reco_mu_dz, "Reco_mu_dz[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_dzErr", Reco_mu_dzErr, "Reco_mu_dzErr[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_nTrkWMea", Reco_mu_nTrkWMea, "Reco_mu_nTrkWMea[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, "Reco_mu_TMOneStaTight[Reco_mu_size]/O");
+  newMytree -> Branch("Reco_mu_nPixWMea", Reco_mu_nPixWMea, "Reco_mu_nPixWMea[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_QQ_sign", Reco_QQ_sign, "Reco_QQ_sign[Reco_QQ_size]/I");
+  newMytree -> Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits, "Reco_mu_nPixValHits[Reco_mu_size]/I");
+  newMytree -> Branch("Reco_mu_ptErr_global", Reco_mu_ptErr_global, "Reco_mu_ptErr_global[Reco_mu_size]/F");
+  newMytree -> Branch("Reco_mu_SelectionType", Reco_mu_SelectionType, "Reco_mu_SelectionType[Reco_mu_size]/I");
 
 
   // event loop start
