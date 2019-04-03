@@ -7,7 +7,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void histMuonIdComp(bool isMC = false, int muSel = 2) 
+void makehistMuonIdRoot(bool isMC = false, int muSel = 2) 
 {
   using namespace std;
   using namespace hi;
