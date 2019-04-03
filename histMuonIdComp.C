@@ -7,7 +7,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void histMuonIdComp(bool isMC = false, int muSel = 1) 
+void histMuonIdComp(bool isMC = false, int muSel = 2) 
 {
   using namespace std;
   using namespace hi;
@@ -18,8 +18,8 @@ void histMuonIdComp(bool isMC = false, int muSel = 1)
 
   TString strMC = (isMC) ? "MC" : "DATA";  
 
-  TFile* f1 = new TFile(Form("skimmedFiles/Onia_Muon_Skim_%s_%s.root",strMC.Data(),strMuSel.Data()),"read");
-  TTree *mytree = (TTree*) f1->Get("hionia/newTree");
+  TFile* f1 = new TFile(Form("Onia_Muon_Skim_%s_%s.root",strMC.Data(),strMuSel.Data()),"read");
+  TTree *mytree = (TTree*) f1->Get("newTree");
   
   const int maxBranchSize = 1000;
 
@@ -47,10 +47,6 @@ void histMuonIdComp(bool isMC = false, int muSel = 1)
   TBranch        *b_Reco_QQ_trig;   //!
   TBranch        *b_Reco_QQ_VtxProb;   //!
 
-  Bool_t          Reco_mu_highPurity[maxBranchSize];   //[Reco_QQ_size]
-  TBranch        *b_Reco_mu_highPurity;   //!
-  mytree->SetBranchAddress("Reco_mu_highPurity", Reco_mu_highPurity, &b_Reco_mu_highPurity);
-
   Reco_QQ_4mom = 0;
   Reco_mu_4mom = 0;
   mytree->SetBranchAddress("eventNb", &eventNb, &b_eventNb);
@@ -62,7 +58,7 @@ void histMuonIdComp(bool isMC = false, int muSel = 1)
   mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
   mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
   mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
-  mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
+//  mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
 
   //  muon id 
   Int_t           Reco_QQ_mupl_idx[maxBranchSize];
@@ -144,12 +140,12 @@ void histMuonIdComp(bool isMC = false, int muSel = 1)
   TH1D* hmuphi = new TH1D("hmuphi",";#phi^{#mu};",300,-4,4);
   TH1D* hmueta = new TH1D("hmueta",";#eta^{#mu};",300,-4,4);
 
-
+  cout << "OK" << endl;
 
   TLorentzVector* mu_Reco = new TLorentzVector;
 
   // event loop start
-  if(nevt == -1) nevt = mytree->GetEntries();
+  int nevt = mytree->GetEntries();
 
   cout << "Total events = " << mytree->GetEntries() << endl;
 
