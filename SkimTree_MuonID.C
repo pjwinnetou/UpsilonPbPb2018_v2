@@ -142,7 +142,7 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
   TFile* newfile;
-  newfile = new TFile(Form("Test_Onia_Muon_Hist_%s_%s_%s.root",muIdStr.Data(),fMCstr.Data(),fSigstr.Data()),"recreate");
+  newfile = new TFile(Form("Onia_MuId_SkimHist_%s_%s_%s.root",muIdStr.Data(),fMCstr.Data(),fSigstr.Data()),"recreate");
 
   Int_t nMuCand;
   TTree* newMytree = new TTree("newTree","skimmedTree");
@@ -181,6 +181,30 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   TLorentzVector *MuMu_Reco = new TLorentzVector;
   TLorentzVector *MuPl_Reco = new TLorentzVector;
   TLorentzVector *MuMi_Reco = new TLorentzVector;
+  
+
+
+  TH1D* hCent = new TH1D("hCent",";Centrality;",200,0,200);
+  TH1D* hNormChi2 = new TH1D("hNormChi2",";Reco_mu_normChi2_global;",1000,-10,100);
+  TH1D* hnTrkHits = new TH1D("hnTrkHits",";Reco_mu_nTrkHits;",40,0,40);
+  TH1D* hnMuValHits = new TH1D("hnMuValHits",";Reco_mu_nMuValHits;",55,0,55);
+  TH1D* hmudxy = new TH1D("hmudxy",";Reco_mu_dxy;",100,-0.3,0.3);
+  TH1D* hmudxyErr = new TH1D("hmudxyErr",";Reco_mu_dxyErr;",500,0,0.1);
+  TH1D* hmudz = new TH1D("hmudz",";Reco_mu_dz;",1000,-10,10);
+  TH1D* hmudzErr = new TH1D("hmudzErr",";Reco_mu_dzErr;",500,0,0.3);
+  TH1D* hnTrkWMea = new TH1D("hnTrkWMea",";Reco_mu_nTrkWMea;",20,0,20);
+  TH1D* hmuTMOneStaTight = new TH1D("hmuTMOneStaTight",";Reco_mu_TMOneStaTight;",2,0,2);
+  TH1D* hmunPixWMea = new TH1D("hmunPixWMea",";Reco_mu_nPixWMea;",7,0,7);
+  TH1D* hmunPixValHits = new TH1D("hmunPixValHits",";Reco_mu_nPixValHits;",12,0,12);
+  TH1D* hmuptErrglobal = new TH1D("hmuptErrglobal",";Reco_mu_ptErr_global;",1000,0,1);
+  TH1D* hmupt = new TH1D("hmupt",";p_{T}^{#mu};",250,0,50);
+  TH1D* hmumupt = new TH1D("hmumupt",";p_{T}^{#mu#mu};",250,0,50);
+  TH1D* hmuphi = new TH1D("hmuphi",";#phi^{#mu};",300,-4,4);
+  TH1D* hmueta = new TH1D("hmueta",";#eta^{#mu};",300,-4,4);
+  TH1D* hmumuy = new TH1D("hmumuy",";y^{#mu#mu};",300,-4,4);
+  TH1D* hVtxProb = new TH1D("hVtxProb",";Reco_QQ_VtxProb;",200,0,1);
+  
+  
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
   cout << "Total events = " << mytree->GetEntries() << endl;
@@ -248,37 +272,103 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
       t_ = MuMu_Reco->T();
 
       new(Reco_QQ_4mom_Lorentz[irqq]) TLorentzVector(x_,y_,z_,t_);
-      
+     
+      bool massPassFlag = false;
+      if(isSignal){
+        if( MuMu_Reco->M() > 2.9 && MuMu_Reco->M() < 3.2) massPassFlag = true;
+      }
+      else if(!isSignal){
+        if( (MuMu_Reco->M() > 2.6 && MuMu_Reco->M() < 2.8) || (MuMu_Reco->M() > 3.3 && MuMu_Reco->M() < 3.5) ) massPassFlag = true;
+      }
+
+      if(!massPassFlag) continue;
+
       nMuCand++; 
       
       hNormChi2          -> Fill(Reco_mu_normChi2_global[Reco_QQ_mumi_idx[irqq]]);
-      hnTrkHits          -> Fill(Reco_mu_nTrkHits[irqq]);
-      hnMuValHits        -> Fill(Reco_mu_nMuValHits[irqq]);
-      hmudxy             -> Fill(Reco_mu_dxy[irqq]);
-      hmudxyErr          -> Fill(Reco_mu_dxyErr[irqq]);
-      hmudz              -> Fill(Reco_mu_dz[irqq]);
-      hmudzErr           -> Fill(Reco_mu_dzErr[irqq]);
-      hnTrkWMea          -> Fill(Reco_mu_nTrkWMea[irqq]);
-      hmuTMOneStaTight   -> Fill(Reco_mu_TMOneStaTight[irqq]);
-      hmunPixWMea        -> Fill(Reco_mu_nPixWMea[irqq]);
-      hmunPixValHits     -> Fill(Reco_mu_nPixValHits[irqq]);
-      hmuptErrglobal     -> Fill(Reco_mu_ptErr_global[irqq]);
+      hNormChi2          -> Fill(Reco_mu_normChi2_global[Reco_QQ_mupl_idx[irqq]]);
+      hnTrkHits          -> Fill(Reco_mu_nTrkHits[Reco_QQ_mumi_idx[irqq]]);
+      hnTrkHits          -> Fill(Reco_mu_nTrkHits[Reco_QQ_mupl_idx[irqq]]);
+      hnMuValHits        -> Fill(Reco_mu_nMuValHits[Reco_QQ_mumi_idx[irqq]]);
+      hnMuValHits        -> Fill(Reco_mu_nMuValHits[Reco_QQ_mupl_idx[irqq]]);
+      hmudxy             -> Fill(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]);
+      hmudxy             -> Fill(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]);
+      hmudxyErr          -> Fill(Reco_mu_dxyErr[Reco_QQ_mumi_idx[irqq]]);
+      hmudxyErr          -> Fill(Reco_mu_dxyErr[Reco_QQ_mupl_idx[irqq]]);
+      hmudz              -> Fill(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]);
+      hmudz              -> Fill(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]);
+      hmudzErr           -> Fill(Reco_mu_dzErr[Reco_QQ_mumi_idx[irqq]]);
+      hmudzErr           -> Fill(Reco_mu_dzErr[Reco_QQ_mupl_idx[irqq]]);
+      hnTrkWMea          -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]]);
+      hnTrkWMea          -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]]);
+      hmuTMOneStaTight   -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]);
+      hmuTMOneStaTight   -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]);
+      hmunPixWMea        -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]]);
+      hmunPixWMea        -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]]);
+      hmunPixValHits     -> Fill(Reco_mu_nPixValHits[Reco_QQ_mumi_idx[irqq]]);
+      hmunPixValHits     -> Fill(Reco_mu_nPixValHits[Reco_QQ_mupl_idx[irqq]]);
+      hmuptErrglobal     -> Fill(Reco_mu_ptErr_global[Reco_QQ_mumi_idx[irqq]]);
+      hmuptErrglobal     -> Fill(Reco_mu_ptErr_global[Reco_QQ_mupl_idx[irqq]]);
 
-      hmupt              -> Fill(mu_Reco->Pt());
-      hmuphi             -> Fill(mu_Reco->Phi());
-      hmueta             -> Fill(mu_Reco->Eta());
+      hVtxProb           -> Fill(Reco_QQ_VtxProb[irqq]);
+
+      hmupt              -> Fill(MuPl_Reco->Pt());
+      hmupt              -> Fill(MuMi_Reco->Pt());
+      hmuphi             -> Fill(MuPl_Reco->Phi());
+      hmuphi             -> Fill(MuMi_Reco->Phi());
+      hmueta             -> Fill(MuPl_Reco->Eta());
+      hmueta             -> Fill(MuMi_Reco->Eta());
+      
+      hmumupt            -> Fill(MuMu_Reco->Pt());
+      hmumuy             -> Fill(MuMu_Reco->Rapidity());
     
       hCent              -> Fill(Centrality);
       
       
     } // end of dimuon loop
-   
+
     if(nMuCand!=0) newMytree->Fill(); 
   } //end of event loop
- 
+
   newfile->cd();
   newMytree->Write();
-  newfile->Close();
-  
-} 
+  hNormChi2       -> Write(); 
+  hNormChi2       -> Write(); 
+  hnTrkHits       -> Write(); 
+  hnTrkHits       -> Write(); 
+  hnMuValHits     -> Write(); 
+  hnMuValHits     -> Write(); 
+  hmudxy          -> Write(); 
+  hmudxy          -> Write(); 
+  hmudxyErr       -> Write(); 
+  hmudxyErr       -> Write(); 
+  hmudz           -> Write(); 
+  hmudz           -> Write(); 
+  hmudzErr        -> Write(); 
+  hmudzErr        -> Write(); 
+  hnTrkWMea       -> Write(); 
+  hnTrkWMea       -> Write(); 
+  hmuTMOneStaTight-> Write(); 
+  hmuTMOneStaTight-> Write(); 
+  hmunPixWMea     -> Write(); 
+  hmunPixWMea     -> Write(); 
+  hmunPixValHits  -> Write(); 
+  hmunPixValHits  -> Write(); 
+  hmuptErrglobal  -> Write(); 
+  hmuptErrglobal  -> Write(); 
+  -> Write(); 
+  hVtxProb        -> Write(); 
+  -> Write(); 
+  hmupt           -> Write(); 
+  hmupt           -> Write(); 
+  hmuphi          -> Write(); 
+  hmuphi          -> Write(); 
+  hmueta          -> Write(); 
+  hmueta          -> Write(); 
 
+  hmumupt         -> Write(); 
+  hmumuy          -> Write(); 
+  -> Write(); 
+  hCent           -> Write(); 
+  newMytree->Close();
+}
