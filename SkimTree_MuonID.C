@@ -141,6 +141,13 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
+  Int_t Reco_mu_whichGen[maxBranchSize];
+  if(isMC){
+    TBranch *b_Reco_mu_whichGen;
+    mytree->SetBranchAddress("Reco_mu_whichGen",Reco_mu_whichGen, &b_Reco_mu_whichGen);
+  }
+
+
   TFile* newfile;
   newfile = new TFile(Form("Onia_MuId_SkimHist_%s_%s_%s.root",muIdStr.Data(),fMCstr.Data(),fSigstr.Data()),"recreate");
 
@@ -181,8 +188,6 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   TLorentzVector *MuMu_Reco = new TLorentzVector;
   TLorentzVector *MuPl_Reco = new TLorentzVector;
   TLorentzVector *MuMi_Reco = new TLorentzVector;
-  
-
 
   TH1D* hCent = new TH1D("hCent",";Centrality;",200,0,200);
   TH1D* hNormChi2 = new TH1D("hNormChi2",";Reco_mu_normChi2_global;",1000,-10,100);
@@ -203,7 +208,6 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   TH1D* hmueta = new TH1D("hmueta",";#eta^{#mu};",300,-4,4);
   TH1D* hmumuy = new TH1D("hmumuy",";y^{#mu#mu};",300,-4,4);
   TH1D* hVtxProb = new TH1D("hVtxProb",";Reco_QQ_VtxProb;",200,0,1);
-  
   
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
@@ -272,7 +276,14 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
       t_ = MuMu_Reco->T();
 
       new(Reco_QQ_4mom_Lorentz[irqq]) TLorentzVector(x_,y_,z_,t_);
-     
+      
+      
+      if(isMC){
+        if(Reco_mu_whichGen[Reco_QQ_mupl_idx[irqq]] == -1) continue;
+        if(Reco_mu_whichGen[Reco_QQ_mumi_idx[irqq]] == -1) continue;
+      }
+
+      
       bool massPassFlag = false;
       if(isSignal){
         if( MuMu_Reco->M() > 2.9 && MuMu_Reco->M() < 3.2) massPassFlag = true;
@@ -356,9 +367,7 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   hmunPixValHits  -> Write(); 
   hmuptErrglobal  -> Write(); 
   hmuptErrglobal  -> Write(); 
-  -> Write(); 
   hVtxProb        -> Write(); 
-  -> Write(); 
   hmupt           -> Write(); 
   hmupt           -> Write(); 
   hmuphi          -> Write(); 
@@ -368,7 +377,6 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
 
   hmumupt         -> Write(); 
   hmumuy          -> Write(); 
-  -> Write(); 
   hCent           -> Write(); 
   newMytree->Close();
 }
