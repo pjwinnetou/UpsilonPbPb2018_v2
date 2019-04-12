@@ -7,7 +7,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool isSignal = true) 
+void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = true, bool isSignal = false) 
 {
   TString muIdStr;
   if(kMuId == kMuGlb) muIdStr = "Glb";
@@ -24,12 +24,16 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   TString fnameData2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   TString fnameMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Oniatree_MC_PromptJpsi_5TeV_PbPbEmbd_20190326.root";
   
-  TChain *mytree = new TChain("myTree");
+  TChain *mytree;
   if(!isMC){
+    mytree = new TChain("myTree");
     mytree->Add(fnameData1.Data());
     mytree->Add(fnameData2.Data());
   }
-  else if(isMC){mytree->Add(fnameMC.Data());}
+  else if(isMC){
+    mytree = new TChain("hionia/myTree");
+    mytree->Add(fnameMC.Data());
+  }
   
   const int maxBranchSize = 1000;
 
@@ -378,5 +382,5 @@ void SkimTree_MuonID(int nevt=-1, int kMuId = kMuGlb, bool isMC = false, bool is
   hmumupt         -> Write(); 
   hmumuy          -> Write(); 
   hCent           -> Write(); 
-  newMytree->Close();
+  newfile->Close();
 }
