@@ -1,4 +1,5 @@
 #include <ctime>
+#include <iostream>
 
 #include <TLorentzVector.h>
 #include "commonUtility.h"
@@ -7,8 +8,9 @@
 #include "SkimTree_MuonID.h"
 
 static const long MAXTREESIZE = 1000000000000;
+int VarCut(const char* histName = "string", int irqq=0);
 
-void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true) 
+void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true) 
 {
   
   TString fMCstr = (isMC) ? "MC" : "DATA" ;
@@ -32,7 +34,41 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     mytree = new TChain("hionia/myTree");
     mytree->Add(fnameMC.Data());
   }
+  Reco_QQ_4mom = 0;
+  Reco_mu_4mom = 0;
   
+  mytree->SetBranchAddress("Reco_mu_highPurity", Reco_mu_highPurity, &b_Reco_mu_highPurity);
+  mytree->SetBranchAddress("runNb", &runNb, &b_runNb);
+  mytree->SetBranchAddress("LS", &LS, &b_LS);
+  mytree->SetBranchAddress("eventNb", &eventNb, &b_eventNb);
+  mytree->SetBranchAddress("zVtx", &zVtx, &b_zVtx);
+  mytree->SetBranchAddress("Centrality", &Centrality, &b_Centrality);
+  mytree->SetBranchAddress("HLTriggers", &HLTriggers, &b_HLTriggers);
+  mytree->SetBranchAddress("Reco_QQ_size", &Reco_QQ_size, &b_Reco_QQ_size);
+  mytree->SetBranchAddress("Reco_mu_size", &Reco_mu_size, &b_Reco_mu_size);
+  mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
+  mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
+  mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
+  mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
+  mytree->SetBranchAddress("Reco_QQ_mupl_idx",Reco_QQ_mupl_idx,&b_Reco_QQ_mupl_idx);
+  mytree->SetBranchAddress("Reco_QQ_mumi_idx",Reco_QQ_mumi_idx,&b_Reco_QQ_mumi_idx);
+  mytree->SetBranchAddress("Reco_mu_nTrkHits", Reco_mu_nTrkHits, &b_Reco_mu_nTrkHits);
+  mytree->SetBranchAddress("Reco_mu_normChi2_global", Reco_mu_normChi2_global, &b_Reco_mu_normChi2_global);
+  mytree->SetBranchAddress("Reco_mu_normChi2_inner", Reco_mu_normChi2_inner, &b_Reco_mu_normChi2_inner);
+  mytree->SetBranchAddress("Reco_mu_nMuValHits", Reco_mu_nMuValHits, &b_Reco_mu_nMuValHits);
+  mytree->SetBranchAddress("Reco_mu_StationsMatched", Reco_mu_StationsMatched, &b_Reco_mu_StationsMatched);
+  mytree->SetBranchAddress("Reco_mu_dxy", Reco_mu_dxy, &b_Reco_mu_dxy);
+  mytree->SetBranchAddress("Reco_mu_dxyErr", Reco_mu_dxyErr, &b_Reco_mu_dxyErr);
+  mytree->SetBranchAddress("Reco_mu_dz", Reco_mu_dz, &b_Reco_mu_dz);
+  mytree->SetBranchAddress("Reco_mu_dzErr", Reco_mu_dzErr, &b_Reco_mu_dzErr);
+  mytree->SetBranchAddress("Reco_mu_nTrkWMea", Reco_mu_nTrkWMea, &b_Reco_mu_nTrkWMea);
+  mytree->SetBranchAddress("Reco_mu_nPixValHits", Reco_mu_nPixValHits, &b_Reco_mu_nPixValHits);
+  mytree->SetBranchAddress("Reco_mu_ptErr_global", Reco_mu_ptErr_global, &b_Reco_mu_ptErr_global);
+  mytree->SetBranchAddress("Reco_mu_ptErr_inner", Reco_mu_ptErr_inner, &b_Reco_mu_ptErr_inner);
+  mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
+  mytree->SetBranchAddress("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, &b_Reco_mu_TMOneStaTight);
+  mytree->SetBranchAddress("Reco_mu_nPixWMea", Reco_mu_nPixWMea, &b_Reco_mu_nPixWMea);
+  mytree->SetBranchAddress("Reco_QQ_sign", Reco_QQ_sign, &b_Reco_QQ_sign);
 
   Int_t Reco_mu_whichGen[maxBranchSize];
   if(isMC){
@@ -42,7 +78,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
 
 
   TFile* newfile;
-  newfile = new TFile(Form("Onia_MuId_SkimHist_%s_%s_%s.root",muIdStr.Data(),fMCstr.Data(),fSigstr.Data()),"recreate");
+  newfile = new TFile(Form("Onia_MuId_SkimHist_%s_isJPsiTrig%d.root",fMCstr.Data(),isJPsiTrig),"recreate");
 
   Int_t nMuCand;
   TTree* newMytree = new TTree("newTree","skimmedTree");
@@ -102,25 +138,25 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
   TH1D* hVtxProb = new TH1D("hVtxProb",";Reco_QQ_VtxProb;",200,0,1);
   
   const int nHist = 18;
-  const char* histName = {"NormChi2global","NormChi2Inner","nTrkHits","nMuValHits","mudxy","mudxyErr","mudz","mudzErr","nTrkWMea","muStationsMatched","muTMOneStaTight","munPixWMea","munPixValHits","muptErrglobal","muptErrInner","mupt","muphi","mueta"};
-  const int nbins[nhist] = {1000, 1000, 40, 55, 100, 500, 1000, 500, 20, 30, 2, 7, 12, 1000, 1000, 250, 300, 300};
+  const char* histName[nHist] = {"NormChi2global","NormChi2Inner","nTrkHits","nMuValHits","mudxy","mudxyErr","mudz","mudzErr","nTrkWMea","muStationsMatched","muTMOneStaTight","munPixWMea","munPixValHits","muptErrglobal","muptErrInner","mupt","muphi","mueta"};
+  const int nbins[nHist] = {1000, 1000, 40, 55, 100, 500, 1000, 500, 20, 30, 2, 7, 12, 1000, 1000, 250, 300, 300};
 
-  const double lowbinval[nhist]  = {0,0,0,0,-0.3,0,-5,0,0,0,0,0,0,0,0,0,-4,-4};
-  const double highbinval[nhist] = {100,100,40,55,0.3,0.1,5,0.3,20,2,7,12,1,1,50,4,4};
+  const double lowBinVal[nHist]  = {0,0,0,0,-0.3,0,-5,0,0,0,0,0,0,0,0,0,-4,-4};
+  const double highBinVal[nHist] = {100,100,40,55,0.3,0.1,5,0.3,20,2,7,12,1,1,50,4,4};
   
   const int nHistdimu = 3;
-  const char* histNamedimu = {"mumuPt","mumuY","VtxProb"};
-  const int nbinsdimu[nhistdimu] = {250, 300, 1000};
+  const char* histNamedimu[nHistdimu] = {"mumuPt","mumuY","VtxProb"};
+  const int nbinsdimu[nHistdimu] = {250, 300, 1000};
 
-  const double lowbinvaldimu[nhist]  = {0,-4,0};
-  const double highbinvaldimu[nhist] = {50,4,1};
+  const double lowBinValdimu[nHistdimu]  = {0,-4,0};
+  const double highBinValdimu[nHistdimu] = {50,4,1};
   
   const int nHistCut = 6;
   const char* histNameCut[nHistCut] = {"mudxy","mudz","nTrkWMea","muTMOneStaTight","munPixWMea","VtxProb"};
   const int nbinsCut[nHistCut] = {100,1000,20,2,7,200};
 
-  const double lowbinvalCut[nHistCut]  = {-0.3,-5,0,0,0,0};
-  const double highbinvalCut[nHistCut] = {0.3,5,20,2,7,1};
+  const double lowBinValCut[nHistCut]  = {-0.3,-5,0,0,0,0};
+  const double highBinValCut[nHistCut] = {0.3,5,20,2,7,1};
 
   map<TString, TH1D*> hAll, hSig, hBkg, hSigSCut, hBkgSCut, hGlbCut, hGlbTrkCut, hSigGlbCut, hSigGlbTrkCut, hBkgGlbCut, hBkgGlbTrkCut, hSigGlbSCut, hSigGlbTrkSCut, hBkgGlbSCut, hBkgGlbTrkSCut;
   
@@ -185,7 +221,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     if(Reco_mu_size==0) continue;
 
     nMuCand = 0;
-    if(isJpsiTrig && (!( (HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) )) continue;
+    if(isJPsiTrig && (!( (HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) )) continue;
 
     for (Int_t irqq=0; irqq<Reco_QQ_size; ++irqq) 
     {
@@ -193,7 +229,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
       MuPl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
       MuMi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
       
-      if(Reco_QQ_sign==0 && (MuMu_Reco->M() < 2.6 || MuMu_Reco->M()>3.5)) continue;
+      if(Reco_QQ_sign[irqq]==0 && (MuMu_Reco->M() < 2.6 || MuMu_Reco->M()>3.5)) continue;
       
       if(isJPsiTrig){
         if(!IsAcceptanceQQ(MuPl_Reco->Pt(), MuPl_Reco->Eta()) || !IsAcceptanceQQ(MuMi_Reco->Pt(), MuMi_Reco->Eta())) continue;
@@ -240,13 +276,13 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
       double weight = 1;
       if(isMC) weight = findNcoll(Centrality);
 
-      double histFillVarM[nHist] = {Reco_mu_normChi2_global[Reco_QQ_mumi_idx[irqq]], Reco_mu_normChi2_inner[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_nMuValHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], Reco_mu_dxyErr[Reco_QQ_mumi_idx[irqq]], Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], Reco_mu_dzErr[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_StationsMatched[Reco_QQ_mumi_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixValHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_ptErr_global[Reco_QQ_mumi_idx[irqq]], Reco_mu_ptErr_inner[Reco_QQ_mumi_idx[irqq]], MuMi_Reco->Pt(), MuMi_Reco->Phi(), MuMi_Reco->Eta()};
-      double histFillVarP[nHist] = {Reco_mu_normChi2_global[Reco_QQ_mupl_idx[irqq]], Reco_mu_normChi2_inner[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_nMuValHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], Reco_mu_dxyErr[Reco_QQ_mupl_idx[irqq]], Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], Reco_mu_dzErr[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_StationsMatched[Reco_QQ_mupl_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixValHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_ptErr_global[Reco_QQ_mupl_idx[irqq]], Reco_mu_ptErr_inner[Reco_QQ_mupl_idx[irqq]], muPl_Reco->Pt(), muPl_Reco->Phi(), muPl_Reco->Eta()};
+      double histFillVarD[nHist] = {Reco_mu_normChi2_global[Reco_QQ_mumi_idx[irqq]], Reco_mu_normChi2_inner[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_nMuValHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], Reco_mu_dxyErr[Reco_QQ_mumi_idx[irqq]], Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], Reco_mu_dzErr[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_StationsMatched[Reco_QQ_mumi_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixValHits[Reco_QQ_mumi_idx[irqq]], Reco_mu_ptErr_global[Reco_QQ_mumi_idx[irqq]], Reco_mu_ptErr_inner[Reco_QQ_mumi_idx[irqq]], MuMi_Reco->Pt(), MuMi_Reco->Phi(), MuMi_Reco->Eta()};
+      int histFillVarI[nHist] = {Reco_mu_normChi2_global[Reco_QQ_mupl_idx[irqq]], Reco_mu_normChi2_inner[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_nMuValHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], Reco_mu_dxyErr[Reco_QQ_mupl_idx[irqq]], Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], Reco_mu_dzErr[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_StationsMatched[Reco_QQ_mupl_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixValHits[Reco_QQ_mupl_idx[irqq]], Reco_mu_ptErr_global[Reco_QQ_mupl_idx[irqq]], Reco_mu_ptErr_inner[Reco_QQ_mupl_idx[irqq]], muPl_Reco->Pt(), muPl_Reco->Phi(), muPl_Reco->Eta()};
       
       double histFillVardimu[nHistdimu] = {MuMu_Reco->Pt(), MuMu_Reco->Rapidity(), Reco_QQ_VtxProb[irqq]};
       
-      double histFillVarCutM[nHistCut] = {Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]], Reco_QQ_VtxProb[irqq]};
-      double histFillVarCutP[nHistCut] = {Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],-999};
+      const double histFillVarCutM[nHistCut] = {Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]], Reco_QQ_VtxProb[irqq]};
+      const double histFillVarCutP[nHistCut] = {Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]], Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]], Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],-999};
       
 
       for(int ihist = 0; ihist<nHist; ihist++){
@@ -366,7 +402,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     if(nMuCand!=0) newMytree->Fill(); 
   } //end of event loop
 
-  for(int ihist = 0; i<nHist; ihist++){
+  for(int ihist = 0; ihist<nHist; ihist++){
     fAll            -> Add(hAll[histName[ihist]]);  
     fSig            -> Add(hSig[histName[ihist]]); 
     fBkg            -> Add(hBkg[histName[ihist]]);  
@@ -377,7 +413,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     fBkgGlbCut      -> Add(hBkgGlbCut[histName[ihist]]);  
     fBkgGlbTrkCut   -> Add(hBkgGlbTrkCut[histName[ihist]]);  
   }
-  for(int ihist = 0; i<nHistdimu; ihist++){
+  for(int ihist = 0; ihist<nHistdimu; ihist++){
     fAll            -> Add(hAll[histNamedimu[ihist]]);  
     fSig            -> Add(hSig[histNamedimu[ihist]]); 
     fBkg            -> Add(hBkg[histNamedimu[ihist]]);  
@@ -388,9 +424,9 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     fBkgGlbCut      -> Add(hBkgGlbCut[histNamedimu[ihist]]);  
     fBkgGlbTrkCut   -> Add(hBkgGlbTrkCut[histNamedimu[ihist]]);  
   }
-  for(int ihist = 0; i<nHistCut; ihist++){
+  for(int ihist = 0; ihist<nHistCut; ihist++){
     fSigSCut        -> Add(hSigSCut[histNameCut[ihist]]);  
-    fBkgSCut        -> Add(hBlgSCut[histNameCut[ihist]]);
+    fBkgSCut        -> Add(hBkgSCut[histNameCut[ihist]]);
     fSigGlbSCut     -> Add(hSigGlbSCut[histNameCut[ihist]]);  
     fSigGlbTrkSCut  -> Add(hSigGlbTrkSCut[histNameCut[ihist]]); 
     fBkgGlbSCut     -> Add(hBkgGlbSCut[histNameCut[ihist]]); 
@@ -417,7 +453,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
 }
 
 
-Int_t VarCut(char histName, int irqq){
+int VarCut(const char* histName, int irqq){
   if(histName == "mudxy"){
     return (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3 && fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3);
   }

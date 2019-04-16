@@ -1,5 +1,11 @@
 #ifndef SkimTree_MuonID_C
 #define SkimTree_MuonID_C
+#include <ctime>
+
+#include <TLorentzVector.h>
+#include "commonUtility.h"
+#include "HiEvtPlaneList.h"
+#include "cutsAndBinUpsilonV2.h"
 
 
 const int maxBranchSize = 1000;
@@ -35,22 +41,52 @@ TBranch        *b_Reco_QQ_VtxProb;   //!
 
 Bool_t          Reco_mu_highPurity[maxBranchSize];   //[Reco_QQ_size]
 TBranch        *b_Reco_mu_highPurity;   //!
-mytree->SetBranchAddress("Reco_mu_highPurity", Reco_mu_highPurity, &b_Reco_mu_highPurity);
 
-Reco_QQ_4mom = 0;
-Reco_mu_4mom = 0;
-mytree->SetBranchAddress("runNb", &runNb, &b_runNb);
-mytree->SetBranchAddress("LS", &LS, &b_LS);
-mytree->SetBranchAddress("eventNb", &eventNb, &b_eventNb);
-mytree->SetBranchAddress("zVtx", &zVtx, &b_zVtx);
-mytree->SetBranchAddress("Centrality", &Centrality, &b_Centrality);
-mytree->SetBranchAddress("HLTriggers", &HLTriggers, &b_HLTriggers);
-mytree->SetBranchAddress("Reco_QQ_size", &Reco_QQ_size, &b_Reco_QQ_size);
-mytree->SetBranchAddress("Reco_mu_size", &Reco_mu_size, &b_Reco_mu_size);
-mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
-mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
-mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
-mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
 
+Int_t           Reco_QQ_mupl_idx[maxBranchSize];
+Int_t           Reco_QQ_mumi_idx[maxBranchSize];
+TBranch        *b_Reco_QQ_mupl_idx;
+TBranch        *b_Reco_QQ_mumi_idx;
+
+Int_t           Reco_mu_nTrkHits[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_nTrkHits;   //!
+Float_t         Reco_mu_normChi2_global[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_normChi2_global;   //!
+Float_t         Reco_mu_normChi2_inner[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_normChi2_inner;   //!
+Int_t           Reco_mu_nMuValHits[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_nMuValHits;   //!
+Int_t           Reco_mu_StationsMatched[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_StationsMatched;   //!
+Float_t         Reco_mu_dxy[maxBranchSize];   //[Reco_mu_size]
+Float_t         Reco_mu_dxyErr[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_dxy;   //!
+TBranch        *b_Reco_mu_dxyErr;   //!
+Float_t         Reco_mu_dz[maxBranchSize];   //[Reco_mu_size]
+Float_t         Reco_mu_dzErr[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_dz;   //!
+TBranch        *b_Reco_mu_dzErr;   //!
+Int_t           Reco_mu_nTrkWMea[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_nTrkWMea;   //!
+Bool_t          Reco_mu_TMOneStaTight[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_TMOneStaTight;   //!
+
+Int_t           Reco_mu_nPixWMea[maxBranchSize];   //[Reco_mu_size]
+TBranch        *b_Reco_mu_nPixWMea;   //!
+Int_t           Reco_QQ_sign[maxBranchSize];   //[Reco_QQ_size]
+TBranch        *b_Reco_QQ_sign;   //!
+Float_t         rpAng[29];   //[nEP]
+TBranch        *b_rpAng;   //!
+//  mytree->SetBranchAddress("rpAng", rpAng, &b_rpAng);
+
+Int_t           Reco_mu_nPixValHits[maxBranchSize];   //[Reco_QQ_size]
+TBranch        *b_Reco_mu_nPixValHits;   //!
+Float_t         Reco_mu_ptErr_global[maxBranchSize];   //[Reco_QQ_size]
+TBranch        *b_Reco_mu_ptErr_global;   //!
+Float_t         Reco_mu_ptErr_inner[maxBranchSize];   //[Reco_QQ_size]
+TBranch        *b_Reco_mu_ptErr_inner;   //!
+
+Int_t           Reco_mu_SelectionType[maxBranchSize];
+TBranch        *b_Reco_mu_SelectionType;
 
 #endif
