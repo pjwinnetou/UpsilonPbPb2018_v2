@@ -9,7 +9,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true) 
+void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true) 
 {
   
   TString fMCstr = (isMC) ? "MC" : "DATA" ;
@@ -69,8 +69,8 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
   mytree->SetBranchAddress("Reco_QQ_sign", Reco_QQ_sign, &b_Reco_QQ_sign);
 
   Int_t Reco_mu_whichGen[maxBranchSize];
+  TBranch *b_Reco_mu_whichGen;
   if(isMC){
-    TBranch *b_Reco_mu_whichGen;
     mytree->SetBranchAddress("Reco_mu_whichGen",Reco_mu_whichGen, &b_Reco_mu_whichGen);
   }
 
@@ -95,9 +95,9 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     hNormChi2Global[Form("%s",histType[ihist])]   = new TH1D(Form("hNormChi2Global_%s",histType[ihist]),";Reco_mu_normChi2_global;",1000,-10,100);
     hnTrkHits[Form("%s",histType[ihist])]         = new TH1D(Form("hnTrkHits_%s",histType[ihist]),";Reco_mu_nTrkHits;",40,0,40);
     hnMuValHits[Form("%s",histType[ihist])]       = new TH1D(Form("hnMuValHits_%s",histType[ihist]),";Reco_mu_nMuValHits;",55,0,55);
-    hmudxy[Form("%s",histType[ihist])]            = new TH1D(Form("hmudxy_%s",histType[ihist]),";Reco_mu_dxy;",100,-0.3,0.3);
+    hmudxy[Form("%s",histType[ihist])]            = new TH1D(Form("hmudxy_%s",histType[ihist]),";Reco_mu_dxy;",50,0,0.3);
     hmudxyErr[Form("%s",histType[ihist])]         = new TH1D(Form("hmudxyErr_%s",histType[ihist]),";Reco_mu_dxyErr;",500,0,0.1);
-    hmudz[Form("%s",histType[ihist])]             = new TH1D(Form("hmudz_%s",histType[ihist]),";Reco_mu_dz;",1000,-10,10);
+    hmudz[Form("%s",histType[ihist])]             = new TH1D(Form("hmudz_%s",histType[ihist]),";Reco_mu_dz;",200,0,5);
     hmudzErr[Form("%s",histType[ihist])]          = new TH1D(Form("hmudzErr_%s",histType[ihist]),";Reco_mu_dzErr;",500,0,0.3);
     hnTrkWMea[Form("%s",histType[ihist])]         = new TH1D(Form("hnTrkWMea_%s",histType[ihist]),";Reco_mu_nTrkWMea;",20,0,20);
     hmuTMOneStaTight[Form("%s",histType[ihist])]  = new TH1D(Form("hmuTMOneStaTight_%s",histType[ihist]),";Reco_mu_TMOneStaTight;",2,0,2);
@@ -113,10 +113,12 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     fOBj[ihist] = new TObjArray();
   }
   
+  int testGlb = 0;
+  int testGlbTrk = 0;
 
   int kTrigSel = 12;
   // event loop start
-  if(nevt == -1) nevt = mytree->GetEntries();
+  if(nevt == -1) nevt = 100000;//mytree->GetEntries();
   cout << "Total events = " << mytree->GetEntries() << endl;
 
   for(int iev=0; iev<nevt ; ++iev)
@@ -158,8 +160,11 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
       
       passMuonTypeGlbTrkMuPl = passMuonTypeGlbTrkMuPl && passGlbMuPl && passTrkMuPl;
       passMuonTypeGlbTrkMuMi = passMuonTypeGlbTrkMuMi && passGlbMuMi && passTrkMuMi;
-      passMuonTypeGlbMuPl = passMuonTypeGlbMuPl && passGlbMuPl && passTrkMuPl;
-      passMuonTypeGlbMuMi = passMuonTypeGlbMuMi && passGlbMuMi && passTrkMuMi;
+      passMuonTypeGlbMuPl = passMuonTypeGlbMuPl && passGlbMuPl;
+      passMuonTypeGlbMuMi = passMuonTypeGlbMuMi && passGlbMuMi;
+
+      if(passMuonTypeGlbMuPl && passMuonTypeGlbMuMi) testGlb++;
+      if(passMuonTypeGlbTrkMuPl & passMuonTypeGlbTrkMuMi) testGlbTrk++;
 
       px_ = MuMu_Reco->Px();
       py_ = MuMu_Reco->Py();
@@ -179,7 +184,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
 
       bool isSignal = false;
       bool isBkg = false;
-      if( MuMu_Reco->M() > 2.9 && MuMu_Reco->M() < 3.2) isSignal = true;
+      if( MuMu_Reco->M() > 3.0 && MuMu_Reco->M() < 3.2) isSignal = true;
       else if( (MuMu_Reco->M() > 2.6 && MuMu_Reco->M() < 2.8) || (MuMu_Reco->M() > 3.3 && MuMu_Reco->M() < 3.5) ) isBkg = true;
 
       double weight = 1;
@@ -203,12 +208,12 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
               hmunPixWMea[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
             }
             if( fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3){
-              hmudxy[histType[ihist]] -> Fill(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], weight);
-              hmudxy[histType[ihist]] -> Fill(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], weight);
+              hmudxy[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]), weight);
+              hmudxy[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
             }
             if( fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20){
-              hmudz[histType[ihist]] -> Fill(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], weight);
-              hmudz[histType[ihist]] -> Fill(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], weight);
+              hmudz[histType[ihist]] -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
+              hmudz[histType[ihist]] -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
             }
             if( Reco_QQ_VtxProb[irqq]>0.01){
               hVtxProb[histType[ihist]]   -> Fill(Reco_QQ_VtxProb[irqq],weight);
@@ -244,10 +249,10 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
             hnTrkWMea[histType[ihist]]         -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
             hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
             hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            hmudxy[histType[ihist]]            -> Fill(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]], weight);
-            hmudxy[histType[ihist]]            -> Fill(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]], weight);
-            hmudz[histType[ihist]]             -> Fill(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]], weight);
-            hmudz[histType[ihist]]             -> Fill(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]], weight);
+            hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]), weight);
+            hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
+            hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
+            hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
           }
         }
       }
@@ -257,7 +262,9 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = true, bool isJPsiTrig = true)
     } // end of dimuon loop
 
   } //end of event loop
-  
+ 
+ cout << "Glb : " << testGlb << endl;
+ cout << "GlbTrk : " << testGlbTrk << endl;
   
   newfile->cd();
 
