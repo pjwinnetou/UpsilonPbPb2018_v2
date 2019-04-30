@@ -70,8 +70,11 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
 
   Int_t Reco_mu_whichGen[maxBranchSize];
   TBranch *b_Reco_mu_whichGen;
+  Float_t Gen_weight;
+  TBranch *b_Gen_weight;
   if(isMC){
     mytree->SetBranchAddress("Reco_mu_whichGen",Reco_mu_whichGen, &b_Reco_mu_whichGen);
+    mytree->SetBranchAddress("Gen_weight",&Gen_weight, &b_Gen_weight);
   }
 
   float px_, py_, pz_, x_, y_, z_, t_, e_;
@@ -85,10 +88,10 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
   TLorentzVector *MuPl_Reco = new TLorentzVector;
   TLorentzVector *MuMi_Reco = new TLorentzVector;
 
-  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb;
+  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den;
 
-  const int nHistType  = 15;
-  const char* histType[nHistType] = {"All", "Sig", "Bkg", "SigSCut", "BkgSCut", "Glb", "GlbTrk", "SigGlbCut", "BkgGlbCut", "SigGlbSCut", "BkgGlbSCut","SigGlbTrkCut", "BkgGlbTrkCut", "SigGlbTrkSCut", "BkgGlbTrkSCut"};
+  const int nHistType  = 12;
+  const char* histType[nHistType] = {"All", "Sig", "Bkg", "Glb", "GlbTrk", "GlbNTrk", "GlbSig", "GlbBkg", "GlbTrkSig", "GlbTrkBkg", "GlbNTrkSig", "GlbNTrkBkg"};
   TObjArray* fOBj[nHistType];
 
   for(int ihist = 0; ihist<nHistType; ihist++){
@@ -110,12 +113,13 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
     hmueta[Form("%s",histType[ihist])]            = new TH1D(Form("hmueta_%s",histType[ihist]),";#eta^{#mu};",300,-4,4);
     hmumuy[Form("%s",histType[ihist])]            = new TH1D(Form("hmumuy_%s",histType[ihist]),";y^{#mu#mu};",300,-4,4);
     hVtxProb[Form("%s",histType[ihist])]          = new TH1D(Form("hVtxProb_%s",histType[ihist]),";Reco_QQ_VtxProb;",200,0,1);
+    hmudz_den[Form("%s",histType[ihist])]         = new TH1D(Form("hmudz_%s_den",histType[ihist]),";Reco_mu_dz;",200,0,5);
+    hmudxy_den[Form("%s",histType[ihist])]        = new TH1D(Form("hmuxy_%s_den",histType[ihist]),";Reco_mu_dz;",200,0,5);
+    hmunPixWMea_den[Form("%s",histType[ihist])]   = new TH1D(Form("hmunPixWMea_%s_den",histType[ihist]),";Reco_mu_nPixWMea;",7,0,7);
+    hnTrkWMea_den[Form("%s",histType[ihist])]     = new TH1D(Form("hnTrkWMea_%s_den",histType[ihist]),";Reco_mu_nTrkWMea;",20,0,20);
     fOBj[ihist] = new TObjArray();
   }
   
-  int testGlb = 0;
-  int testGlbTrk = 0;
-
   int kTrigSel = 12;
   // event loop start
   if(nevt == -1) nevt = 100000;//mytree->GetEntries();
@@ -138,7 +142,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
       MuPl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
       MuMi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
       
-      if(Reco_QQ_sign[irqq]==0 && (MuMu_Reco->M() < 2.6 || MuMu_Reco->M()>3.5)) continue;
+      if(Reco_QQ_sign[irqq]!=0 || MuMu_Reco->M() < 2.6 || MuMu_Reco->M()>3.5) continue;
       
       if(isJPsiTrig){
         if(!IsAcceptanceQQ(MuPl_Reco->Pt(), MuPl_Reco->Eta()) || !IsAcceptanceQQ(MuMi_Reco->Pt(), MuMi_Reco->Eta())) continue;
@@ -157,14 +161,15 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
       bool passMuonTypeGlbMuMi = true;
       bool passMuonTypeGlbTrkMuPl = true;
       bool passMuonTypeGlbTrkMuMi = true;
+      bool passMuonTypeGlbNTrkMuPl = true;
+      bool passMuonTypeGlbNTrkMuMi = true;
       
-      passMuonTypeGlbTrkMuPl = passMuonTypeGlbTrkMuPl && passGlbMuPl && passTrkMuPl;
-      passMuonTypeGlbTrkMuMi = passMuonTypeGlbTrkMuMi && passGlbMuMi && passTrkMuMi;
       passMuonTypeGlbMuPl = passMuonTypeGlbMuPl && passGlbMuPl;
       passMuonTypeGlbMuMi = passMuonTypeGlbMuMi && passGlbMuMi;
-
-      if(passMuonTypeGlbMuPl && passMuonTypeGlbMuMi) testGlb++;
-      if(passMuonTypeGlbTrkMuPl & passMuonTypeGlbTrkMuMi) testGlbTrk++;
+      passMuonTypeGlbTrkMuPl = passMuonTypeGlbTrkMuPl && passGlbMuPl && passTrkMuPl;
+      passMuonTypeGlbTrkMuMi = passMuonTypeGlbTrkMuMi && passGlbMuMi && passTrkMuMi;
+      passMuonTypeGlbNTrkMuPl = passMuonTypeGlbNTrkMuPl && passGlbMuPl && (!passTrkMuPl);
+      passMuonTypeGlbNTrkMuMi = passMuonTypeGlbNTrkMuMi && passGlbMuMi && (!passTrkMuMi);
 
       px_ = MuMu_Reco->Px();
       py_ = MuMu_Reco->Py();
@@ -188,116 +193,93 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
       else if( (MuMu_Reco->M() > 2.6 && MuMu_Reco->M() < 2.8) || (MuMu_Reco->M() > 3.3 && MuMu_Reco->M() < 3.5) ) isBkg = true;
 
       double weight = 1;
-      if(isMC) weight = findNcoll(Centrality);
+      if(isMC) weight = findNcoll(Centrality) * Gen_weight;
 
-      bool isHistPass[nHistType] = {true, (isSignal), (isBkg), (isSignal), (isBkg), (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl)};
+      bool isHistPass[nHistType] = {true, (isSignal), (isBkg), (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isBkg && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl)};
 
       for(int ihist =0; ihist<nHistType; ihist++){
         if(isHistPass[ihist]){
-          if(ihist == 3 || ihist == 4 || ihist == 9 || ihist == 10 || ihist == 13 || ihist == 14){
-            if(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true && Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true){ 
-              hmuTMOneStaTight[histType[ihist]] -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]],weight);
-              hmuTMOneStaTight[histType[ihist]] -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]],weight);
-            }
-            if(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5 && Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5){ 
-              hnTrkWMea[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]],weight);
-              hnTrkWMea[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            }
-            if(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0 && Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0){ 
-              hmunPixWMea[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
-              hmunPixWMea[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            }
-            if( fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3){
-              hmudxy[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]), weight);
-              hmudxy[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
-            }
-            if( fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20){
-              hmudz[histType[ihist]] -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
-              hmudz[histType[ihist]] -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
-            }
-            if( Reco_QQ_VtxProb[irqq]>0.01){
-              hVtxProb[histType[ihist]]   -> Fill(Reco_QQ_VtxProb[irqq],weight);
-            }
+          hNormChi2Global[histType[ihist]]   -> Fill(Reco_mu_normChi2_global[Reco_QQ_mumi_idx[irqq]],weight);
+          hNormChi2Global[histType[ihist]]   -> Fill(Reco_mu_normChi2_global[Reco_QQ_mupl_idx[irqq]],weight);
+          hnTrkHits[histType[ihist]]         -> Fill(Reco_mu_nTrkHits[Reco_QQ_mumi_idx[irqq]],weight);
+          hnTrkHits[histType[ihist]]         -> Fill(Reco_mu_nTrkHits[Reco_QQ_mupl_idx[irqq]],weight);
+          hnMuValHits[histType[ihist]]       -> Fill(Reco_mu_nMuValHits[Reco_QQ_mumi_idx[irqq]],weight);
+          hnMuValHits[histType[ihist]]       -> Fill(Reco_mu_nMuValHits[Reco_QQ_mupl_idx[irqq]],weight);
+          hmudxyErr[histType[ihist]]         -> Fill(Reco_mu_dxyErr[Reco_QQ_mumi_idx[irqq]],weight);
+          hmudxyErr[histType[ihist]]         -> Fill(Reco_mu_dxyErr[Reco_QQ_mupl_idx[irqq]],weight);
+          hmudzErr[histType[ihist]]          -> Fill(Reco_mu_dzErr[Reco_QQ_mumi_idx[irqq]],weight);
+          hmudzErr[histType[ihist]]          -> Fill(Reco_mu_dzErr[Reco_QQ_mupl_idx[irqq]],weight);
+          hmunPixValHits[histType[ihist]]    -> Fill(Reco_mu_nPixValHits[Reco_QQ_mumi_idx[irqq]],weight);
+          hmunPixValHits[histType[ihist]]    -> Fill(Reco_mu_nPixValHits[Reco_QQ_mupl_idx[irqq]],weight);
+          hmuptErrglobal[histType[ihist]]    -> Fill(Reco_mu_ptErr_global[Reco_QQ_mumi_idx[irqq]],weight);
+          hmuptErrglobal[histType[ihist]]    -> Fill(Reco_mu_ptErr_global[Reco_QQ_mupl_idx[irqq]],weight);
+          hmupt[histType[ihist]]             -> Fill(MuMi_Reco->Pt(),weight);
+          hmupt[histType[ihist]]             -> Fill(MuPl_Reco->Pt(),weight);
+          hmumupt[histType[ihist]]           -> Fill(MuMu_Reco->Pt(),weight);
+          hmuphi[histType[ihist]]            -> Fill(MuMi_Reco->Phi(),weight);
+          hmuphi[histType[ihist]]            -> Fill(MuPl_Reco->Phi(),weight);
+          hmueta[histType[ihist]]            -> Fill(MuMi_Reco->Eta(),weight);
+          hmueta[histType[ihist]]            -> Fill(MuPl_Reco->Eta(),weight);
+          hmumuy[histType[ihist]]            -> Fill(MuMu_Reco->Rapidity(),weight);
+          hVtxProb[histType[ihist]]          -> Fill(Reco_QQ_VtxProb[irqq],weight);
+          hmuTMOneStaTight[histType[ihist]]  -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]],weight);
+          hmuTMOneStaTight[histType[ihist]]  -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]],weight);
+          hnTrkWMea[histType[ihist]]         -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]],weight);
+          hnTrkWMea[histType[ihist]]         -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
+          hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
+          hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
+          hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]), weight);
+          hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
+          hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
+          hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
+          
+          if(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01){
+            hmudxy_den[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]),weight);
+            hmudz_den[histType[ihist]]  -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]),weight);
+            hnTrkWMea_den[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]],weight);
+            hnPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
           }
-          else{
-            hNormChi2Global[histType[ihist]]   -> Fill(Reco_mu_normChi2_global[Reco_QQ_mumi_idx[irqq]],weight);
-            hNormChi2Global[histType[ihist]]   -> Fill(Reco_mu_normChi2_global[Reco_QQ_mupl_idx[irqq]],weight);
-            hnTrkHits[histType[ihist]]         -> Fill(Reco_mu_nTrkHits[Reco_QQ_mumi_idx[irqq]],weight);
-            hnTrkHits[histType[ihist]]         -> Fill(Reco_mu_nTrkHits[Reco_QQ_mupl_idx[irqq]],weight);
-            hnMuValHits[histType[ihist]]       -> Fill(Reco_mu_nMuValHits[Reco_QQ_mumi_idx[irqq]],weight);
-            hnMuValHits[histType[ihist]]       -> Fill(Reco_mu_nMuValHits[Reco_QQ_mupl_idx[irqq]],weight);
-            hmudxyErr[histType[ihist]]         -> Fill(Reco_mu_dxyErr[Reco_QQ_mumi_idx[irqq]],weight);
-            hmudxyErr[histType[ihist]]         -> Fill(Reco_mu_dxyErr[Reco_QQ_mupl_idx[irqq]],weight);
-            hmudzErr[histType[ihist]]          -> Fill(Reco_mu_dzErr[Reco_QQ_mumi_idx[irqq]],weight);
-            hmudzErr[histType[ihist]]          -> Fill(Reco_mu_dzErr[Reco_QQ_mupl_idx[irqq]],weight);
-            hmunPixValHits[histType[ihist]]    -> Fill(Reco_mu_nPixValHits[Reco_QQ_mumi_idx[irqq]],weight);
-            hmunPixValHits[histType[ihist]]    -> Fill(Reco_mu_nPixValHits[Reco_QQ_mupl_idx[irqq]],weight);
-            hmuptErrglobal[histType[ihist]]    -> Fill(Reco_mu_ptErr_global[Reco_QQ_mumi_idx[irqq]],weight);
-            hmuptErrglobal[histType[ihist]]    -> Fill(Reco_mu_ptErr_global[Reco_QQ_mupl_idx[irqq]],weight);
-            hmupt[histType[ihist]]             -> Fill(MuMi_Reco->Pt(),weight);
-            hmupt[histType[ihist]]             -> Fill(MuPl_Reco->Pt(),weight);
-            hmumupt[histType[ihist]]           -> Fill(MuMu_Reco->Pt(),weight);
-            hmuphi[histType[ihist]]            -> Fill(MuMi_Reco->Phi(),weight);
-            hmuphi[histType[ihist]]            -> Fill(MuPl_Reco->Phi(),weight);
-            hmueta[histType[ihist]]            -> Fill(MuMi_Reco->Eta(),weight);
-            hmueta[histType[ihist]]            -> Fill(MuPl_Reco->Eta(),weight);
-            hmumuy[histType[ihist]]            -> Fill(MuMu_Reco->Rapidity(),weight);
-            hVtxProb[histType[ihist]]          -> Fill(Reco_QQ_VtxProb[irqq],weight);
-            hmuTMOneStaTight[histType[ihist]]  -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]],weight);
-            hmuTMOneStaTight[histType[ihist]]  -> Fill(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]],weight);
-            hnTrkWMea[histType[ihist]]         -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]],weight);
-            hnTrkWMea[histType[ihist]]         -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
-            hmunPixWMea[histType[ihist]]       -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]), weight);
-            hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
-            hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
-            hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
+          if(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01){
+            hmudxy_den[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]),weight);
+            hmudz_den[histType[ihist]]  -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]),weight);
+            hnTrkWMea_den[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
+            hnPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
           }
         }
       }
-
       nMuCand++; 
-      
+
     } // end of dimuon loop
 
   } //end of event loop
  
- cout << "Glb : " << testGlb << endl;
- cout << "GlbTrk : " << testGlbTrk << endl;
-  
   newfile->cd();
 
   for(int ihist = 0; ihist<nHistType; ihist++){
-    if(ihist == 3 || ihist == 4 || ihist == 9 || ihist == 10 || ihist == 13 || ihist == 14){
-      fOBj[ihist]  ->  Add(hVtxProb[histType[ihist]]);        
-      fOBj[ihist]  ->  Add(hmuTMOneStaTight[histType[ihist]]);
-      fOBj[ihist]  ->  Add(hnTrkWMea[histType[ihist]]);       
-      fOBj[ihist]  ->  Add(hmunPixWMea[histType[ihist]]);     
-      fOBj[ihist]  ->  Add(hmudxy[histType[ihist]]);          
-      fOBj[ihist]  ->  Add(hmudz[histType[ihist]]);
-    }
-    else{
-      fOBj[ihist]  ->  Add(hNormChi2Global[histType[ihist]]); 
-      fOBj[ihist]  ->  Add(hnTrkHits[histType[ihist]]);
-      fOBj[ihist]  ->  Add(hnMuValHits[histType[ihist]]);    
-      fOBj[ihist]  ->  Add(hmudxyErr[histType[ihist]]);       
-      fOBj[ihist]  ->  Add(hmudzErr[histType[ihist]]);        
-      fOBj[ihist]  ->  Add(hmunPixValHits[histType[ihist]]);  
-      fOBj[ihist]  ->  Add(hmuptErrglobal[histType[ihist]]);  
-      fOBj[ihist]  ->  Add(hmupt[histType[ihist]]);           
-      fOBj[ihist]  ->  Add(hmumupt[histType[ihist]]);         
-      fOBj[ihist]  ->  Add(hmuphi[histType[ihist]]);          
-      fOBj[ihist]  ->  Add(hmueta[histType[ihist]]);          
-      fOBj[ihist]  ->  Add(hmumuy[histType[ihist]]);          
-      fOBj[ihist]  ->  Add(hVtxProb[histType[ihist]]);        
-      fOBj[ihist]  ->  Add(hmuTMOneStaTight[histType[ihist]]);
-      fOBj[ihist]  ->  Add(hnTrkWMea[histType[ihist]]);       
-      fOBj[ihist]  ->  Add(hmunPixWMea[histType[ihist]]);     
-      fOBj[ihist]  ->  Add(hmudxy[histType[ihist]]);          
-      fOBj[ihist]  ->  Add(hmudz[histType[ihist]]);
-    }
-      
+    fOBj[ihist]  ->  Add(hNormChi2Global[histType[ihist]]); 
+    fOBj[ihist]  ->  Add(hnTrkHits[histType[ihist]]);
+    fOBj[ihist]  ->  Add(hnMuValHits[histType[ihist]]);    
+    fOBj[ihist]  ->  Add(hmudxyErr[histType[ihist]]);       
+    fOBj[ihist]  ->  Add(hmudzErr[histType[ihist]]);        
+    fOBj[ihist]  ->  Add(hmunPixValHits[histType[ihist]]);  
+    fOBj[ihist]  ->  Add(hmuptErrglobal[histType[ihist]]);  
+    fOBj[ihist]  ->  Add(hmupt[histType[ihist]]);           
+    fOBj[ihist]  ->  Add(hmumupt[histType[ihist]]);         
+    fOBj[ihist]  ->  Add(hmuphi[histType[ihist]]);          
+    fOBj[ihist]  ->  Add(hmueta[histType[ihist]]);          
+    fOBj[ihist]  ->  Add(hmumuy[histType[ihist]]);          
+    fOBj[ihist]  ->  Add(hVtxProb[histType[ihist]]);        
+    fOBj[ihist]  ->  Add(hmuTMOneStaTight[histType[ihist]]);
+    fOBj[ihist]  ->  Add(hnTrkWMea[histType[ihist]]);       
+    fOBj[ihist]  ->  Add(hmunPixWMea[histType[ihist]]);     
+    fOBj[ihist]  ->  Add(hmudxy[histType[ihist]]);          
+    fOBj[ihist]  ->  Add(hmudz[histType[ihist]]);
+
+    fOBj[ihist]  ->  Add(hnTrkWMea_den[histType[ihist]]);       
+    fOBj[ihist]  ->  Add(hmunPixWMea_den[histType[ihist]]);     
+    fOBj[ihist]  ->  Add(hmudxy_den[histType[ihist]]);          
+    fOBj[ihist]  ->  Add(hmudz_den[histType[ihist]]);
+
     fOBj[ihist] -> Write(Form("f%s",histType[ihist]),TObject::kOverwrite | TObject::kSingleKey);
   }    
 
