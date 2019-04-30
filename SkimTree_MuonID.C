@@ -122,9 +122,8 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
   
   int kTrigSel = 12;
   // event loop start
-  if(nevt == -1) nevt = 100000;//mytree->GetEntries();
+  if(nevt == -1) nevt = mytree->GetEntries();
   cout << "Total events = " << mytree->GetEntries() << endl;
-
   for(int iev=0; iev<nevt ; ++iev)
   {
     if(iev%100000==0) cout << ">>>>> EVENT " << iev << " / " << mytree->GetEntries() <<  " ("<<(int)(100.*iev/mytree->GetEntries()) << "%)" << endl;
@@ -233,17 +232,17 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
           hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
           hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
           
-          if(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01){
+          if(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01 && MuPl_Reco->Pt()>3.5){
             hmudxy_den[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]),weight);
             hmudz_den[histType[ihist]]  -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]),weight);
             hnTrkWMea_den[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]],weight);
-            hnPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
+            hmunPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]],weight);
           }
-          if(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01){
+          if(Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01 && MuMi_Reco->Pt()>3.5){
             hmudxy_den[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]),weight);
             hmudz_den[histType[ihist]]  -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]),weight);
             hnTrkWMea_den[histType[ihist]] -> Fill(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]],weight);
-            hnPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
+            hmunPixWMea_den[histType[ihist]] -> Fill(Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]],weight);
           }
         }
       }
