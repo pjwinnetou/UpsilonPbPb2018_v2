@@ -9,7 +9,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true) 
+void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int centCutLow = 60, int centCutHigh = 200) 
 {
   
   TString fMCstr = (isMC) ? "MC" : "DATA" ;
@@ -80,7 +80,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
   float px_, py_, pz_, x_, y_, z_, t_, e_;
 
   TFile* newfile;
-  newfile = new TFile(Form("Onia_MuId_SkimHist_%s_isJPsiTrig%d.root",fMCstr.Data(),isJPsiTrig),"recreate");
+  newfile = new TFile(Form("Onia_MuId_SkimHist_%s_isJPsiTrig%d_cent%d-%d.root",fMCstr.Data(),isJPsiTrig, centCutLow, centCutHigh),"recreate");
 
   Int_t nMuCand;
 
@@ -88,7 +88,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
   TLorentzVector *MuPl_Reco = new TLorentzVector;
   TLorentzVector *MuMi_Reco = new TLorentzVector;
 
-  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den;
+  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den, hmass;
 
   const int nHistType  = 12;
   const char* histType[nHistType] = {"All", "Sig", "Bkg", "Glb", "GlbTrk", "GlbNTrk", "GlbSig", "GlbBkg", "GlbTrkSig", "GlbTrkBkg", "GlbNTrkSig", "GlbNTrkBkg"};
@@ -98,7 +98,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
     hNormChi2Global[Form("%s",histType[ihist])]   = new TH1D(Form("hNormChi2Global_%s",histType[ihist]),";Reco_mu_normChi2_global;",1000,-10,100);
     hnTrkHits[Form("%s",histType[ihist])]         = new TH1D(Form("hnTrkHits_%s",histType[ihist]),";Reco_mu_nTrkHits;",40,0,40);
     hnMuValHits[Form("%s",histType[ihist])]       = new TH1D(Form("hnMuValHits_%s",histType[ihist]),";Reco_mu_nMuValHits;",55,0,55);
-    hmudxy[Form("%s",histType[ihist])]            = new TH1D(Form("hmudxy_%s",histType[ihist]),";Reco_mu_dxy;",50,0,0.3);
+    hmudxy[Form("%s",histType[ihist])]            = new TH1D(Form("hmudxy_%s",histType[ihist]),";Reco_mu_dxy;",200,0,0.7);
     hmudxyErr[Form("%s",histType[ihist])]         = new TH1D(Form("hmudxyErr_%s",histType[ihist]),";Reco_mu_dxyErr;",500,0,0.1);
     hmudz[Form("%s",histType[ihist])]             = new TH1D(Form("hmudz_%s",histType[ihist]),";Reco_mu_dz;",200,0,5);
     hmudzErr[Form("%s",histType[ihist])]          = new TH1D(Form("hmudzErr_%s",histType[ihist]),";Reco_mu_dzErr;",500,0,0.3);
@@ -114,9 +114,10 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
     hmumuy[Form("%s",histType[ihist])]            = new TH1D(Form("hmumuy_%s",histType[ihist]),";y^{#mu#mu};",300,-4,4);
     hVtxProb[Form("%s",histType[ihist])]          = new TH1D(Form("hVtxProb_%s",histType[ihist]),";Reco_QQ_VtxProb;",200,0,1);
     hmudz_den[Form("%s",histType[ihist])]         = new TH1D(Form("hmudz_%s_den",histType[ihist]),";Reco_mu_dz;",200,0,5);
-    hmudxy_den[Form("%s",histType[ihist])]        = new TH1D(Form("hmuxy_%s_den",histType[ihist]),";Reco_mu_dz;",200,0,5);
+    hmudxy_den[Form("%s",histType[ihist])]        = new TH1D(Form("hmudxy_%s_den",histType[ihist]),";Reco_mu_dxy;",200,0,0.7);
     hmunPixWMea_den[Form("%s",histType[ihist])]   = new TH1D(Form("hmunPixWMea_%s_den",histType[ihist]),";Reco_mu_nPixWMea;",7,0,7);
     hnTrkWMea_den[Form("%s",histType[ihist])]     = new TH1D(Form("hnTrkWMea_%s_den",histType[ihist]),";Reco_mu_nTrkWMea;",20,0,20);
+    hmass[Form("%s",histType[ihist])]             = new TH1D(Form("hmass_%s",histType[ihist]),";#mu^{+}#mu^{-} (GeV);",50,2.6,3.5);
     fOBj[ihist] = new TObjArray();
   }
   
@@ -193,6 +194,9 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
 
       double weight = 1;
       if(isMC) weight = findNcoll(Centrality) * Gen_weight;
+    
+      if(Centrality*weight < centCutLow || Centrality*weight > centCutHigh) continue;
+
 
       bool isHistPass[nHistType] = {true, (isSignal), (isBkg), (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isBkg && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl)};
 
@@ -231,6 +235,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
           hmudxy[histType[ihist]]            -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]]), weight);
           hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]]), weight);
           hmudz[histType[ihist]]             -> Fill(fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]]), weight);
+          hmass[histType[ihist]]             -> Fill(MuMu_Reco->M(), weight);
           
           if(Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]]>5 && Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]]>0 && fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3 && fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20 && Reco_QQ_VtxProb[irqq]>0.01 && MuPl_Reco->Pt()>3.5){
             hmudxy_den[histType[ihist]] -> Fill(fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]]),weight);
@@ -278,6 +283,8 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true)
     fOBj[ihist]  ->  Add(hmunPixWMea_den[histType[ihist]]);     
     fOBj[ihist]  ->  Add(hmudxy_den[histType[ihist]]);          
     fOBj[ihist]  ->  Add(hmudz_den[histType[ihist]]);
+
+    fOBj[ihist]  ->  Add(hmass[histType[ihist]]);
 
     fOBj[ihist] -> Write(Form("f%s",histType[ihist]),TObject::kOverwrite | TObject::kSingleKey);
   }    
