@@ -90,8 +90,8 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int
 
   map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den, hnTrkWMea_den, hmass, hcent
 
-  const int nHistType  = 13;
-  const char* histType[nHistType] = {"All", "Sig", "Bkg", "Glb", "GlbTrk", "GlbNTrk", "GlbSig", "GlbBkg", "GlbTrkSig", "GlbTrkBkg", "GlbNTrkSig", "GlbNTrkBkg","GlbOTrk"};
+  const int nHistType  = 16;
+  const char* histType[nHistType] = {"All", "Sig", "Bkg", "Glb", "GlbTrk", "GlbNTrk", "GlbSig", "GlbBkg", "GlbTrkSig", "GlbTrkBkg", "GlbNTrkSig", "GlbNTrkBkg","GlbOTrk","GlbSoftID","GlbTrkSoftID","GlbNTrkSoftID"};
   TObjArray* fOBj[nHistType];
 
   for(int ihist = 0; ihist<nHistType; ihist++){
@@ -192,6 +192,19 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int
         if(Reco_mu_whichGen[Reco_QQ_mupl_idx[irqq]] == -1) continue;
         if(Reco_mu_whichGen[Reco_QQ_mumi_idx[irqq]] == -1) continue;
       }
+      
+      bool muplSoft = ( (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.)
+          ) ; 
+
+      bool mumiSoft = ( (Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5) &&
+          (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
+          (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
+          (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.) 
+          ) ; 
+      bool bsoftID = muplSoft && mumiSoft && Reco_QQ_VtxProb[irqq]>0.01;
 
       bool isSignal = false;
       bool isBkg = false;
@@ -200,11 +213,10 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int
 
       double weight = 1;
       if(isMC) weight = findNcoll(Centrality) * Gen_weight;
-    
       if(Centrality*weight < centCutLow || Centrality*weight > centCutHigh) continue;
 
 
-      bool isHistPass[nHistType] = {true, (isSignal), (isBkg), (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isBkg && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), passMuonTypeGlbOTrk};
+      bool isHistPass[nHistType] = {true, (isSignal), (isBkg), (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isSignal && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isBkg && passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), (isSignal && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isBkg && passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), (isSignal && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), (isBkg && passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl), passMuonTypeGlbOTrk, bsoftID && (passMuonTypeGlbMuMi && passMuonTypeGlbMuPl), bsoftID && (passMuonTypeGlbTrkMuMi && passMuonTypeGlbTrkMuPl), bsoftID && (passMuonTypeGlbNTrkMuMi && passMuonTypeGlbNTrkMuPl) };
 
       for(int ihist =0; ihist<nHistType; ihist++){
         if(isHistPass[ihist]){
