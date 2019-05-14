@@ -88,7 +88,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int
   TLorentzVector *MuPl_Reco = new TLorentzVector;
   TLorentzVector *MuMi_Reco = new TLorentzVector;
 
-  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den, hnTrkWMea_den, hmass, hcent
+  map<TString, TH1D*> hNormChi2Global, hmudxy, hmudxyErr, hmudz, hmudzErr, hnTrkHits, hnMuValHits, hnTrkWMea, hmuTMOneStaTight, hmunPixWMea, hmuStationsMatched, hmunPixValHits, hmuptErrglobal, hmupt, hmumupt, hmuphi, hmueta, hmumuy, hVtxProb, hmudxy_den, hmudz_den, hmunPixWMea_den, hnTrkWMea_den, hmuTMOneStaTight_den, hmass, hcent;
 
   const int nHistType  = 16;
   const char* histType[nHistType] = {"All", "Sig", "Bkg", "Glb", "GlbTrk", "GlbNTrk", "GlbSig", "GlbBkg", "GlbTrkSig", "GlbTrkBkg", "GlbNTrkSig", "GlbNTrkBkg","GlbOTrk","GlbSoftID","GlbTrkSoftID","GlbNTrkSoftID"};
@@ -119,7 +119,7 @@ void SkimTree_MuonID(int nevt=-1, bool isMC = false, bool isJPsiTrig = true, int
     hnTrkWMea_den[Form("%s",histType[ihist])]     = new TH1D(Form("hnTrkWMea_%s_den",histType[ihist]),";Reco_mu_nTrkWMea;",20,0,20);
     hmuTMOneStaTight_den[Form("%s",histType[ihist])]  = new TH1D(Form("hmuTMOneStaTight_%s_den",histType[ihist]),";Reco_mu_TMOneStaTight;",2,0,2);
     hmass[Form("%s",histType[ihist])]             = new TH1D(Form("hmass_%s",histType[ihist]),";#mu^{+}#mu^{-} (GeV);",50,2.6,3.5);
-    hcent[Form("%s",histType[ihist])]             = new TH1D(Form("hmass_%s",histType[ihist]),";Centrality (%);",200,0,200);
+    hcent[Form("%s",histType[ihist])]             = new TH1D(Form("hcent_%s",histType[ihist]),";Centrality (%);",200,0,200);
     fOBj[ihist] = new TObjArray();
   }
   
