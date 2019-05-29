@@ -4,6 +4,10 @@
 #include "commonUtility.h"
 #include "HiEvtPlaneList.h"
 #include "cutsAndBinUpsilonV2.h"
+#include "RooRealVar.h"
+
+#include "RooDataSet.h"
+#include "RooGaussian.h"
 
 static const long MAXTREESIZE = 1000000000000;
 
@@ -18,18 +22,12 @@ void SkimTree_dimuRoo(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname1_1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part1.root";
-  TString fname1_2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part2.root";
-  TString fname1_3 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/Oniatree_addvn_part3_000*.root";
-  TString fname1_4 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/Oniatree_addvn_part4_000*.root";
-  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
+  TString fnameData1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
+  TString fnameData2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   
   TChain *mytree = new TChain("myTree");
-  mytree->Add(fname1_4.Data());
-  mytree->Add(fname1_1.Data());
-  mytree->Add(fname1_2.Data());
-  mytree->Add(fname1_3.Data());
-  mytree->Add(fname2.Data());
+  mytree->Add(fnameData1.Data());
+  mytree->Add(fnameData2.Data());
 
   const int maxBranchSize = 1000;
 
@@ -132,30 +130,19 @@ void SkimTree_dimuRoo(int nevt=-1)
   TBranch        *b_Reco_mu_ptErr_global;   //!
   mytree->SetBranchAddress("Reco_mu_ptErr_global", Reco_mu_ptErr_global, &b_Reco_mu_ptErr_global);
 
-  ULong64_t           Reco_mu_SelectionType[maxBranchSize];
+  Int_t           Reco_mu_SelectionType[maxBranchSize];
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
 
-
-  TChain *eptree = new TChain("tree");
-  eptree->Add(fname1_4.Data());
-  eptree->Add(fname1_1.Data());
-  eptree->Add(fname1_2.Data());
-  eptree->Add(fname1_3.Data());
-  eptree->Add(fname2.Data());
-  
-  
   const int nEP = 29;  // number of event planes in the tree
   double qx[nEP]; 
   double qy[nEP]; 
   TBranch *b_qx;
   TBranch *b_qy;
-  eptree->SetBranchAddress("qx",qx, &b_qx);
-  eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile("OniaFlowSkim_UpsTrig_90perc.root","recreate");
+  newfile = new TFile("OniaTree_Skim_UpsTrig_190506.root","recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
@@ -177,7 +164,7 @@ void SkimTree_dimuRoo(int nevt=-1)
   RooRealVar* evtWeight = new RooRealVar("weight","pt weight", 0, 10000,"");
   RooRealVar* recoQQsign = new RooRealVar("recoQQsign","qq sign",-1,3,"");
   RooArgSet* argSet    = new RooArgSet(*massVar, *ptVar, *yVar, *pt1Var, *pt2Var, *eta1Var, *eta2Var,*evtWeight);
-  argSet->add(*cBinVar); argSet->add(*ep2Var); argSet->add(*qqsign);
+  argSet->add(*cBinVar); argSet->add(*ep2Var); argSet->add(*recoQQsign);
   
   RooDataSet* dataSet  = new RooDataSet("dataset", " a dataset", *argSet);
 
@@ -190,19 +177,18 @@ void SkimTree_dimuRoo(int nevt=-1)
   TLorentzVector* mumi_Reco = new TLorentzVector;
 
 
-  int kTrigSel = 1;
+  int kTrigSel = 13;
 
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
 
-  cout << "Total events = " << nevt << ", : " << eptree->GetEntries() << endl;
+  cout << "Total events = " << nevt << ", : " << mytree->GetEntries() << endl;
 
   for(int iev=0; iev<nevt ; ++iev)
   {
     if(iev%100000==0) cout << ">>>>> EVENT " << iev << " / " << mytree->GetEntries() <<  " ("<<(int)(100.*iev/mytree->GetEntries()) << "%)" << endl;
 
     mytree->GetEntry(iev);
-    eptree->GetEntry(iev);
   
     if(!( (HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
 
@@ -214,11 +200,6 @@ void SkimTree_dimuRoo(int nevt=-1)
       dm.event = eventNb ;
       dm.vz = zVtx;
       dm.cBin = Centrality ;
-    
-      evt = eventNb;
-      lumi = LS;
-      cBin = Centrality;
-      vz = zVtx;
 
       JP_Reco = (TLorentzVector*) Reco_QQ_4mom->At(irqq);
       mupl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
@@ -226,20 +207,27 @@ void SkimTree_dimuRoo(int nevt=-1)
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
-      bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
+      bool passMuonTypePl = true;
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((int)pow(2,1)));
+      passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((int)pow(2,3)));
+
+      bool passMuonTypeMi = true;
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,1)));
+      passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,3)));
+
+      
+      bool muplSoft = ( passMuonTypePl && //(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
-          (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.) &&
-          ((Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
+          (fabs(Reco_mu_dz[Reco_QQ_mupl_idx[irqq]])<20.) 
           ) ; 
 
-      bool mumiSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
+      bool mumiSoft = ( passMuonTypeMi && //(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
-          (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.)  && 
-          ((Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&1)>0)        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
+          (fabs(Reco_mu_dz[Reco_QQ_mumi_idx[irqq]])<20.)  
           ) ; 
 
       if ( !(muplSoft && mumiSoft) ) 
