@@ -19,7 +19,7 @@
 using namespace std;
 using namespace RooFit;
 void doFitUpsilon_Data(
-       float ptLow=15, float ptHigh=50, 
+       float ptLow=30, float ptHigh=50, 
        float yLow=0, float yHigh=2.4,
        int cLow=0, int cHigh=200,
        float SiMuPtCut=3.5,
@@ -95,14 +95,14 @@ void doFitUpsilon_Data(
   RooFormulaVar sigma2s_2("sigma2s_2","@0*@1",RooArgList(sigma1s_2,mRatio21) );
   RooFormulaVar sigma3s_2("sigma3s_2","@0*@1",RooArgList(sigma1s_2,mRatio31) );
   
-  RooRealVar alpha1s_1("alpha1s_1","tail shift", 2.022 , 1.016, 4.931);
+  RooRealVar alpha1s_1("alpha1s_1","tail shift", 1.722 , 1.016, 4.931);
   RooFormulaVar alpha2s_1("alpha2s_1","1.0*@0",RooArgList(alpha1s_1) );
   RooFormulaVar alpha3s_1("alpha3s_1","1.0*@0",RooArgList(alpha1s_1) );
   RooFormulaVar alpha1s_2("alpha1s_2","1.0*@0",RooArgList(alpha1s_1) );
   RooFormulaVar alpha2s_2("alpha2s_2","1.0*@0",RooArgList(alpha1s_1) );
   RooFormulaVar alpha3s_2("alpha3s_2","1.0*@0",RooArgList(alpha1s_1) );
 
-  RooRealVar n1s_1("n1s_1","power order", 1.405 , 1.002, 5.345);
+  RooRealVar n1s_1("n1s_1","power order", 2.405 , 1.002, 5.345);
   RooFormulaVar n2s_1("n2s_1","1.0*@0",RooArgList(n1s_1) );
   RooFormulaVar n3s_1("n3s_1","1.0*@0",RooArgList(n1s_1) );
   RooFormulaVar n1s_2("n1s_2","1.0*@0",RooArgList(n1s_1) );
@@ -303,9 +303,29 @@ void doFitUpsilon_Data(
   TLine *l1 = new TLine(massLow,0,massHigh,0);
   l1->SetLineStyle(9);
   l1->Draw("same");
+
+
+  TPad *pad3 = new TPad("pad3", "pad3", 0.55, 0.45, 0.75, 0.82);
+  pad3->SetBottomMargin(0);
+  c1->cd();
+  pad3->Draw();
+  pad3->cd();
+
+  RooPlot* legFrame = ws->var("mass")->frame(Name("Fit Results"), Title("Fit Results"));
+
+  //// Show floating parameters only! (not observables)
+  RooArgList paramList = fitRes2->floatParsFinal();
+  paramList.Print("v");
+  ws->pdf("model")->paramOn(legFrame,Layout(0,.95, .97),Parameters(paramList));
+  legFrame->getAttText()->SetTextAlign(11);
+  legFrame->getAttText()->SetTextSize(0.09);
+
+  TPaveText* hh = (TPaveText*)legFrame->findObject(Form("%s_paramBox",ws->pdf("model")->GetName()));
+  hh->SetY1(0.01); hh->SetY2(0.95);
+  hh->Draw();
+
   pad1->Update();
-              
-  
+
   TH1D* outh = new TH1D("fitResults","fit result",20,0,20);
 
   outh->GetXaxis()->SetBinLabel(1,"Upsilon1S");
@@ -341,13 +361,16 @@ void doFitUpsilon_Data(
 
   pad1->Update();
   pad2->Update();
+  pad3->Update();
 
   c1->cd();
   pad1->Draw();
   pad2->Draw();
+  pad3->Draw();
 
   pad1->Update();
   pad2->Update();
+  pad3->Update();
 
   TFile* outf = new TFile(Form("fitresults_upsilon_DoubleCB_%s.root",kineLabel.Data()),"recreate");
   outh->Write();
