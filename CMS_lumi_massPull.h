@@ -22,7 +22,7 @@ float extraTextFont = 52;  // default is helvetica-italics
 float lumiTextSize     = 0.6*1.5; // KYO
 float lumiTextOffset   = 0.2;
 //float cmsTextSize      = 0.75;
-float cmsTextSize      = 0.75*1.5; // KYO
+float cmsTextSize      = 0.75*1.5*0.6; // KYO
 float cmsTextOffset    = 0.1;  // only used in outOfFrame version
 
 float relPosX    = 0.045;
@@ -40,5 +40,5 @@ TString lumi_sqrtS = "";
 
 bool drawLogo      = false;
 
-void CMS_lumi_v2mass( TPad* pad, int iPeriod=3, int iPosX=10 );
+void CMS_lumi_massPull( TPad* pad, int iPeriod=3, int iPosX=10 );
 

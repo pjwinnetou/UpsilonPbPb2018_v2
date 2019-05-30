@@ -100,6 +100,20 @@ void SetHistStyle(TH1* h, Int_t c, Int_t m) {
   h-> GetYaxis()->CenterTitle();
 }
 
+void SetHistStyleSmall(TH1* h, Int_t c, Int_t m) {
+  Int_t colorArr[] = { kGray+3, kRed+1, kBlue+1, kOrange+7, kGreen+3, kAzure+9, kViolet-1, kGreen+1,kBlack };
+  Int_t markerFullArr[] = {kFullCircle, kFullTriangleUp, kFullTriangleDown, kFullSquare, kFullStar, kFullDiamond};
+  Int_t markerOpenArr[] = {kOpenCircle, kOpenTriangleUp, kOpenTriangleDown, kOpenSquare, kOpenStar, kOpenDiamond};
+  h-> SetMarkerColor(colorArr[c]);
+  if(m<10) h-> SetMarkerStyle(markerFullArr[m]);
+  else h-> SetMarkerStyle(markerOpenArr[m-10]);
+  h-> SetMarkerSize(0.3);
+  h-> SetLineColor(colorArr[c]);
+  h-> SetLineWidth(1.);
+  h-> GetXaxis()->CenterTitle();
+  h-> GetYaxis()->CenterTitle();
+}
+
 void SetHistStyle2D(TH2* h, Int_t c, Int_t m) {
   Int_t colorArr[] = { kGray+3, kRed+2, kBlue+1, kOrange+7, kGreen+3, kAzure+9, kViolet-1, kGreen+1,kBlack };
   Int_t markerFullArr[] = {kFullCircle, kFullTriangleUp, kFullTriangleDown, kFullSquare, kFullStar, kFullDiamond};
@@ -140,6 +154,21 @@ void SetGraphStyle(TGraph* gr, Int_t c, Int_t m) {
   else gr-> SetMarkerSize(1.5);
   gr-> SetLineColor(colorArr[c]);
   gr-> SetLineWidth(1);
+}
+
+void SetGraphStyle2(TGraph* gr, Int_t c, Int_t m) {
+  Int_t colorArr[] = { kGray+3, kRed+2, kBlue+1, kOrange+7, kGreen+3, kAzure+9, kViolet-1, kGreen+1,kBlack };
+  Int_t markerFullArr[] = {kFullCircle, kFullTriangleUp, kFullTriangleDown, kFullSquare, kFullStar, kFullDiamond};
+  Int_t markerOpenArr[] = {kOpenCircle, kOpenTriangleUp, kOpenTriangleDown, kOpenSquare, kOpenStar, kOpenDiamond};
+  gr-> SetMarkerColor(colorArr[c]);
+  if(m<4) gr-> SetMarkerStyle(markerFullArr[m]);
+  else gr-> SetMarkerStyle(markerOpenArr[m-4]);
+  if (m==2 || m==3) gr-> SetMarkerSize(2.6);
+  else gr-> SetMarkerSize(0.8);
+  gr-> SetLineColor(colorArr[c]);
+  gr-> SetLineWidth(1.);
+  gr-> GetXaxis()->CenterTitle();
+  gr-> GetYaxis()->CenterTitle();
 }
 
 void SetGraphStyleOpen(TGraph* gr, Int_t c, Int_t m, Int_t s) {

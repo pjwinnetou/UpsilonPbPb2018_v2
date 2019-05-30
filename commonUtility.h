@@ -589,6 +589,30 @@ void scaleInt( TH1 *a=0, double normFac=1., double minX=-999.21231, double maxX=
   if ( fac>0) a->Scale(normFac/fac);
 }
 
+void scaleIntWidth( TH1 *a=0, double normFac=1., double minX=-999.21231, double maxX=-999.21231)
+{
+  float fac=0;
+  int lowBin=1; 
+  int highBin=a->GetNbinsX();
+  if ( minX != -999.21231)
+    lowBin = a->FindBin(minX);
+  if ( maxX != -999.21231)
+    highBin=a->FindBin(maxX);
+
+  fac =  a->Integral( lowBin, highBin);
+  if ( fac>0) a->Scale(normFac/fac);
+  
+  int nBins = a->GetNbinsX();
+  for(int j=1;j<=nBins;j++){
+    double theWidth = a->GetBinWidth(j);
+    double cont = a->GetBinContent(j);
+    double err = a->GetBinError(j);
+    a->SetBinContent(j, cont/theWidth);
+    a->SetBinError(j, err/theWidth);
+  }
+
+}
+
 
 
 double goodIntegral( TH1 *a=0, int lower=-123, int upper=-123)
