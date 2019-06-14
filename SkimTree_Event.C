@@ -140,8 +140,11 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   
   Int_t Reco_mu_whichGen[maxBranchSize];
   TBranch *b_Reco_mu_whichGen;
+  Float_t Gen_weight;
+  TBranch *b_Gen_weight;
   if(isMC){
     mytree->SetBranchAddress("Reco_mu_whichGen",Reco_mu_whichGen, &b_Reco_mu_whichGen);
+    mytree->SetBranchAddress("Gen_weight",&Gen_weight, &b_Gen_weight);
   }
 
 
@@ -285,7 +288,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
       mumi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
       
       weight = 1.;
-      if(isMC) weight = findNcoll(Centrality);
+      if(isMC) weight = findNcoll(Centrality) * Gen_weight;
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
