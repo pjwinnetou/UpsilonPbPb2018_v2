@@ -36,7 +36,7 @@ void getEfficiency(
   const int numBins = (max-min)/binwidth;
 
   //input files
-  TFile *inputMC   = TFile::Open("Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC_190610.root","READ");
+  TFile *inputMC   = TFile::Open("../../Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC_190610.root","READ");
   TTree* MC_QQ_Tree = (TTree*)inputMC->Get("myTree");
 
   TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
@@ -243,12 +243,12 @@ void getEfficiency(
   cptHighC_eff->SaveAs("Plots/cptHighC_eff.pdf");
 
   //Save efficiency files for later use.
-  hpt_eff->SetName("mc_eff_vs_pt_noTnP_Cent0-100");
-  hptLowestC_eff->SetName("mc_eff_vs_pt_noTnP_Cent0-10");
-  hptLowC_eff->SetName("mc_eff_vs_pt_noTnP_Cent10-30");
-  hptMidC_eff->SetName("mc_eff_vs_pt_noTnP_Cent30-50");
-  hptHighC_eff->SetName("mc_eff_vs_pt_noTnP_Cent50-100");
-  TString outFileName = "mc_eff_vs_pt_noTnP_20190613.root";
+  hpt_eff->SetName("mc_eff_vs_pt_noTnP_Cent0100");
+  hptLowestC_eff->SetName("mc_eff_vs_pt_noTnP_Cent010");
+  hptLowC_eff->SetName("mc_eff_vs_pt_noTnP_Cent1030");
+  hptMidC_eff->SetName("mc_eff_vs_pt_noTnP_Cent3050");
+  hptHighC_eff->SetName("mc_eff_vs_pt_noTnP_Cent50100");
+  TString outFileName = "mc_eff_vs_pt_noTnP_20190614.root";
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowestC_eff->Write();
