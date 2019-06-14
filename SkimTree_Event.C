@@ -7,7 +7,7 @@
 
 static const long MAXTREESIZE = 1000000000000;
 
-void SkimTree_Event(int nevt=-1) 
+void SkimTree_Event(int nevt=-1, bool isMC = false) 
 {
 
   using namespace std;
@@ -18,12 +18,19 @@ void SkimTree_Event(int nevt=-1)
   cout << " Index of "<< EPNames[HFp2] << " = " << HFp2 << endl;
   cout << " Index of "<< EPNames[trackmid2] << " = " << trackmid2 << endl;
 
-  TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
-  TString fname2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
-  
+  //TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/MinBias/HIMinimumBias_Run2018_Upsilon_PromptReco_v1.root";
+  TString fnameData1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
+  TString fnameData2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
+  TString fnameMC = "/eos/cms/store/group/phys_heavyions/gbak/Ups1SMM_MC/Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC.root";
+
   TChain *mytree = new TChain("myTree");
-  mytree->Add(fname1.Data());
-  mytree->Add(fname2.Data());
+  if(!isMC){
+    mytree->Add(fnameData1.Data());
+    mytree->Add(fnameData2.Data());
+  }
+  else if(isMC){
+    mytree->Add(fnameMC.Data());
+  }
 
   const int maxBranchSize = 1000;
 
@@ -130,11 +137,22 @@ void SkimTree_Event(int nevt=-1)
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
+  
+  Int_t Reco_mu_whichGen[maxBranchSize];
+  TBranch *b_Reco_mu_whichGen;
+  if(isMC){
+    mytree->SetBranchAddress("Reco_mu_whichGen",Reco_mu_whichGen, &b_Reco_mu_whichGen);
+  }
 
 
   TChain *eptree = new TChain("tree");
-  eptree->Add(fname1.Data());
-  eptree->Add(fname2.Data());
+  if(!isMC){
+    eptree->Add(fnameData1.Data());
+    eptree->Add(fnameData2.Data());
+  }
+  else if(isMC){
+    eptree->Add(fnameMC.Data());
+  }
   
   
   const int nEP = 29;  // number of event planes in the tree
@@ -146,7 +164,7 @@ void SkimTree_Event(int nevt=-1)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile("OniaFlowSkim_UpsTrig_190321.root","recreate");
+  newfile = new TFile(Form("OniaFlowSkim_UpsTrig_isMC%d_190506.root",isMC),"recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
@@ -185,6 +203,7 @@ void SkimTree_Event(int nevt=-1)
   float qymupl[nMaxDimu];
   float qymumi[nMaxDimu];
   int recoQQsign[nMaxDimu];
+  double weight = 1;
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
   mmevttree->SetMaxTreeSize(MAXTREESIZE);
@@ -216,6 +235,8 @@ void SkimTree_Event(int nevt=-1)
   mmevttree->Branch("qymupl",qymupl,"qymupl[nDimu]/F");
   mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
   mmevttree->Branch("recoQQsign",recoQQsign,"recoQQsign[nDimu]/I");
+  mmevttree->Branch("weight",&weight,"weight/D");
+      
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -262,8 +283,16 @@ void SkimTree_Event(int nevt=-1)
       JP_Reco = (TLorentzVector*) Reco_QQ_4mom->At(irqq);
       mupl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
       mumi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
+      
+      weight = 1.;
+      if(isMC) weight = findNcoll(Centrality);
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
+      
+      if(isMC){
+        if(Reco_mu_whichGen[Reco_QQ_mupl_idx[irqq]] == -1) continue;
+        if(Reco_mu_whichGen[Reco_QQ_mumi_idx[irqq]] == -1) continue;
+      }
       
       bool passMuonTypePl = true;
       passMuonTypePl = passMuonTypePl && (Reco_mu_SelectionType[Reco_QQ_mupl_idx[irqq]]&((int)pow(2,1)));
@@ -273,7 +302,7 @@ void SkimTree_Event(int nevt=-1)
       passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,1)));
       passMuonTypeMi = passMuonTypeMi && (Reco_mu_SelectionType[Reco_QQ_mumi_idx[irqq]]&((int)pow(2,3)));
 
-      bool muplSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
+      bool muplSoft = (  //(Reco_mu_TMOneStaTight[Reco_QQ_mupl_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mupl_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mupl_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mupl_idx[irqq]])<0.3) &&
@@ -281,7 +310,7 @@ void SkimTree_Event(int nevt=-1)
           passMuonTypePl        //			 &&  (Reco_mu_highPurity[Reco_QQ_mupl_idx[irqq]]==true) 
           ) ; 
 
-      bool mumiSoft = ( (Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
+      bool mumiSoft = ( //(Reco_mu_TMOneStaTight[Reco_QQ_mumi_idx[irqq]]==true) &&
           (Reco_mu_nTrkWMea[Reco_QQ_mumi_idx[irqq]] > 5) &&
           (Reco_mu_nPixWMea[Reco_QQ_mumi_idx[irqq]] > 0) &&
           (fabs(Reco_mu_dxy[Reco_QQ_mumi_idx[irqq]])<0.3) &&
