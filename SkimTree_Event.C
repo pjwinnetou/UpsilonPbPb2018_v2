@@ -6,8 +6,10 @@
 #include "cutsAndBinUpsilonV2.h"
 
 static const long MAXTREESIZE = 1000000000000;
+double getAccWeight(double pt = 0);
+double getEffWeight(double pt = 0, int cent = 0);
 
-void SkimTree_Event(int nevt=-1, bool isMC = false) 
+void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW = false) 
 {
 
   using namespace std;
@@ -31,6 +33,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   else if(isMC){
     mytree->Add(fnameMC.Data());
   }
+
 
   const int maxBranchSize = 1000;
 
@@ -167,7 +170,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile(Form("OniaFlowSkim_UpsTrig_isMC%d_190506.root",isMC),"recreate");
+  newfile = new TFile(Form("OniaFlowSkim_UpsTrig_isMC%d_190506_AccW%d_EffW%d.root",isMC,AccW,EffW),"recreate");
 
   DiMuon dm;
   TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
@@ -289,6 +292,8 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
       
       weight = 1.;
       if(isMC) weight = findNcoll(Centrality) * Gen_weight;
+      if(AccW) weight = getAccWeight(pt);
+      if(EffW) weight = getEffWeight(pt, Centrality);
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
@@ -420,3 +425,28 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   
 } 
 
+double getAccWeight(double pt){
+  TFile *fAcc = new TFile("Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
+
+  TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
+  double weight_ = 1./hAccPt->GetBinContent(pt);
+  return weight_;
+} 
+
+double getEffWeight(double pt, int cent){
+  TFile *fEff = new TFile("Acceptance/mc_eff_vs_pt_noTnP_20190614.root","read");
+  TH1D* hEffPt[4];
+  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
+  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
+  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
+  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
+
+  if(pt >=30) pt = 30;
+  double weight_;
+
+  if(cent>=0 && cent<20) weight_ = 1./hEffPt[0]->GetBinContent(pt);
+  else if(cent>=20 && cent<60)   weight_ = 1./hEffPt[1]->GetBinContent(pt);
+  else if(cent>=60 && cent<100)  weight_ = 1./hEffPt[2]->GetBinContent(pt);
+  else if(cent>=100 && cent<200) weight_ = 1./hEffPt[3]->GetBinContent(pt);
+  return weight_;
+} 
