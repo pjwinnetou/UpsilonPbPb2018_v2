@@ -209,6 +209,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   float qymupl[nMaxDimu];
   float qymumi[nMaxDimu];
   int recoQQsign[nMaxDimu];
+  double weightCor[nMaxDimu];
   double weight = 1;
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
@@ -226,8 +227,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   mmevttree->Branch("eta",eta,"eta[nDimu]/F");
   mmevttree->Branch("eta1",eta1,"eta1[nDimu]/F");
   mmevttree->Branch("eta2",eta2,"eta2[nDimu]/F");
-  mmevttree->Branch("weight0",weight0,"weight0[nDimu]/F");
-  mmevttree->Branch("weight1",weight1,"weight1[nDimu]/F");
   mmevttree->Branch("qxa",qxa,"qxa[nDimu]/F");
   mmevttree->Branch("qxb",qxb,"qxb[nDimu]/F");
   mmevttree->Branch("qxc",qxc,"qxc[nDimu]/F");
@@ -242,6 +241,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
   mmevttree->Branch("recoQQsign",recoQQsign,"recoQQsign[nDimu]/I");
   mmevttree->Branch("weight",&weight,"weight/D");
+  mmevttree->Branch("weightCor",weightCor,"weightCor[nDimu]/D");
       
 
 
@@ -292,8 +292,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
       
       weight = 1.;
       if(isMC) weight = findNcoll(Centrality) * Gen_weight;
-      if(AccW) weight = getAccWeight(pt);
-      if(EffW) weight = getEffWeight(pt, Centrality);
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
       
@@ -412,6 +410,9 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
       qxmumi[nDimu] = TMath::Cos(2*phi2[nDimu]);
       qymupl[nDimu] = TMath::Sin(2*phi1[nDimu]);
       qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
+      weightCor[nDimu] = 1.;
+      if(AccW) weightCor[nDimu] = getAccWeight(JP_Reco->Pt());
+      if(EffW) weightCor[nDimu] = getEffWeight(JP_Reco->Pt(), Centrality);
       nDimu++;
 
     } // end of dimuon loop
@@ -420,6 +421,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
     
   } //end of event loop
 //  mmtree->Write();  // Don't need to call Write() for trees
+  newfile->cd();
   mmevttree->Write();
   newfile->Close();
   
@@ -430,6 +432,7 @@ double getAccWeight(double pt){
 
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
   double weight_ = 1./hAccPt->GetBinContent(pt);
+  fAcc->Close();
   return weight_;
 } 
 
@@ -448,5 +451,6 @@ double getEffWeight(double pt, int cent){
   else if(cent>=20 && cent<60)   weight_ = 1./hEffPt[1]->GetBinContent(pt);
   else if(cent>=60 && cent<100)  weight_ = 1./hEffPt[2]->GetBinContent(pt);
   else if(cent>=100 && cent<200) weight_ = 1./hEffPt[3]->GetBinContent(pt);
+  fEff->Close();
   return weight_;
 } 
