@@ -6,10 +6,10 @@
 #include "cutsAndBinUpsilonV2.h"
 
 static const long MAXTREESIZE = 1000000000000;
-double getAccWeight(double pt = 0);
-double getEffWeight(double pt = 0, int cent = 0);
+double getAccWeight(TH1D* h = 0, double pt = 0);
+double getEffWeight(TH1D* h = 0, double pt = 0, int cent = 0);
 
-void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW = false) 
+void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = true, bool EffW = false) 
 {
 
   using namespace std;
@@ -34,6 +34,15 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
     mytree->Add(fnameMC.Data());
   }
 
+  TFile *fEff = new TFile("Efficiency/mc_eff_vs_pt_noTnP_20190614.root","read");
+  TH1D* hEffPt[4];
+  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
+  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
+  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
+  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
+
+  TFile *fAcc = new TFile("Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
+  TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
   const int maxBranchSize = 1000;
 
@@ -411,8 +420,13 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
       qymupl[nDimu] = TMath::Sin(2*phi1[nDimu]);
       qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
       weightCor[nDimu] = 1.;
-      if(AccW) weightCor[nDimu] = getAccWeight(JP_Reco->Pt());
-      if(EffW) weightCor[nDimu] = getEffWeight(JP_Reco->Pt(), Centrality);
+      if(AccW) weightCor[nDimu] = getAccWeight(hAccPt, JP_Reco->Pt());
+      if(EffW){ 
+        if(Centrality<20) weightCor[nDimu] = getEffWeight(hEffPt[0],JP_Reco->Pt(), Centrality);
+        if(Centrality>=20 && Centrality<60) weightCor[nDimu] = getEffWeight(hEffPt[1],JP_Reco->Pt(), Centrality);
+        if(Centrality>=60 && Centrality<100) weightCor[nDimu] = getEffWeight(hEffPt[2],JP_Reco->Pt(), Centrality);
+        if(Centrality>=100 && Centrality<200) weightCor[nDimu] = getEffWeight(hEffPt[3],JP_Reco->Pt(), Centrality);
+      }
       nDimu++;
 
     } // end of dimuon loop
@@ -427,30 +441,13 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   
 } 
 
-double getAccWeight(double pt){
-  TFile *fAcc = new TFile("Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
-
-  TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
-  double weight_ = 1./hAccPt->GetBinContent(pt);
-  fAcc->Close();
+double getAccWeight(TH1D* h, double pt){
+  double weight_ = 1./h->GetBinContent(pt);
   return weight_;
 } 
 
-double getEffWeight(double pt, int cent){
-  TFile *fEff = new TFile("Acceptance/mc_eff_vs_pt_noTnP_20190614.root","read");
-  TH1D* hEffPt[4];
-  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
-  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
-  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
-  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
-
+double getEffWeight(TH1D *h, double pt, int cent){
   if(pt >=30) pt = 30;
-  double weight_;
-
-  if(cent>=0 && cent<20) weight_ = 1./hEffPt[0]->GetBinContent(pt);
-  else if(cent>=20 && cent<60)   weight_ = 1./hEffPt[1]->GetBinContent(pt);
-  else if(cent>=60 && cent<100)  weight_ = 1./hEffPt[2]->GetBinContent(pt);
-  else if(cent>=100 && cent<200) weight_ = 1./hEffPt[3]->GetBinContent(pt);
-  fEff->Close();
+  double weight_ = 1./h->GetBinContent(pt);
   return weight_;
 } 
