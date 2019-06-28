@@ -5,34 +5,61 @@
 #include "Style_jaebeom.h"
 #include "tdrstyle.C"
 #include "CMS_lumi_v2mass.C"
-
+#include "rootFitHeaders.h"
+#include <RooGaussian.h>
+#include <RooCBShape.h>
+#include <RooWorkspace.h>
+#include <RooChebychev.h>
+#include <RooPolynomial.h>
+#include "RooPlot.h"
+#include "TText.h"
+#include "TArrow.h"
+#include "TFile.h"
 
 using namespace std;
+using namespace RooFit;
+
 using namespace hi;
 
+double getAccWeight(TH1D* h = 0, double pt = 0);
+double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 20, int cHigh = 120,
-                float ptLow = 0, float ptHigh = 30, 
+void makeV2Hist(int cLow = 60, int cHigh = 120,
+                float ptLow = 0, float ptHigh = 6, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 7, float massHigh =14, bool dimusign=true)
+                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAcc = false, bool fEff = false)
 {
+  //Basic Setting
   gStyle->SetOptStat(0);
   setTDRStyle();
   writeExtraText= true;
   int iPeriod = 2;
   int iPos = 33;
-
-  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/skimmedFiles/OniaFlowSkim_UpsTrig_190306.root","read");
-  TTree *tree = (TTree*) rf -> Get("mmepevt");
-
   TH1::SetDefaultSumw2();
-
   TString kineLabel = getKineLabel (ptLow, ptHigh, yLow, yHigh, SiMuPtCut, cLow, cHigh) ;
   TString dimusignString;
   if(dimusign) dimusignString = "OS";
   else if(!dimusign) dimusignString = "SS";
 
+
+  //READ Input Skimmed File
+  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/skimmedFiles/OniaFlowSkim_UpsTrig_isMC0_190506.root","read");
+  TTree *tree = (TTree*) rf -> Get("mmepevt");
+
+  
+  //Get Correction histograms
+  TFile *fEff = new TFile("Efficiency/mc_eff_vs_pt_noTnP_20190614.root","read");
+  TH1D* hEffPt[4];
+  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
+  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
+  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
+  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
+  TFile *fAcc = new TFile("Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
+  TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
+
+
+  //SetBranchAddress
   const int nMaxDimu = 1000;
   float mass[nMaxDimu];
   float qxa[nMaxDimu];
@@ -55,6 +82,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   Int_t nDimu; 
   float vz;
   int recoQQsign[nMaxDimu];
+  double weight;
 
   TBranch *b_event;
   TBranch *b_cBin;
@@ -77,6 +105,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TBranch *b_qyb;
   TBranch *b_qyc;
   TBranch *b_qydimu;
+  TBranch *b_weight;
   
 
   tree -> SetBranchAddress("event", &event, &b_event);
@@ -100,6 +129,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   tree -> SetBranchAddress("qyb", qyb, &b_qyb);
   tree -> SetBranchAddress("qyc", qyc, &b_qyc);
   tree -> SetBranchAddress("qydimu", qydimu, &b_qydimu);
+  tree -> SetBranchAddress("weight", &weight, &b_weight);
   
 
   const int nMassBin_7 = 18;
@@ -107,13 +137,6 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   
   float massBinDiff_7[nMassBin_7+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
   float massBinDiff_8[nMassBin_8+1]={0, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
-
-/*
-  const int nMassBin = 18;
-  float massLow = 7;
-  float massHigh = 14;
-  float massBinDiff[nMassBin+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 31, 32, 33, 35, 41, 48, 56, 77, 98, 120};
-*/
 
   float massBin_7[nMassBin_7+1];
   float massBin_8[nMassBin_8+1];
@@ -149,6 +172,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
 
   TString fSB[nMass_div] = {"SB1 (8<m<9)","SB2 (10m<14)","S (9<m<10)"};
   
+  //Define drawing histogram
   TH1D* h_v2_1[nMass_div];
   TH1D* h_v2_2[nMass_div];
   TH1D* h_v2_3[nMass_div];
@@ -172,6 +196,10 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   
   TH1D* h_mass = new TH1D("h_mass",";m_{#mu^{+}#mu^{-}};Counts",60,massLow,massHigh);
 
+  RooRealVar* massVar = new RooRealVar("mass","mass variable",0,200,"GeV/c^{2}");
+  RooArgSet* argSet = new RooArgSet(*massVar);
+  RooDataSet* dataSet = new RooDataSet("dataset","a dataset",*argSet); 
+
   const static int countMax = 1000000;
   vector<vector<double>> v2_1(nMassBin,vector<double> (countMax,0));
   vector<vector<double>> v2_2(nMassBin,vector<double> (countMax,0));
@@ -192,8 +220,14 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   int nDimuPass=0;
   int nDimu_one=0;
   int nDimu_more=0;
+
+  double weight_acc = 1;
+  double weight_eff = 1;
+
   Int_t nEvt = tree->GetEntries();
   cout << "nEvt : " << nEvt << endl;
+  
+  //Begin Loop
   for(int i=0; i<nEvt; i++){
     tree->GetEntry(i);
     nDimuPass=0;
@@ -201,6 +235,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
     if(!(cBin>cLow&&cBin<cHigh)) continue; 
     if(fabs(vz)>=15) continue;
 
+    //Remove double candidate
     for(int j=0; j<nDimu; j++){
       if(dimusign) {dimusignPass = (recoQQsign[j] == 0) ? true : false;}
       else if(!dimusign) {dimusignPass = (recoQQsign[j] == 0) ? false : true;}
@@ -215,6 +250,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
     if(nDimuPass>1) {nDimu_more++; continue;}
     nDimu_one++;
 
+    // Fill Dimuon Loop
     for(int j=0; j<nDimu; j++){
       if(dimusign) {dimusignPass = (recoQQsign[j] == 0) ? true : false;}
       else if(!dimusign) {dimusignPass = (recoQQsign[j] == 0) ? false : true;}
@@ -222,6 +258,14 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
 
       if(mass[j]<massLow || mass[j]>massHigh) continue; // dimuon mass range
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
+        if(fAccW){weight_acc = getAccWeight(hAccPt, pt[j]); weight = weight * weight_acc;}
+        if(fEffW){ 
+          if(cBin<20) weight_eff = getEffWeight(hEffPt[0], pt[j]);
+          if(cBin>=20 && cBin<60) weight_eff = getEffWeight(hEffPt[0], pt[j]);
+          if(cBin>=60 && cBin<100) weight_eff = getEffWeight(hEffPt[1], pt[j]);
+          if(cBin>=100 && cBin<200) weight_eff = getEffWeight(hEffPt[2], pt[j]);
+          weight = weight * weight_eff;
+        }
         for(int imbin=0; imbin<nMassBin; imbin++){
           if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
               v2_1[imbin][count[imbin]] = qxa[j]*qxdimu[j] + qya[j]*qydimu[j];
@@ -237,29 +281,56 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
           }
         }
         if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
-          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
-          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
-          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
-          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
+          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
+          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
+          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
         }
         else if(mass[j]>=mass_low_SB2 && mass[j]<mass_high_SB2){
-          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
-          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
-          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
-          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
+          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
+          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
+          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
         }
         else if(mass[j]>=mass_low_SB && mass[j]<mass_high_SB){
-          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
-          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j]);
-          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j]);
-          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j]);
+          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
+          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
+          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
+          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
         }
-
-      h_mass->Fill(mass[j]);
+        massVar->setVal((double)mass[j]);
+        dataSet->add(*argSet);
+//      h_mass->Fill(mass[j]);
       }
     }
   }
 
+  int nMassFrameBin = 60;
+  RooWorkspace *ws = new RooWorkspace("workspace");
+  ws->import(*dataSet);
+  ws->SetName("dataWS");
+  ws->var("mass")->setRange(massLow, massHigh);
+  ws->var("mass")->Print();
+
+  RooPlot* myPlot = ws->var("mass")->frame(nMassFrameBin);
+  ws->data("dataset")->plotOn(myPlot,Name("massDataHist"));
+  RooHist* hist = (RooHist*) myPlot->findObject("massDataHist");
+  int nHistP = hist->GetN();
+  cout << "nHistP : " << nHistP << endl;
+  if(nHistP != nMassFrameBin) cout << "ERROR::: INCONSISTENT NUMBER OF BINS" << endl;
+  
+  TGraphAsymmErrors *g_mass = new TGraphAsymmErrors();
+  g_mass->SetName("g_mass");
+  Double_t xp, yp, ypl, yph;
+  for(int ip = 0; ip < nHistP; ip++){
+    xp=0; yp=0; ypl=0; yph=0;
+    hist->GetPoint(ip,xp,yp);
+    ypl = hist->GetErrorYlow(ip);
+    yph = hist->GetErrorYhigh(ip);
+    g_mass->SetPoint(ip,xp,yp);
+    g_mass->SetPointError(ip,0,0,ypl,yph);
+  }
+    
   cout << "more than one dimuon : " << nDimu_more << endl;
   cout << "one dimuon : " << nDimu_one << endl;
 
@@ -328,13 +399,15 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_final->GetXaxis()->SetTitleOffset(1.0);
   h_v2_final->GetXaxis()->SetLabelOffset(0.011);
   SetHistStyle(h_v2_final,0,0);
-  SetHistStyle(h_mass,0,0);
-  h_mass->GetYaxis()->SetLimits(0,14000);
-  h_mass->GetYaxis()->SetLabelSize(0.055);
-  h_mass->GetXaxis()->SetLabelSize(0.04);
-  h_mass->GetYaxis()->SetTitleSize(0.055);
-  h_mass->GetYaxis()->SetTitleOffset(1.7);
-  h_mass->GetXaxis()->SetTitleSize(0.065);
+  SetGraphStyle2(g_mass,0,0);
+  g_mass->GetYaxis()->SetLimits(0,14000);
+  g_mass->GetXaxis()->SetLimits(massLow,massHigh);
+  g_mass->GetXaxis()->SetRangeUser(massLow,massHigh);
+  g_mass->GetYaxis()->SetLabelSize(0.055);
+  g_mass->GetXaxis()->SetLabelSize(0.04);
+  g_mass->GetYaxis()->SetTitleSize(0.055);
+  g_mass->GetYaxis()->SetTitleOffset(1.7);
+  g_mass->GetXaxis()->SetTitleSize(0.065);
   
   float pos_x = 0.23;
   float pos_x_mass = 0.53;
@@ -355,9 +428,9 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   pad1->SetTopMargin(0.08);
   pad1->Draw();
   pad1->cd();
-  h_mass->GetXaxis()->SetTitleSize(0);
-  h_mass->GetXaxis()->SetLabelSize(0);
-  h_mass->Draw("P");
+  g_mass->GetXaxis()->SetTitleSize(0);
+  g_mass->GetXaxis()->SetLabelSize(0);
+  g_mass->Draw("AP");
   if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x_mass,pos_y,text_color,text_size);
   else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
   if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
@@ -442,7 +515,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   h_v2_2[1]->Draw("hist same");
   h_v2_2[2]->Draw("hist same");
   leg_v2_2->Draw("same");
-  c_qq_2->SaveAs(Form("c_qaqb_%s.pdf",kineLabel.Data()));
+  c_qq_2->SaveAs(Form("plots/MassV2_190506/c_qaqb_%s.pdf",kineLabel.Data()));
 
   TCanvas *c_qq_3 = new TCanvas("c_qaqc","",600,600);
   c_qq_3->cd();
@@ -463,7 +536,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 120,
   TFile *wf = new TFile(Form("Ups_%s.root",kineLabel.Data()),"recreate");
   wf->cd();
   h_v2_final->Write();
-  h_mass->Write();
+  g_mass->Write();
 
 }
     
@@ -480,4 +553,15 @@ void GetHistSqrt(TH1D* h1, TH1D* h2){
     h2->SetBinContent(i,TMath::Sqrt(content));
     h2->SetBinError(i,err);
   }
+} 
+
+double getAccWeight(TH1D* h, double pt){
+  double weight_ = 1./h->GetBinContent(pt);
+  return weight_;
+} 
+
+double getEffWeight(TH1D *h, double pt){
+  if(pt >=30) pt = 30;
+  double weight_ = 1./h->GetBinContent(pt);
+  return weight_;
 } 

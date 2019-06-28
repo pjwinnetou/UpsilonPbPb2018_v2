@@ -6,10 +6,8 @@
 #include "cutsAndBinUpsilonV2.h"
 
 static const long MAXTREESIZE = 1000000000000;
-double getAccWeight(TH1D* h = 0, double pt = 0);
-double getEffWeight(TH1D* h = 0, double pt = 0);
 
-void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW = true) 
+void SkimTree_Event(int nevt=-1, bool isMC = false) 
 {
 
   using namespace std;
@@ -250,7 +248,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
   mmevttree->Branch("recoQQsign",recoQQsign,"recoQQsign[nDimu]/I");
   mmevttree->Branch("weight",&weight,"weight/D");
-  mmevttree->Branch("weightCor",weightCor,"weightCor[nDimu]/D");
       
 
 
@@ -419,14 +416,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
       qxmumi[nDimu] = TMath::Cos(2*phi2[nDimu]);
       qymupl[nDimu] = TMath::Sin(2*phi1[nDimu]);
       qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
-      weightCor[nDimu] = 1.;
-      if(AccW) weightCor[nDimu] = getAccWeight(hAccPt, JP_Reco->Pt());
-      if(EffW){ 
-        if(Centrality<20) weightCor[nDimu] = getEffWeight(hEffPt[0],JP_Reco->Pt());
-        if(Centrality>=20 && Centrality<60) weightCor[nDimu] = getEffWeight(hEffPt[1],JP_Reco->Pt());
-        if(Centrality>=60 && Centrality<100) weightCor[nDimu] = getEffWeight(hEffPt[2],JP_Reco->Pt());
-        if(Centrality>=100 && Centrality<200) weightCor[nDimu] = getEffWeight(hEffPt[3],JP_Reco->Pt());
-      }
       nDimu++;
 
     } // end of dimuon loop
@@ -439,15 +428,4 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, bool AccW = false, bool EffW
   mmevttree->Write();
   newfile->Close();
   
-} 
-
-double getAccWeight(TH1D* h, double pt){
-  double weight_ = 1./h->GetBinContent(pt);
-  return weight_;
-} 
-
-double getEffWeight(TH1D *h, double pt){
-  if(pt >=30) pt = 30;
-  double weight_ = 1./h->GetBinContent(pt);
-  return weight_;
 } 
