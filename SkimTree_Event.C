@@ -6,8 +6,29 @@
 #include "cutsAndBinUpsilonV2.h"
 
 static const long MAXTREESIZE = 1000000000000;
+double getAccWeight(TH1D* h = 0, double pt = 0);
+double getEffWeight(TH1D* h = 0, double pt = 0);
 
-void SkimTree_Event(int nevt=-1, bool isMC = false) 
+const Int_t nBins = 200; // table of bin edges
+const Double_t binTable[nBins+1] = {0, 10.5072, 11.2099, 11.8364, 12.478, 13.1194, 13.7623, 14.4081, 15.0709, 15.7532, 16.4673, 17.1881, 17.923, 18.673, 19.4865, 20.3033, 21.1536, 22.0086, 22.9046, 23.8196, 24.7924, 25.8082, 26.8714, 27.9481, 29.0828, 30.2757, 31.5043, 32.8044, 34.1572, 35.6142, 37.1211, 38.6798, 40.3116, 42.0398, 43.8572, 45.6977, 47.6312, 49.6899, 51.815, 54.028, 56.3037, 58.7091, 61.2024, 63.8353, 66.5926, 69.3617, 72.2068, 75.2459, 78.3873, 81.5916, 84.9419, 88.498, 92.1789, 95.9582, 99.8431, 103.739, 107.78, 111.97, 116.312, 120.806, 125.46, 130.269, 135.247, 140.389, 145.713, 151.212, 156.871, 162.729, 168.762, 174.998, 181.424, 188.063, 194.907, 201.942, 209.19, 216.683, 224.37, 232.291, 240.43, 248.807, 257.416, 266.256, 275.348, 284.668, 294.216, 304.053, 314.142, 324.488, 335.101, 345.974, 357.116, 368.547, 380.283, 392.29, 404.564, 417.122, 429.968, 443.116, 456.577, 470.357, 484.422, 498.78, 513.473, 528.479, 543.813, 559.445, 575.411, 591.724, 608.352, 625.344, 642.686, 660.361, 678.371, 696.749, 715.485, 734.608, 754.068, 773.846, 794.046, 814.649, 835.608, 856.972, 878.719, 900.887, 923.409, 946.374, 969.674, 993.435, 1017.62, 1042.21, 1067.28, 1092.72, 1118.64, 1144.96, 1171.71, 1198.98, 1226.67, 1254.82, 1283.46, 1312.65, 1342.21, 1372.27, 1402.85, 1433.93, 1465.49, 1497.62, 1530.29, 1563.49, 1597.22, 1631.49, 1666.37, 1701.8, 1737.75, 1774.35, 1811.51, 1849.29, 1887.75, 1926.79, 1966.6, 2006.97, 2047.99, 2089.71, 2132.1, 2175.23, 2219.17, 2263.72, 2309.2, 2355.43, 2402.47, 2450.33, 2499.05, 2548.66, 2599.16, 2650.59, 2703.03, 2756.32, 2810.75, 2866.27, 2922.91, 2980.54, 3039.47, 3099.53, 3160.98, 3223.66, 3287.71, 3353.18, 3420.34, 3489.13, 3559.72, 3632.06, 3706.18, 3782.42, 3860.78, 3941.42, 4024.52, 4110.27, 4199.4, 4292.8, 4394.49, 4519.52, 5199.95};
+
+Int_t getHiBinFromhiHF(const Double_t hiHF)
+{
+  Int_t binPos = -1;
+  for(int i = 0; i < nBins; ++i){
+    if(hiHF >= binTable[i] && hiHF < binTable[i+1]){
+      binPos = i;
+      break;
+    }
+  }
+
+  binPos = nBins - 1 - binPos;
+
+  return (Int_t)(200*((Double_t)binPos)/((Double_t)nBin));
+}
+
+
+void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = 13) 
 {
 
   using namespace std;
@@ -21,26 +42,16 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   //TString fname1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/MinBias/HIMinimumBias_Run2018_Upsilon_PromptReco_v1.root";
   TString fnameData1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
   TString fnameData2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
+  TString fnameDataReReco = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/ReReco/AOD/DoubleMuon/ReReco_Oniatree_addvn_part*.root";
   TString fnameMC = "/eos/cms/store/group/phys_heavyions/gbak/Ups1SMM_MC/Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC.root";
 
   TChain *mytree = new TChain("myTree");
   if(!isMC){
-    mytree->Add(fnameData1.Data());
-    mytree->Add(fnameData2.Data());
+    mytree->Add(fnameDataReReco.Data());
   }
   else if(isMC){
     mytree->Add(fnameMC.Data());
   }
-
-  TFile *fEff = new TFile("Efficiency/mc_eff_vs_pt_noTnP_20190614.root","read");
-  TH1D* hEffPt[4];
-  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
-  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
-  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
-  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
-
-  TFile *fAcc = new TFile("Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
-  TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
   const int maxBranchSize = 1000;
 
@@ -49,6 +60,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   float           zVtx;
   Int_t           Centrality;
   ULong64_t       HLTriggers;
+  Float_t         SumET_HF;
   Int_t           Reco_QQ_size;
   Int_t           Reco_mu_size;
   TClonesArray    *Reco_QQ_4mom;
@@ -61,6 +73,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   TBranch        *b_zVtx;   //!
   TBranch        *b_Centrality;   //!
   TBranch        *b_HLTriggers;   //!
+  TBranch        *b_SumET_HF;   //!
   TBranch        *b_Reco_QQ_size;   //!
   TBranch        *b_Reco_mu_size;   //!
   TBranch        *b_Reco_QQ_4mom;   //!
@@ -80,6 +93,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   mytree->SetBranchAddress("zVtx", &zVtx, &b_zVtx);
   mytree->SetBranchAddress("Centrality", &Centrality, &b_Centrality);
   mytree->SetBranchAddress("HLTriggers", &HLTriggers, &b_HLTriggers);
+  mytree->SetBranchAddress("SumET_HF", &SumET_HF, &b_SumET_HF);
   mytree->SetBranchAddress("Reco_QQ_size", &Reco_QQ_size, &b_Reco_QQ_size);
   mytree->SetBranchAddress("Reco_mu_size", &Reco_mu_size, &b_Reco_mu_size);
   mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
@@ -177,15 +191,11 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   eptree->SetBranchAddress("qy",qy, &b_qy);
   
   TFile* newfile;
-  newfile = new TFile(Form("OniaFlowSkim_UpsTrig_isMC%d_190506_AccW%d_EffW%d.root",isMC,AccW,EffW),"recreate");
-
-  DiMuon dm;
-  TTree* mmtree = new TTree("mmep","dimuonAndEventPlanes");
-  mmtree->SetMaxTreeSize(MAXTREESIZE);
-  mmtree->Branch("mm",&dm.run,branchString.Data());
+  newfile = new TFile(Form("OniaFlowSkim_UpsTrig_DBPD_isMC%d_190710.root",isMC),"recreate");
 
   const static int nMaxDimu = 1000;
   int evt;
+  int runN;
   int lumi;
   int cBin;
   int nDimu;
@@ -216,12 +226,12 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   float qymupl[nMaxDimu];
   float qymumi[nMaxDimu];
   int recoQQsign[nMaxDimu];
-  double weightCor[nMaxDimu];
   double weight = 1;
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
   mmevttree->SetMaxTreeSize(MAXTREESIZE);
   mmevttree->Branch("event",&evt,"event/I");
+  mmevttree->Branch("runN",&runN,"runN/I");
   mmevttree->Branch("lumi",&lumi,"lumi/I");
   mmevttree->Branch("cBin",&cBin,"cBin/I");
   mmevttree->Branch("vz",&vz,"vz/F");
@@ -259,7 +269,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
   TLorentzVector* mumi_Reco = new TLorentzVector;
 
 
-  int kTrigSel = 13;
 
   // event loop start
   if(nevt == -1) nevt = mytree->GetEntries();
@@ -279,16 +288,10 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
 
     for (Int_t irqq=0; irqq<Reco_QQ_size; ++irqq) 
     {
-      dm.clear();      // clear the output tree: 
-      dm.run = runNb;
-      dm.lumi = LS ;
-      dm.event = eventNb ;
-      dm.vz = zVtx;
-      dm.cBin = Centrality ;
-    
+      runN = runNb;
       evt = eventNb;
       lumi = LS;
-      cBin = Centrality;
+      cBin = getHiBinFromhiHF(SumET_HF);
       vz = zVtx;
 
 
@@ -300,7 +303,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
       if(isMC) weight = findNcoll(Centrality) * Gen_weight;
 
       if(!( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) ) continue;
-      
+     
       if(isMC){
         if(Reco_mu_whichGen[Reco_QQ_mupl_idx[irqq]] == -1) continue;
         if(Reco_mu_whichGen[Reco_QQ_mumi_idx[irqq]] == -1) continue;
@@ -354,11 +357,6 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
      */      
       // Fill the output tree
       if ( JP_Reco->Eta() < 0 )  {  
-        dm.qxa = qx[HFp2] ;  
-        dm.qya = qy[HFp2] ;  
-        dm.qxb = qx[HFm2] ;  
-        dm.qyb = qy[HFm2] ;  
-        
         qxa[nDimu] = qx[HFp2];
         qya[nDimu] = qy[HFp2];
         qxb[nDimu] = qx[HFm2];
@@ -366,38 +364,12 @@ void SkimTree_Event(int nevt=-1, bool isMC = false)
 
       }
       else {
-        dm.qxa = qx[HFm2] ;  
-        dm.qya = qy[HFm2] ;  
-        dm.qxb = qx[HFp2] ;  
-        dm.qyb = qy[HFp2] ;  
-        
         qxa[nDimu] = qx[HFm2];
         qya[nDimu] = qy[HFm2];
         qxb[nDimu] = qx[HFp2];
         qyb[nDimu] = qy[HFp2];
       }
       
-      dm.qxc = qx[trackmid2];
-      dm.qyc = qy[trackmid2];
-      qxc[nDimu] = qx[trackmid2];
-      qyc[nDimu] = qy[trackmid2];
-      
-      dm.mass   = JP_Reco->M();
-      dm.pt     = JP_Reco->Pt();
-      dm.phi    = JP_Reco->Phi();
-      dm.y      = JP_Reco->Rapidity();
-      dm.eta      = JP_Reco->Eta();
-      dm.pt1  = mupl_Reco->Pt();
-      dm.eta1 = mupl_Reco->Eta();
-      dm.phi1 = mupl_Reco->Phi();
-      dm.pt2  = mumi_Reco->Pt();
-      dm.eta2 = mumi_Reco->Eta();
-      dm.phi2 = mumi_Reco->Phi();
-
-      dm.qxdimu = TMath::Cos(2*dm.phi);
-      dm.qydimu = TMath::Sin(2*dm.phi);
-      
-      //mmtree->Fill();
 
       mass[nDimu] = JP_Reco->M();
       phi[nDimu] = JP_Reco->Phi();
