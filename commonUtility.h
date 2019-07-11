@@ -69,15 +69,10 @@ void debug() {
 
 
 bool acceptance(double muPt, double muEta) {
-  return ( 	( (TMath::Abs(muEta) <= 1.0) && (muPt >=3.4) ) || 
-		( (TMath::Abs(muEta) > 1.0)  && (TMath::Abs(muEta) <= 1.5) && (muPt >= 5.8-2.4*(TMath::Abs(muEta))) ) || 
-		( (TMath::Abs(muEta) > 1.5)  && (TMath::Abs(muEta) <= 2.4) && (muPt >= 3.3667-7.0/9.0*(TMath::Abs(muEta))) )  
+  return ( 	( (TMath::Abs(muEta) <= 1.2) && (muPt >=3.5) ) || 
+		( (TMath::Abs(muEta) > 1.2)  && (TMath::Abs(muEta) <= 2.1) && (muPt >= 5.47-1.89*(TMath::Abs(muEta))) ) || 
+		( (TMath::Abs(muEta) > 2.1)  && (TMath::Abs(muEta) <= 2.4) && (muPt >= 1.5) )  
 		) ; 
-  
-  /*  return ( TMath::Abs(muEta) < 2.4 &&
-      ((TMath::Abs(muEta) < 1.3 && muPt >=3.3) ||
-      (1.3 <= TMath::Abs(muEta) && TMath::Abs(muEta) < 2.2 && muP >=2.9) || (2.2 <= TMath::Abs(muEta) && muPt >= 0.8)));*/
-  
 }
 
 bool CaloMatchingCut(float trkPt, float trkEta, float pfEcal, float pfHcal)
