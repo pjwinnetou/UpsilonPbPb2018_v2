@@ -24,7 +24,7 @@ Int_t getHiBinFromhiHF(const Double_t hiHF)
 
   binPos = nBins - 1 - binPos;
 
-  return (Int_t)(200*((Double_t)binPos)/((Double_t)nBin));
+  return (Int_t)(200*((Double_t)binPos)/((Double_t)nBins));
 }
 
 
@@ -174,8 +174,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = 13)
 
   TChain *eptree = new TChain("tree");
   if(!isMC){
-    eptree->Add(fnameData1.Data());
-    eptree->Add(fnameData2.Data());
+    eptree->Add(fnameDataReReco.Data());
   }
   else if(isMC){
     eptree->Add(fnameMC.Data());
@@ -370,6 +369,8 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = 13)
         qyb[nDimu] = qy[HFp2];
       }
       
+      qxc[nDimu] = qx[trackmid2];
+      qyc[nDimu] = qy[trackmid2];
 
       mass[nDimu] = JP_Reco->M();
       phi[nDimu] = JP_Reco->Phi();
