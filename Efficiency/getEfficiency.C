@@ -17,7 +17,7 @@ Centrality bins:
 
 
 void getEfficiency(
-  float ptLow = 0.0, float ptHigh = 30.0,
+  float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
   int cLow = 0, int cHigh = 200
   ) {
@@ -31,12 +31,13 @@ void getEfficiency(
   float massHigh = 10.0;
 
   double min = 0;
-  double max = 30;
+  double max = ptHigh;
   double binwidth = 1;
   const int numBins = (max-min)/binwidth;
 
   //input files
-  TFile *inputMC   = TFile::Open("../../Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC_190610.root","READ");
+  //TFile *inputMC   = TFile::Open("../../Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC_190610.root","READ");
+  TFile *inputMC   = TFile::Open("/eos/cms/store/group/phys_heavyions/gbak/2018PbPbMC/OniatreeMC_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8_July_8th.root","READ");
   TTree* MC_QQ_Tree = (TTree*)inputMC->Get("myTree");
 
   TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
