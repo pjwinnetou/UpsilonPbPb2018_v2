@@ -63,7 +63,7 @@ Int_t getHiBinFromhiHF_Down(const Double_t hiHF)
 }
 
 
-void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, int hiHFBinEdge = 1) 
+void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, int hiHFBinEdge = 0) 
 {
 
   using namespace std;
