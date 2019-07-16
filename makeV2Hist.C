@@ -25,10 +25,10 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 100, int cHigh = 200,
-                float ptLow = 0, float ptHigh = 3, 
+void makeV2Hist(int cLow = 0, int cHigh = 180,
+                float ptLow = 6, float ptHigh = 50, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAccW = false, bool fEffW = false)
+                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAccW = true, bool fEffW = true)
 {
   //Basic Setting
   gStyle->SetOptStat(0);
@@ -44,18 +44,18 @@ void makeV2Hist(int cLow = 100, int cHigh = 200,
 
 
   //READ Input Skimmed File
-  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/skimmedFiles/OniaFlowSkim_UpsTrig_isMC0_190506.root","read");
+  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   
   //Get Correction histograms
-  TFile *fEff = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/Efficiency/mc_eff_vs_pt_noTnP_20190614.root","read");
+  TFile *fEff = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_noTnP_20190712_jaebeom.root","read");
   TH1D* hEffPt[4];
   hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
   hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
   hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
   hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
-  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
+  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
 
@@ -142,6 +142,7 @@ void makeV2Hist(int cLow = 100, int cHigh = 200,
   float massBin_8[nMassBin_8+1];
   
   kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh) + "_" + dimusignString;
+  kineLabel = kineLabel + Form("_AccW%d_EffW%d",fAccW,fEffW);
   
   for(int i=0; i<=nMassBin_7; i++){
     if(i<=3) massBin_7[i] = 7 + massBinDiff_7[i]*0.05;
@@ -263,49 +264,52 @@ void makeV2Hist(int cLow = 100, int cHigh = 200,
 
       if(mass[j]<massLow || mass[j]>massHigh) continue; // dimuon mass range
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
-        if(fAccW){weight_acc = getAccWeight(hAccPt, pt[j]); weight = weight * weight_acc;}
+        weight_acc = 1;
+        weight_eff = 1;
+        if(fAccW){weight_acc = getAccWeight(hAccPt, pt[j]);} 
         if(fEffW){ 
           if(cBin<20) weight_eff = getEffWeight(hEffPt[0], pt[j]);
           if(cBin>=20 && cBin<60) weight_eff = getEffWeight(hEffPt[1], pt[j]);
           if(cBin>=60 && cBin<100) weight_eff = getEffWeight(hEffPt[2], pt[j]);
           if(cBin>=100 && cBin<200) weight_eff = getEffWeight(hEffPt[3], pt[j]);
-          weight = weight * weight_eff;
         }
+        double weight_ = weight * weight_eff * weight_acc;
+        cout << "weight, total : " << weight << ", - " << weight_ << endl;
         for(int imbin=0; imbin<nMassBin; imbin++){
           if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
-              v2_1[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j])*weight;
-              v2_2[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j])*weight;
-              v2_3[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j])*weight;
-              v2_4[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j])*weight;
+              v2_1[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j])*weight_;
+              v2_2[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j])*weight_;
+              v2_3[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j])*weight_;
+              v2_4[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j])*weight_;
 
               v2_1_avg[imbin] += v2_1[imbin][count[imbin]];
               v2_2_avg[imbin] += v2_2[imbin][count[imbin]];
               v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
               v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
               count[imbin]++;
-              weight_s[imbin] += weight;
+              weight_s[imbin] += weight_;
           }
         }
         if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
-          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
-          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
-          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
-          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
+          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
+          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
+          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
+          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
         }
         else if(mass[j]>=mass_low_SB2 && mass[j]<mass_high_SB2){
-          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
-          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
-          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
-          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
+          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
+          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
+          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
+          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
         }
         else if(mass[j]>=mass_low_SB && mass[j]<mass_high_SB){
-          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight);
-          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight);
-          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight);
-          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight);
+          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
+          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
+          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
+          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
         }
         massVar->setVal((double)mass[j]);
-        weightVar->setVal((double)weight);
+        weightVar->setVal((double)weight_);
         dataSet->add(*argSet);
 //      h_mass->Fill(mass[j]);
       }
@@ -584,7 +588,7 @@ double getAccWeight(TH1D* h, double pt){
 } 
 
 double getEffWeight(TH1D *h, double pt){
-  if(pt >=30) pt = 30.;
+//  if(pt >=30) pt = 29.;
   double weight_ = 1./h->GetBinContent((int)((pt*100)/100+1));
   return weight_;
 } 
