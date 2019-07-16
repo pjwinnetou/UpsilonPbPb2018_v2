@@ -42,23 +42,13 @@ int selGlbTrkSoftID = 14;
 int selGlbNTrkSoftID = 15;
 int selGlbOTrkSoftID = 16;
 
-const int nPtBins1s  = 6;   double ptBin1s[nPtBins1s+1] = {0,2,4,6,9,12,30};
-const int nPtBins1sMC  = 60;  double ptBin1sMC[nPtBins1sMC+1] = {0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20,20.5,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30};  
+const int Ntrig = 4;
+int kTrigJpsi = 12;
+int kTrigUps = 13;
+int kTrigL1DBOS40100 = 0;
+int kTrigL1DB50100 = 1;
+TString fTrigName[Ntrig] = {"Jpsi", "Ups", "L1DoubleMuOpenOS40100", "L1DoubleMuOpen50100"};
 
-const int nPtBins2s  = 3;   double ptBin2s[nPtBins2s+1] = {0,4,9,30};
-const int nPtBins2sMC  = 60;  double ptBin2sMC[nPtBins2sMC+1] = {0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20,20.5,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30};  
-
-const int nPtBins3s  = 2;   double ptBin3s[nPtBins3s+1] = {0,6,30};
-
-const int nYBins1S  = 6;   double yBin1S[nYBins1S+1] ={0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4};
-const int nYBins2S  = 3;   double yBin2S[nYBins2S+1] ={0, 0.8, 1.6, 2.4};
-const int nYBins3S  = 2;   double yBin3S[nYBins3S+1] ={0, 1.2, 2.4};
-
-const int nYBins  = 2;   double yBin[nYBins+1] ={0, 1.2, 2.4}; // for event reweighting
-
-const int nCentBins1s  = 9;   double centBin1s[nCentBins1s+1] = {0,10,20,40,60,80,100,120,140,200}; 
-const int nCentBins2s  = 9;   double centBin2s[nCentBins2s+1] = {0,10,20,40,60,80,100,120,140,200};
-const int nCentBins3s  = 2;   double centBin3s[nCentBins3s+1] = {0,60,200};
 
 Double_t findNcoll(int hiBin) {
   const int nbins = 200;
@@ -235,7 +225,11 @@ class DiMuon {
 };
 TString branchString = "run/I:lumi:event:cBin:ep2/F:dphiEp2:vz:mass:pt:y:phi:eta:pt1:eta1:phi1:pt2:eta2:phi2:weight0:weight:oniaIndex/I:softFlag:highPtFlag:qxa/F:qya:qxb:qyb:qxc:qyc:qxdimu:qydimu";
 
-
+TString getKineLabelJpsi(float ptLow, float ptHigh, float yLow, float yHigh, int cLow, int cHigh) {
+  TString kineLabel = Form("pt%.1f-%.1f_y%.1f-%.1f",ptLow,ptHigh, yLow, yHigh) ;
+    kineLabel = kineLabel+ Form("_centrality%d-%d",(int)cLow, (int)cHigh) ;
+  return kineLabel;
+}
 TString getKineLabel(float ptLow, float ptHigh, float yLow, float yHigh, float muPtCut_, int cLow, int cHigh) {
   TString kineLabel = Form("pt%.1f-%.1f_y%.1f-%.1f_muPt%.1f",ptLow,ptHigh, yLow, yHigh, (float)muPtCut_) ;
     kineLabel = kineLabel+ Form("_centrality%d-%d",(int)cLow, (int)cHigh) ;
