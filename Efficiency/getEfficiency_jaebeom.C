@@ -11,7 +11,7 @@ using namespace std;
 void getEfficiency_jaebeom(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 200
+  int cLow = 0, int cHigh = 180
   ) {
 
   gStyle->SetOptStat(0);
@@ -29,8 +29,11 @@ void getEfficiency_jaebeom(
   const int numBins = (max-min)/binwidth;
 
   //input files
-  TFile *inputMC   = new TFile("/eos/cms/store/group/phys_heavyions/gbak/2018PbPbMC/OniatreeMC_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8_July_8th.root","READ");
-  TTree* mytree = (TTree*)inputMC->Get("myTree");
+  TString inputMC1 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_v1.root";
+  TString inputMC2 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_ext-v1.root";
+  TChain* mytree = new TChain("myTree"); 
+  mytree->Add(inputMC1.Data());
+  mytree->Add(inputMC2.Data());
 
   TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
   TH1D* hptLowestC_reco = new TH1D("hptLowestC_reco","hptLowestC_reco",numBins,min,max);
@@ -60,7 +63,7 @@ void getEfficiency_jaebeom(
   hptLowestC_reco->SetTitle("Reco: Centrality 0-10%");
   hptLowC_reco->SetTitle("Reco: Centrality 10-30%");
   hptMidC_reco->SetTitle("Reco: Centrality 30-50%");
-  hptHighC_reco->SetTitle("Reco: Centrality 50-100%");
+  hptHighC_reco->SetTitle("Reco: Centrality 50-90%");
 
   hpt_reco->GetXaxis()->SetTitle("pt");
   hptLowestC_reco->GetXaxis()->SetTitle("pt");
@@ -72,7 +75,7 @@ void getEfficiency_jaebeom(
   hptLowestC_gen->SetTitle("Gen: Centrality 0-10%");
   hptLowC_gen->SetTitle("Gen: Centrality 10-30%");
   hptMidC_gen->SetTitle("Gen: Centrality 30-50%");
-  hptHighC_gen->SetTitle("Gen: Centrality 50-100%");
+  hptHighC_gen->SetTitle("Gen: Centrality 50-90%");
 
   hpt_gen->GetXaxis()->SetTitle("pt");
   hptLowestC_gen->GetXaxis()->SetTitle("pt");
@@ -192,7 +195,7 @@ void getEfficiency_jaebeom(
     if(iev%100000==0) cout << ">>>>> EVENT " << iev << " / " << mytree->GetEntries() <<  " ("<<(int)(100.*iev/mytree->GetEntries()) << "%)" << endl;
 
     mytree->GetEntry(iev);
-    weight = findNcoll(Centrality);// * Gen_weight;
+    weight = findNcoll(Centrality) * Gen_weight;
     
     for(int igen = 0; igen<Gen_QQ_size; igen++){
       JP_Gen = (TLorentzVector*) Gen_QQ_4mom->At(igen);
@@ -206,7 +209,7 @@ void getEfficiency_jaebeom(
       if(Centrality < 20) hptLowestC_gen -> Fill(JP_Gen->Pt(), weight);
       else if(Centrality > 20 && Centrality < 60) hptLowC_gen -> Fill(JP_Gen->Pt(), weight);
       else if(Centrality > 60 && Centrality < 100) hptMidC_gen -> Fill(JP_Gen->Pt(), weight);
-      else if(Centrality > 100 && Centrality < 200) hptHighC_gen -> Fill(JP_Gen->Pt(), weight);
+      else if(Centrality > 100 && Centrality < 180) hptHighC_gen -> Fill(JP_Gen->Pt(), weight);
     }
 
   
@@ -257,7 +260,7 @@ void getEfficiency_jaebeom(
       if(Centrality < 20) hptLowestC_reco -> Fill(JP_Reco->Pt(), weight);
       else if(Centrality > 20 && Centrality < 60) hptLowC_reco -> Fill(JP_Reco->Pt(), weight);
       else if(Centrality > 60 && Centrality < 100) hptMidC_reco -> Fill(JP_Reco->Pt(), weight);
-      else if(Centrality > 100 && Centrality < 200) hptHighC_reco -> Fill(JP_Reco->Pt(), weight);
+      else if(Centrality > 100 && Centrality < 180) hptHighC_reco -> Fill(JP_Reco->Pt(), weight);
     }
   }
 
@@ -336,7 +339,7 @@ void getEfficiency_jaebeom(
   hptLowestC_eff->SetTitle("Eff: Centrality 0-10%");
   hptLowC_eff->SetTitle("Eff: Centrality 10-30%");
   hptMidC_eff->SetTitle("Eff: Centrality 30-50%");
-  hptHighC_eff->SetTitle("Eff: Centrality 50-100%");
+  hptHighC_eff->SetTitle("Eff: Centrality 50-90%");
 
   TCanvas * cpt_eff = new TCanvas("cpt_eff","cpt_eff",0,400,400,400);
   cpt_eff->cd();
@@ -397,8 +400,8 @@ void getEfficiency_jaebeom(
   hptLowestC_eff->SetName("mc_eff_vs_pt_noTnP_Cent010");
   hptLowC_eff->SetName("mc_eff_vs_pt_noTnP_Cent1030");
   hptMidC_eff->SetName("mc_eff_vs_pt_noTnP_Cent3050");
-  hptHighC_eff->SetName("mc_eff_vs_pt_noTnP_Cent50100");
-  TString outFileName = "mc_eff_vs_pt_noTnP_20190712_jaebeom.root";
+  hptHighC_eff->SetName("mc_eff_vs_pt_noTnP_Cent5090");
+  TString outFileName = "mc_eff_vs_pt_noTnP_OfficialMC.root";
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowestC_eff->Write();
