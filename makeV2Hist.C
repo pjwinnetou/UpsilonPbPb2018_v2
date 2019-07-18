@@ -25,7 +25,7 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 0, int cHigh = 180,
+void makeV2Hist(int cLow = 100, int cHigh = 180,
                 float ptLow = 6, float ptHigh = 50, 
                 float yLow = 0, float yHigh=2.4,
                 float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAccW = true, bool fEffW = true)
@@ -49,12 +49,12 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
 
   
   //Get Correction histograms
-  TFile *fEff = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_noTnP_20190712_jaebeom.root","read");
+  TFile *fEff = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_noTnP_OfficialMC.root","read");
   TH1D* hEffPt[4];
   hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
   hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
   hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
-  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent50100"); 
+  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent5090"); 
   TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
@@ -271,10 +271,9 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
           if(cBin<20) weight_eff = getEffWeight(hEffPt[0], pt[j]);
           if(cBin>=20 && cBin<60) weight_eff = getEffWeight(hEffPt[1], pt[j]);
           if(cBin>=60 && cBin<100) weight_eff = getEffWeight(hEffPt[2], pt[j]);
-          if(cBin>=100 && cBin<200) weight_eff = getEffWeight(hEffPt[3], pt[j]);
+          if(cBin>=100 && cBin<180) weight_eff = getEffWeight(hEffPt[3], pt[j]);
         }
         double weight_ = weight * weight_eff * weight_acc;
-        cout << "weight, total : " << weight << ", - " << weight_ << endl;
         for(int imbin=0; imbin<nMassBin; imbin++){
           if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
               v2_1[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j])*weight_;
