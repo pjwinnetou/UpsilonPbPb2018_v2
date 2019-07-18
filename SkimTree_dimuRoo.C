@@ -60,6 +60,8 @@ void SkimTree_dimuRoo(int nevt=-1)
   TClonesArray    *Reco_mu_4mom;
   ULong64_t       Reco_QQ_trig[maxBranchSize];   //[Reco_QQ_size]
   Float_t         Reco_QQ_VtxProb[maxBranchSize];   //[Reco_QQ_size]
+  Float_t         Reco_QQ_ctau3D;
+  Float_t         Reco_QQ_ctauErr3D;
   TBranch        *b_runNb;   //!
   TBranch        *b_eventNb;   //!
   TBranch        *b_LS;
@@ -73,6 +75,8 @@ void SkimTree_dimuRoo(int nevt=-1)
   TBranch        *b_Reco_mu_4mom;   //!
   TBranch        *b_Reco_QQ_trig;   //!
   TBranch        *b_Reco_QQ_VtxProb;   //!
+  TBranch        *b_Reco_QQ_ctau3D;
+  TBranch        *b_Reco_QQ_ctauErr3D;
 
   Bool_t          Reco_mu_highPurity[maxBranchSize];   //[Reco_QQ_size]
   TBranch        *b_Reco_mu_highPurity;   //!
@@ -93,6 +97,8 @@ void SkimTree_dimuRoo(int nevt=-1)
   mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
   mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
   mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
+  mytree->SetBranchAddress("Reco_QQ_ctau3D", Reco_QQ_ctau3D, &b_Reco_QQ_ctau3D);
+  mytree->SetBranchAddress("Reco_QQ_ctauErr3D", Reco_QQ_ctauErr3D, &b_Reco_QQ_ctauErr3D);
 
   //  muon id 
   Int_t           Reco_QQ_mupl_idx[maxBranchSize];
@@ -183,8 +189,9 @@ void SkimTree_dimuRoo(int nevt=-1)
   RooRealVar* ep2Var   = new RooRealVar("ep2","2nd order event plane", -100,100,"");
   RooRealVar* evtWeight = new RooRealVar("weight","pt weight", 0, 10000,"");
   RooRealVar* recoQQsign = new RooRealVar("recoQQsign","qq sign",-1,3,"");
+  RooRealVar* ctau3D = new RooRealVar("ctau3D","ctau3D dimuon",-20,20,"cm");
   RooArgSet* argSet    = new RooArgSet(*massVar, *ptVar, *yVar, *pt1Var, *pt2Var, *eta1Var, *eta2Var,*evtWeight);
-  argSet->add(*cBinVar); argSet->add(*ep2Var); argSet->add(*recoQQsign);
+  argSet->add(*cBinVar); argSet->add(*recoQQsign); argSet->add(*ctau3D);
   
   RooDataSet* dataSet  = new RooDataSet("dataset", " a dataset", *argSet);
 
@@ -271,6 +278,7 @@ void SkimTree_dimuRoo(int nevt=-1)
       dm.phi2 = mumi_Reco->Phi();
       dm.weight = 1.;
 
+      ctau3D -> setVal((double)Reco_QQ_ctau3D[irqq]);
       recoQQsign->setVal((int)Reco_QQ_sign[irqq]);     
       massVar->setVal( (double)dm.mass ) ;
       ptVar->setVal(   (double)dm.pt   ) ;
