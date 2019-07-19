@@ -25,8 +25,8 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 100, int cHigh = 180,
-                float ptLow = 6, float ptHigh = 50, 
+void makeV2Hist(int cLow = 60, int cHigh = 100,
+                float ptLow = 0, float ptHigh = 3, 
                 float yLow = 0, float yHigh=2.4,
                 float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAccW = true, bool fEffW = true)
 {
@@ -208,6 +208,11 @@ void makeV2Hist(int cLow = 100, int cHigh = 180,
   vector<vector<double>> v2_2(nMassBin,vector<double> (countMax,0));
   vector<vector<double>> v2_3(nMassBin,vector<double> (countMax,0));
   vector<vector<double>> v2_4(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_1_raw(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_2_raw(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_3_raw(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> v2_4_raw(nMassBin,vector<double> (countMax,0));
+  vector<vector<double>> weight_dimu(nMassBin,vector<double> (countMax,0));
 
   vector<double> v2_1_avg(nMassBin,0);
   vector<double> v2_2_avg(nMassBin,0);
@@ -280,11 +285,18 @@ void makeV2Hist(int cLow = 100, int cHigh = 180,
               v2_2[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j])*weight_;
               v2_3[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j])*weight_;
               v2_4[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j])*weight_;
+              v2_1_raw[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
+              v2_2_raw[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j]);
+              v2_3_raw[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j]);
+              v2_4_raw[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j]);
 
               v2_1_avg[imbin] += v2_1[imbin][count[imbin]];
               v2_2_avg[imbin] += v2_2[imbin][count[imbin]];
               v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
               v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
+
+              weight_dimu[imbin][count[imbin]] = weight_;
+
               count[imbin]++;
               weight_s[imbin] += weight_;
           }
@@ -367,10 +379,10 @@ void makeV2Hist(int cLow = 100, int cHigh = 180,
     v2_4_avg[ibin] = v2_4_avg[ibin]/weight_s[ibin];
 
     for(int icount=0; icount<count[ibin]; icount++){
-      v2_1_err[ibin] += (v2_1[ibin][icount]-v2_1_avg[ibin])*(v2_1[ibin][icount]-v2_1_avg[ibin]);
-      v2_2_err[ibin] += (v2_2[ibin][icount]-v2_2_avg[ibin])*(v2_2[ibin][icount]-v2_2_avg[ibin]);
-      v2_3_err[ibin] += (v2_3[ibin][icount]-v2_3_avg[ibin])*(v2_3[ibin][icount]-v2_3_avg[ibin]);
-      v2_4_err[ibin] += (v2_4[ibin][icount]-v2_4_avg[ibin])*(v2_4[ibin][icount]-v2_4_avg[ibin]);
+      v2_1_err[ibin] += (v2_1_raw[ibin][icount]-v2_1_avg[ibin])*(v2_1_raw[ibin][icount]-v2_1_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
+      v2_2_err[ibin] += (v2_2_raw[ibin][icount]-v2_2_avg[ibin])*(v2_2_raw[ibin][icount]-v2_2_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
+      v2_3_err[ibin] += (v2_3_raw[ibin][icount]-v2_3_avg[ibin])*(v2_3_raw[ibin][icount]-v2_3_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
+      v2_4_err[ibin] += (v2_4_raw[ibin][icount]-v2_4_avg[ibin])*(v2_4_raw[ibin][icount]-v2_4_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
     }
 
     /*v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin]/(count[ibin]*(count[ibin]-1)));
@@ -378,10 +390,10 @@ void makeV2Hist(int cLow = 100, int cHigh = 180,
     v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin]/(count[ibin]*(count[ibin]-1)));
     v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin]/(count[ibin]*(count[ibin]-1)));
 */
-    v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin]/(weight_s[ibin]*(weight_s[ibin]-1)));
-    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin]/(weight_s[ibin]*(weight_s[ibin]-1)));
-    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin]/(weight_s[ibin]*(weight_s[ibin]-1)));
-    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin]/(weight_s[ibin]*(weight_s[ibin]-1)));
+    v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin])/weight_s[ibin];
+    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin])/weight_s[ibin];
+    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin])/weight_s[ibin];
+    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin])/weight_s[ibin];
 
     h_v2_num_q1->SetBinContent(ibin+1,v2_1_avg[ibin]);
     h_v2_num_q1->SetBinError(ibin+1,v2_1_err[ibin]);
