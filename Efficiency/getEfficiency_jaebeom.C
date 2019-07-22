@@ -329,11 +329,11 @@ void getEfficiency_jaebeom(
   hptMidC_eff = (TH1D*)hptMidC_reco->Clone("hptMidC_eff");
   hptHighC_eff = (TH1D*)hptHighC_reco->Clone("hptHighC_eff");
 
-  hpt_eff->Divide(hpt_gen);
-  hptLowestC_eff->Divide(hptLowestC_gen);
-  hptLowC_eff->Divide(hptLowC_gen);
-  hptMidC_eff->Divide(hptMidC_gen);
-  hptHighC_eff->Divide(hptHighC_gen);
+  hpt_eff->Divide(hpt_eff, hpt_gen, 1, 1, "B");
+  hptLowestC_eff->Divide(hptLowestC_eff, hptLowestC_gen, 1, 1, "B");
+  hptLowC_eff->Divide(hptLowC_eff, hptLowC_gen, 1, 1, "B");
+  hptMidC_eff->Divide(hptMidC_eff, hptMidC_gen, 1, 1, "B");
+  hptHighC_eff->Divide(hptHighC_eff, hptHighC_gen, 1, 1, "B");
 
   hpt_eff->SetTitle("Eff: Full Centrality");
   hptLowestC_eff->SetTitle("Eff: Centrality 0-10%");
