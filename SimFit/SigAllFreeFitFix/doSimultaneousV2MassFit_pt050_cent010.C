@@ -558,7 +558,7 @@ Double_t pol3bkg(Double_t* x, Double_t* par)
 
 
 
-void doSimultaneousV2MassFit_pt050_cent090(int cLow = 0, int cHigh = 180,
+void doSimultaneousV2MassFit_pt050_cent010(int cLow = 0, int cHigh = 20,
                      float ptLow = 0, float ptHigh = 50,
                      float yLow = 0, float yHigh=2.4,
                      float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, int ibkg_vn_sel = fpol2)
@@ -666,11 +666,11 @@ void doSimultaneousV2MassFit_pt050_cent090(int cLow = 0, int cHigh = 180,
   Double_t Bkgmean_ = ws->var("#mu")->getVal();
   Double_t Bkgsigma_ = ws->var("#sigma")->getVal();
   Double_t Bkgp0_ = ws->var("#lambda")->getVal();
-  Double_t c_ = 0.03;
-  Double_t c1_ = 0.00142884;
-  Double_t c2_ = -0.0484097;
-  Double_t c3_ = 0.5;
-  Double_t c4_ = -0.11964;
+  Double_t c_ = 0.031;
+  Double_t c1_ = -0.00143884;
+  Double_t c2_ = 0.51384097;
+  Double_t c3_ = -0.1233;
+  Double_t c4_ = 0.12964;
   //}}}
 
   cout << "sigma_ : " << sigma_ << endl;
@@ -698,8 +698,8 @@ void doSimultaneousV2MassFit_pt050_cent090(int cLow = 0, int cHigh = 180,
   //}}}
 
   //combined function condition{{{
-  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.2, -5, -5, -4, -4};
-  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.0,  par0[11]*2.0, par0[12]*2.0,  0.2,  5,  5,  4,  4};
+  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.1,  par0[11]*0.2, par0[12]*0.2, -0.2, -0.1, -5, -4, -4};
+  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*3.1,  par0[11]*3.5, par0[12]*3.5,  0.2,  0.1,  5,  4,  4};
 
   fitter.Config().SetParamsSettings(nParmV_, par0);
   for(int ipar = 0; ipar<nParmV_; ipar++){
