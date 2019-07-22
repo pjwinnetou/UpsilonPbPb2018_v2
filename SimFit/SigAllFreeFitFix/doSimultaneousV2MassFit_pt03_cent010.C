@@ -38,12 +38,12 @@
 #include <Math/WrappedMultiTF1.h>
 #include <HFitInterface.h>
 
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/commonUtility.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/cutsAndBinUpsilonV2.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/HiEvtPlaneList.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/Style_jaebeom.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/tdrstyle.C"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/CMS_lumi_v2mass.C"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/commonUtility.h"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/cutsAndBinUpsilonV2.h"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/HiEvtPlaneList.h"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Style_jaebeom.h"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/tdrstyle.C"
+#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/CMS_lumi_v2mass.C"
 
 //}}}
 
@@ -167,10 +167,19 @@ Double_t TotalYield(Double_t* x, Double_t* par)
     Ups3S_2 = a*TMath::Power((b-U3S_t2),-n);
   }
   
-  return N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2)
-    + N2*(frac*Ups2S_1 + (1-frac)*Ups2S_2)
-    + N3*(frac*Ups3S_1 + (1-frac)*Ups3S_2)
-    + Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
+  Double_t fC = n/absAlpha*1/(n-1)*exp(-absAlpha*absAlpha/2);
+  Double_t fD = TMath::Sqrt(TMath::Pi()/2)*(1+TMath::Erf(absAlpha/TMath::Sqrt(2)));
+  Double_t fN1s_1 = 1./(sigma*(fC+fD));
+  Double_t fN1s_2 = 1./(sigma1_2*(fC+fD));
+  Double_t fN2s_1 = 1./(sigma2_1*(fC+fD));
+  Double_t fN2s_2 = 1./(sigma2_2*(fC+fD));
+  Double_t fN3s_1 = 1./(sigma3_1*(fC+fD));
+  Double_t fN3s_2 = 1./(sigma3_2*(fC+fD));
+
+  Double_t SigM = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2) + N2*(fN2s_1*frac*Ups2S_1 + fN2s_2*(1-frac)*Ups2S_2) + N3*(fN3s_1*frac*Ups3S_1 + fN3s_2*(1-frac)*Ups3S_2);
+  Double_t BkgM = Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
+  
+  return SigM + BkgM;
 }
 //}}}
 
@@ -264,234 +273,21 @@ Double_t TotalYieldSig(Double_t* x, Double_t* par)
     Ups3S_2 = a*TMath::Power((b-U3S_t2),-n);
   }
   
-  return N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2)
-    + N2*(frac*Ups2S_1 + (1-frac)*Ups2S_2)
-    + N3*(frac*Ups3S_1 + (1-frac)*Ups3S_2);
+  Double_t fC = n/absAlpha*1/(n-1)*exp(-absAlpha*absAlpha/2);
+  Double_t fD = TMath::Sqrt(TMath::Pi()/2)*(1+TMath::Erf(absAlpha/TMath::Sqrt(2)));
+  Double_t fN1s_1 = 1./(sigma*(fC+fD));
+  Double_t fN1s_2 = 1./(sigma1_2*(fC+fD));
+  Double_t fN2s_1 = 1./(sigma2_1*(fC+fD));
+  Double_t fN2s_2 = 1./(sigma2_2*(fC+fD));
+  Double_t fN3s_1 = 1./(sigma3_1*(fC+fD));
+  Double_t fN3s_2 = 1./(sigma3_2*(fC+fD));
+
+  Double_t SigM = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2) + N2*(fN2s_1*frac*Ups2S_1 + fN2s_2*(1-frac)*Ups2S_2) + N3*(fN3s_1*frac*Ups3S_1 + fN3s_2*(1-frac)*Ups3S_2);
+  
+  return SigM;
 }
 //}}}
 
-
-//totalvn pol2 bkg Upsilon 1S{{{
-Double_t Totalvnpol2U1S(Double_t* x, Double_t* par)
-{
-	Double_t N1 = par[0];
-	Double_t N2 = par[1];
-	Double_t N3 = par[2];
-	Double_t Nbkg = par[3];
-	Double_t mean = par[4];
-	Double_t sigma = par[5];
-	Double_t alpha = par[6];
-	Double_t n = par[7];
-	Double_t ratio = par[8];
-	Double_t frac = par[9];
-	Double_t Bkgmean = par[10];
-	Double_t Bkgsigma = par[11];
-	Double_t Bkgp0 = par[12];
-	Double_t c = par[13];
-	Double_t c1 = par[14];
-	Double_t c2 = par[15];
-	Double_t c3 = par[16];
-	Double_t c4 = par[17];
-	Double_t mean2 = mean*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t mean3 = mean*pdgMass.Y3S/pdgMass.Y1S;
-	Double_t sigma1S_2 = sigma*ratio;
-	Double_t sigma2S_1 = sigma*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t sigma2S_2 = sigma*ratio*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t sigma3S_1 = sigma*pdgMass.Y3S/pdgMass.Y1S;
-	Double_t sigma3S_2 = sigma*ratio*pdgMass.Y3S/pdgMass.Y1S;
-	
-  //t2 > t1
-	Double_t U1S_t1 = (x[0]-mean)/sigma;
-	Double_t U1S_t2 = (x[0]-mean)/sigma1S_2;
-	Double_t U2S_t1 = (x[0]-mean2)/sigma2S_1;
-	Double_t U2S_t2 = (x[0]-mean2)/sigma2S_2;
-	Double_t U3S_t1 = (x[0]-mean3)/sigma3S_1;
-	Double_t U3S_t2 = (x[0]-mean3)/sigma3S_2;
-	if (alpha < 0)
-	{
-
-    cout << "ERROR ::: alpha variable negative!!!! " << endl;
-    return -1;
-	}
-
-	Double_t absAlpha = fabs((Double_t)alpha);
-	Double_t a = TMath::Power(n/absAlpha,n)*exp(-absAlpha*absAlpha/2.);
-	Double_t b = n/absAlpha - absAlpha;
-
-  Double_t Ups1S_1 = -1;
-  Double_t Ups1S_2 = -1;
-  Double_t Ups2S_1 = -1;
-  Double_t Ups2S_2 = -1;
-  Double_t Ups3S_1 = -1;
-  Double_t Ups3S_2 = -1;
-
-
-  if(U1S_t1 > -alpha){
-    Ups1S_1 = exp(-U1S_t1*U1S_t1/2.);
-  }
-  else if(U1S_t1 <= -alpha){
-    Ups1S_1 = a*TMath::Power((b-U1S_t1),-n);
-  }
-
-  if(U1S_t2 > -alpha){
-    Ups1S_2 = exp(-U1S_t2*U1S_t2/2.);
-  }
-  else if(U1S_t2 <= -alpha){
-    Ups1S_2 = a*TMath::Power((b-U1S_t2),-n);
-  }
-
-  if(U2S_t1 > -alpha){
-    Ups2S_1 = exp(-U2S_t1*U2S_t1/2.);
-  }
-  else if(U2S_t1 <= -alpha){
-    Ups2S_1 = a*TMath::Power((b-U2S_t1),-n);
-  }
-
-  if(U2S_t2 > -alpha){
-    Ups2S_2 = exp(-U2S_t2*U2S_t2/2.);
-  }
-  else if(U2S_t2 <= -alpha){
-    Ups2S_2 = a*TMath::Power((b-U2S_t2),-n);
-  }
-
-  if(U3S_t1 > -alpha){
-    Ups3S_1 = exp(-U3S_t1*U3S_t1/2.);
-  }
-  else if(U3S_t1 <= -alpha){
-    Ups3S_1 = a*TMath::Power((b-U3S_t1),-n);
-  }
-
-  if(U3S_t2 > -alpha){
-    Ups3S_2 = exp(-U3S_t2*U3S_t2/2.);
-  }
-  else if(U3S_t2 <= -alpha){
-    Ups3S_2 = a*TMath::Power((b-U3S_t2),-n);
-  }
-
-/*
-  if( Ups1S_1 == -1 || Ups1S_2 == -1 || Ups2S_1 == -1 || Ups2S_2 == -1 || Ups3S_1 == -1 || Ups3S_2 == -1){
-    cout << "ERROR ::: no match for UpsNS value " << endl;
-    return -1;
-  }
-*/
-  Double_t SigM = N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2);
-  Double_t BkgM = Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
-  
-  //return c*(SigM/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c3 + c2*x[0] + c1*x[0]*x[0]);
-  return c*(SigM/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c4 + c3*x[0] + c2*x[0]*x[0] + c1*x[0]*x[0]*x[0]);
-  
-}
-//}}}
-
-//totalvn pol2 bkg Upsilon 1S&2S{{{
-Double_t Totalvnpol2U1S2S(Double_t* x, Double_t* par)
-{
-	Double_t N1 = par[0];
-	Double_t N2 = par[1];
-	Double_t N3 = par[2];
-	Double_t Nbkg = par[3];
-	Double_t mean = par[4];
-	Double_t sigma = par[5];
-	Double_t alpha = par[6];
-	Double_t n = par[7];
-	Double_t ratio = par[8];
-	Double_t frac = par[9];
-	Double_t Bkgmean = par[10];
-	Double_t Bkgsigma = par[11];
-	Double_t Bkgp0 = par[12];
-	Double_t c = par[13];
-	Double_t c1 = par[14];
-	Double_t c2 = par[15];
-	Double_t c3 = par[16];
-	Double_t mean2 = mean*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t mean3 = mean*pdgMass.Y3S/pdgMass.Y1S;
-	Double_t sigma1S_2 = sigma*ratio;
-	Double_t sigma2S_1 = sigma*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t sigma2S_2 = sigma*ratio*pdgMass.Y2S/pdgMass.Y1S;
-	Double_t sigma3S_1 = sigma*pdgMass.Y3S/pdgMass.Y1S;
-	Double_t sigma3S_2 = sigma*ratio*pdgMass.Y3S/pdgMass.Y1S;
-	
-  //t2 > t1
-	Double_t U1S_t1 = (x[0]-mean)/sigma;
-	Double_t U1S_t2 = (x[0]-mean)/sigma1S_2;
-	Double_t U2S_t1 = (x[0]-mean2)/sigma2S_1;
-	Double_t U2S_t2 = (x[0]-mean2)/sigma2S_2;
-	Double_t U3S_t1 = (x[0]-mean3)/sigma3S_1;
-	Double_t U3S_t2 = (x[0]-mean3)/sigma3S_2;
-	if (alpha < 0)
-	{
-
-    cout << "ERROR ::: alpha variable negative!!!! " << endl;
-    return -1;
-	}
-
-	Double_t absAlpha = fabs((Double_t)alpha);
-	Double_t a = TMath::Power(n/absAlpha,n)*exp(-absAlpha*absAlpha/2.);
-	Double_t b = n/absAlpha - absAlpha;
-
-  Double_t Ups1S_1 = -1;
-  Double_t Ups1S_2 = -1;
-  Double_t Ups2S_1 = -1;
-  Double_t Ups2S_2 = -1;
-  Double_t Ups3S_1 = -1;
-  Double_t Ups3S_2 = -1;
-
-
-  if(U1S_t1 > -alpha){
-    Ups1S_1 = exp(-U1S_t1*U1S_t1/2.);
-  }
-  else if(U1S_t1 <= -alpha){
-    Ups1S_1 = a*TMath::Power((b-U1S_t1),-n);
-  }
-
-  if(U1S_t2 > -alpha){
-    Ups1S_2 = exp(-U1S_t2*U1S_t2/2.);
-  }
-  else if(U1S_t2 <= -alpha){
-    Ups1S_2 = a*TMath::Power((b-U1S_t2),-n);
-  }
-
-  if(U2S_t1 > -alpha){
-    Ups2S_1 = exp(-U2S_t1*U2S_t1/2.);
-  }
-  else if(U2S_t1 <= -alpha){
-    Ups2S_1 = a*TMath::Power((b-U2S_t1),-n);
-  }
-
-  if(U2S_t2 > -alpha){
-    Ups2S_2 = exp(-U2S_t2*U2S_t2/2.);
-  }
-  else if(U3S_t2 <= -alpha){
-    Ups3S_2 = a*TMath::Power((b-U3S_t2),-n);
-  }
-
-  if(U3S_t1 > -alpha){
-    Ups3S_1 = exp(-U3S_t1*U3S_t1/2.);
-  }
-  else if(U3S_t1 <= -alpha){
-    Ups3S_1 = a*TMath::Power((b-U3S_t1),-n);
-  }
-
-  if(U3S_t2 > -alpha){
-    Ups3S_2 = exp(-U3S_t2*U3S_t2/2.);
-  }
-  else if(U3S_t2 <= -alpha){
-    Ups3S_2 = a*TMath::Power((b-U3S_t2),-n);
-  }
-
-/*
-  if( Ups1S_1 == -1 || Ups1S_2 == -1 || Ups2S_1 == -1 || Ups2S_2 == -1 || Ups3S_1 == -1 || Ups3S_2 == -1){
-    cout << "ERROR ::: no match for UpsNS value " << endl;
-    return -1;
-  }
-*/
-  Double_t SigM = N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2) + N2*(frac*Ups2S_1 + (1-frac)*Ups2S_2);
-  Double_t BkgM = Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
-  
-  return c*(SigM/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c3 + c2*x[0] + c1*x[0]*x[0]);
-  
-}
-//}}}
 
 //totalvn pol2 bkg Upsilon 1S&2S&3S{{{
 Double_t Totalvnpol2U1S2S3S(Double_t* x, Double_t* par)
@@ -595,8 +391,18 @@ Double_t Totalvnpol2U1S2S3S(Double_t* x, Double_t* par)
     return -1;
   }
 */
-  Double_t SigM = N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2) + N2*(frac*Ups2S_1 + (1-frac)*Ups2S_2) + N3*(frac*Ups3S_1 + (1-frac)*Ups3S_2);
-  Double_t SigM1s = N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2);
+  
+  Double_t fC = n/absAlpha*1/(n-1)*exp(-absAlpha*absAlpha/2);
+  Double_t fD = TMath::Sqrt(TMath::Pi()/2)*(1+TMath::Erf(absAlpha/TMath::Sqrt(2)));
+  Double_t fN1s_1 = 1./(sigma*(fC+fD));
+  Double_t fN1s_2 = 1./(sigma1S_2*(fC+fD));
+  Double_t fN2s_1 = 1./(sigma2S_1*(fC+fD));
+  Double_t fN2s_2 = 1./(sigma2S_2*(fC+fD));
+  Double_t fN3s_1 = 1./(sigma3S_1*(fC+fD));
+  Double_t fN3s_2 = 1./(sigma3S_2*(fC+fD));
+
+  Double_t SigM = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2) + N2*(fN2s_1*frac*Ups2S_1 + fN2s_2*(1-frac)*Ups2S_2) + N3*(fN3s_1*frac*Ups3S_1 + fN3s_2*(1-frac)*Ups3S_2);
+  Double_t SigM1s = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2);
   Double_t BkgM = Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
   
   return c*(SigM1s/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c3 + c2*x[0] + c1*x[0]*x[0]);
@@ -707,10 +513,21 @@ Double_t Totalvnpol3U1S2S3S(Double_t* x, Double_t* par)
     return -1;
   }
 */
-  Double_t SigM = N1*(frac*Ups1S_1 + (1-frac)*Ups1S_2) + N2*(frac*Ups2S_1 + (1-frac)*Ups2S_2) + N3*(frac*Ups3S_1 + (1-frac)*Ups3S_2);
+  
+  Double_t fC = n/absAlpha*1/(n-1)*exp(-absAlpha*absAlpha/2);
+  Double_t fD = TMath::Sqrt(TMath::Pi()/2)*(1+TMath::Erf(absAlpha/TMath::Sqrt(2)));
+  Double_t fN1s_1 = 1./(sigma*(fC+fD));
+  Double_t fN1s_2 = 1./(sigma1S_2*(fC+fD));
+  Double_t fN2s_1 = 1./(sigma2S_1*(fC+fD));
+  Double_t fN2s_2 = 1./(sigma2S_2*(fC+fD));
+  Double_t fN3s_1 = 1./(sigma3S_1*(fC+fD));
+  Double_t fN3s_2 = 1./(sigma3S_2*(fC+fD));
+
+  Double_t SigM = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2) + N2*(fN2s_1*frac*Ups2S_1 + fN2s_2*(1-frac)*Ups2S_2) + N3*(fN3s_1*frac*Ups3S_1 + fN3s_2*(1-frac)*Ups3S_2);
+  Double_t SigM1s = N1*(fN1s_1*frac*Ups1S_1 + fN1s_2*(1-frac)*Ups1S_2);
   Double_t BkgM = Nbkg*(TMath::Exp(-x[0]/Bkgp0)*(TMath::Erf((x[0]-Bkgmean)/(TMath::Sqrt(2)*Bkgsigma))+1)/2.);
   
-  return c*(SigM/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c4 + c3*x[0] + c2*x[0]*x[0] + c1*x[0]*x[0]*x[0]);
+  return c*(SigM1s/(SigM+BkgM)) + (1 - SigM/(SigM+BkgM))*(c4 + c3*x[0] + c2*x[0]*x[0] + c1*x[0]*x[0]*x[0]);
   
 }
 //}}}
@@ -784,13 +601,8 @@ void doSimultaneousV2MassFit_pt03_cent010(int cLow = 0, int cHigh = 20,
     return;
   }
   
-  //Read Signal File
-  TFile *sfile = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/MassFit/AllParmFreeFit/fitRes/Folder1/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y0.0-2.4_muPt3.5_centrality0-200.root",ptLow,ptHigh),"read");
-  sfile->cd();
-  RooWorkspace *ws = (RooWorkspace*) sfile -> Get("workspace");
-
   //Get yield distribution{{{
-  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/plots/MassV2_190506/Ups_%s.root",kineLabel.Data()),"read");
+  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2Hist/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
   TH1D* h_v2_SplusB = (TH1D*) rf->Get("h_v2_SplusB");  
   TGraphAsymmErrors* g_mass = (TGraphAsymmErrors*) rf->Get("g_mass");  
 
@@ -834,28 +646,34 @@ void doSimultaneousV2MassFit_pt03_cent010(int cLow = 0, int cHigh = 20,
   //}}}
 
 
+  //Read Signal File
+  TFile *sfile = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/MassFit/AllParmFreeFit/fitRes/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y0.0-2.4_muPt3.5_centrality0-180.root",ptLow,ptHigh),"read");
+  sfile->cd();
+  RooWorkspace *ws = (RooWorkspace*) sfile -> Get("workspace");
+
 
   //Get fitting parameter{{{
-  Double_t N1_ = 890.246;
-  Double_t N2_ = 4.6377e+01;
-  Double_t N3_ = 3.5729e+01;
-  Double_t Nbkg_ = 6493.22;
+  Double_t N1_ = ws->var("nSig1s")->getVal();
+  Double_t N2_ = ws->var("nSig2s")->getVal();
+  Double_t N3_ = ws->var("nSig3s")->getVal();
+  Double_t Nbkg_ = ws->var("nBkg")->getVal();
   Double_t mean_ = pdgMass.Y1S;
   Double_t sigma_ = ws->var("sigma1s_1")->getVal();
   Double_t alpha_ = ws->var("alpha1s_1")->getVal();
   Double_t n_ = ws->var("n1s_1")->getVal();
   Double_t ratio_ = ws->var("x1s")->getVal();
   Double_t frac_ = ws->var("f1s")->getVal();
-  Double_t Bkgmean_ = 7.99882;
-  Double_t Bkgsigma_ = 1.12746;
-  Double_t Bkgp0_ = 4.32817;
+  Double_t Bkgmean_ = ws->var("#mu")->getVal();
+  Double_t Bkgsigma_ = ws->var("#sigma")->getVal();
+  Double_t Bkgp0_ = ws->var("#lambda")->getVal();
   Double_t c_ = 0.03;
-  Double_t c1_ = 0.00142884;
-  Double_t c2_ = -0.0484097;
-  Double_t c3_ = 0.5;
-  Double_t c4_ = -0.11964;
+  Double_t c1_ = -0.00115612;
+  Double_t c2_ = -0.00484097;
+  Double_t c3_ = -0.020;
+  Double_t c4_ = -0.12964;
   //}}}
 
+  cout << "sigma_ : " << sigma_ << endl;
   
   Double_t par0[nParmV];
 
@@ -880,8 +698,8 @@ void doSimultaneousV2MassFit_pt03_cent010(int cLow = 0, int cHigh = 20,
   //}}}
 
   //combined function condition{{{
-  Double_t parLimitLow[nParmV]  = {     0,  -10, -10,        0, mean_ -0.02, 0.01, 1.301, 1.351, 0, 0,  0,   0,  0, -0.2, -5, -5, -4, -4};
-  Double_t parLimitHigh[nParmV] = {N1_*10, 1000, 400, Nbkg_*10, mean_ +0.02, 0.08, 4.8, 4.8, 1, 1, 35,  35, 35,  0.2,  5,  5,  4,  4};
+  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.3,  par0[11]*0.3, par0[12]*0.3, -0.2, -0.2, -0.1, -1.5, -4};
+  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.2,  0.2,  0.1,  1.5,  4};
 
   fitter.Config().SetParamsSettings(nParmV_, par0);
   for(int ipar = 0; ipar<nParmV_; ipar++){
@@ -894,6 +712,9 @@ void doSimultaneousV2MassFit_pt03_cent010(int cLow = 0, int cHigh = 20,
   fitter.Config().ParSettings(7).Fix();
   fitter.Config().ParSettings(8).Fix();
   fitter.Config().ParSettings(9).Fix();
+//  fitter.Config().ParSettings(10).Fix();
+//  fitter.Config().ParSettings(11).Fix();
+//  fitter.Config().ParSettings(12).Fix();
 
   fitter.Config().MinimizerOptions().SetPrintLevel(0);
   fitter.Config().SetMinimizer("Minuit2","Migrad");
@@ -947,7 +768,7 @@ void doSimultaneousV2MassFit_pt03_cent010(int cLow = 0, int cHigh = 20,
     fvn_bkg->FixParameter(3, fvn_simul->GetParameter(17));
   }
 
-  unsigned int nfpxl = 200000;
+  unsigned int nfpxl = 1100;
 //  fvn_bkg->SetNpx(nfpxl);
   fvn_simul->SetNpx(nfpxl);
 //  fyield_bkg->SetNpx(nfpxl);

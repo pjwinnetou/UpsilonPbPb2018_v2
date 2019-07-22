@@ -768,7 +768,7 @@ void doSimultaneousV2MassFit_pt03_cent090(int cLow = 0, int cHigh = 180,
     fvn_bkg->FixParameter(3, fvn_simul->GetParameter(17));
   }
 
-  unsigned int nfpxl = 200000;
+  unsigned int nfpxl = 1100;
 //  fvn_bkg->SetNpx(nfpxl);
   fvn_simul->SetNpx(nfpxl);
 //  fyield_bkg->SetNpx(nfpxl);
