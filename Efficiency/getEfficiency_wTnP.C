@@ -1,17 +1,18 @@
 #include <iostream>
 
 #include <TLorentzVector.h>
-#include "commonUtility.h"
-#include "HiEvtPlaneList.h"
-#include "cutsAndBinUpsilonV2.h"
-#include "Style_jaebeom.h"
+#include "../commonUtility.h"
+#include "../HiEvtPlaneList.h"
+#include "../cutsAndBinUpsilonV2.h"
+#include "../Style_jaebeom.h"
+#include "tnp_weight_lowptPbPb.h"
 
 using namespace std;
 
 void getEfficiency_wTnP(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = true
+  int cLow = 0, int cHigh = 180, bool isTnP = true 
   ) {
 
   gStyle->SetOptStat(0);
@@ -29,11 +30,12 @@ void getEfficiency_wTnP(
   const int numBins = (max-min)/binwidth;
 
   //input files
-  TString inputMC1 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_v1.root";
+  TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
+  //TString inputMC1 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_v1.root";
   TString inputMC2 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_ext-v1.root";
   TChain* mytree = new TChain("myTree"); 
   mytree->Add(inputMC1.Data());
-  mytree->Add(inputMC2.Data());
+  //mytree->Add(inputMC2.Data());
 
   TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
   TH1D* hptLowestC_reco = new TH1D("hptLowestC_reco","hptLowestC_reco",numBins,min,max);
@@ -194,6 +196,12 @@ void getEfficiency_wTnP(
   double tnp_weight = 1;
   double tnp_trig_weight_mupl = -1;
   double tnp_trig_weight_mumi = -1;
+
+  int kL2filter = 38;
+  int kL3filter = 39;
+
+  int count =0;
+  int counttnp =0;
   const int nevt = mytree->GetEntries();
   cout << "Total Events : " << nevt << endl;
   for(int iev=0; iev<nevt ; ++iev)
@@ -263,22 +271,28 @@ void getEfficiency_wTnP(
       
       if(!( (mupl_Reco->Pt()>3.5 && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>3.5 && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50)) continue;
      
+      count++;
       if(isTnP){
        tnp_weight = tnp_weight * tnp_weight_muid_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 0) * tnp_weight_muid_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 0); //mu id
        tnp_weight = tnp_weight * tnp_weight_trk_pbpb(mupl_Reco->Eta(), 0) * tnp_weight_trk_pbpb(mumi_Reco->Eta(), 0); //inner tracker
 
        //Trigger part
+       if(!((Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) && (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ){
+         cout << "irqq : " << irqq << " - iev : " << iev << endl;
+         cout << "TnP ERROR !!!! ::: No matched L2 filter1 " << endl;
+  //       continue;
+       }
        bool mupl_L2Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
        bool mupl_L3Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
        bool mumi_L2Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
        bool mumi_L3Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
-       if(mupl_L2Filter == false || mumi_L2Filter == false){ cout << "TnP ERROR !!!! ::: No matched L2 filter " << endl;} 
+       if(mupl_L2Filter == false || mumi_L2Filter == false){ cout << "TnP ERROR !!!! ::: No matched L2 filter2 " << endl; cout << endl;} 
 
        bool mupl_isL2 = (mupl_L2Filter && !mupl_L3Filter) ? true : false;
        bool mupl_isL3 = (mupl_L2Filter && mupl_L3Filter) ? true : false;
        bool mumi_isL2 = (mumi_L2Filter && !mumi_L3Filter) ? true : false;
        bool mumi_isL3 = (mumi_L2Filter && mumi_L3Filter) ? true : false;
-       bool SelDone = false
+       bool SelDone = false;
 
        if( mupl_isL2 && mumi_isL3){
          tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 2, 0);
@@ -302,11 +316,12 @@ void getEfficiency_wTnP(
            tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
            tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
          }
-         else {cout << "ERROR :: No random selection done !!!!" << endl; return;}
+         else {cout << "ERROR :: No random selection done !!!!" << endl; continue;}
          SelDone = true;
        }       
-       if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; return;}
+       if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
        tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
+       counttnp++;
       }
 
       hpt_reco->Fill(JP_Reco->Pt(),weight * tnp_weight);
@@ -317,6 +332,8 @@ void getEfficiency_wTnP(
     }
   }
 
+  cout << "count " << count << endl;
+  cout << "counttnp " << counttnp << endl;
   
 
 
