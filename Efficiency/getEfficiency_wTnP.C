@@ -12,7 +12,7 @@ using namespace std;
 void getEfficiency_wTnP(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = true 
+  int cLow = 0, int cHigh = 180, bool isTnP = false 
   ) {
 
   gStyle->SetOptStat(0);
@@ -31,8 +31,8 @@ void getEfficiency_wTnP(
 
   //input files
   //TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
-  TString inputMC1 = "/afs/cern.ch/work/h/hckim/public/v20190724_ForJaebeom/Oniatree_addvn_MC_v20190724_ext1-v1.root";
-  TString inputMC2 = "/afs/cern.ch/work/h/hckim/public/v20190724_ForJaebeom/Oniatree_addvn_MC_v20190724_v1.root";
+  TString inputMC1 = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Oniatree_addvn_MC_v20190724_ext1-v1.root";
+  TString inputMC2 = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Oniatree_addvn_MC_v20190724_v1.root";
   TChain* mytree = new TChain("myTree"); 
   mytree->Add(inputMC1.Data());
   mytree->Add(inputMC2.Data());
@@ -269,18 +269,21 @@ void getEfficiency_wTnP(
       if ( Reco_QQ_VtxProb[irqq]  < 0.01 ) continue;
       if(Reco_QQ_sign[irqq]!=0) continue;  
       
-      if(!( (mupl_Reco->Pt()>3.5 && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>3.5 && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50)) continue;
+      if(!( (mupl_Reco->Pt()>3.5 && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>3.5 && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50  && JP_Reco->M()>massLow && JP_Reco->M()<massHigh)) continue;
      
       count++;
       if(isTnP){
+       tnp_weight = 1;
+       tnp_trig_weight_mupl = -1;
+       tnp_trig_weight_mumi = -1;
        tnp_weight = tnp_weight * tnp_weight_muid_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 0) * tnp_weight_muid_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 0); //mu id
        tnp_weight = tnp_weight * tnp_weight_trk_pbpb(mupl_Reco->Eta(), 0) * tnp_weight_trk_pbpb(mumi_Reco->Eta(), 0); //inner tracker
 
        //Trigger part
        if(!((Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) && (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ){
-         cout << "irqq : " << irqq << " - iev : " << iev << endl;
-         cout << "TnP ERROR !!!! ::: No matched L2 filter1 " << endl;
-  //       continue;
+//         cout << "irqq : " << irqq << " - iev : " << iev << endl;
+//         cout << "TnP ERROR !!!! ::: No matched L2 filter1 " << endl;
+         continue;
        }
        bool mupl_L2Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
        bool mupl_L3Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
@@ -299,12 +302,12 @@ void getEfficiency_wTnP(
          tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 3, 0);
          SelDone = true;
        }
-       if( mupl_isL3 && mumi_isL2){
+       else if( mupl_isL3 && mumi_isL2){
          tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
          tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
          SelDone = true;
        }
-       if( mupl_isL3 && mumi_isL3){
+       else if( mupl_isL3 && mumi_isL3){
          int t[2] = {-1,1}; // mupl, mumi
          int l = rand() % (2); 
          //pick up what will be L2
@@ -318,7 +321,8 @@ void getEfficiency_wTnP(
          }
          else {cout << "ERROR :: No random selection done !!!!" << endl; continue;}
          SelDone = true;
-       }       
+       }    
+
        if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
        tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
        counttnp++;
