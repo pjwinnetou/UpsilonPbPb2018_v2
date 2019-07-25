@@ -30,12 +30,12 @@ void getEfficiency_wTnP(
   const int numBins = (max-min)/binwidth;
 
   //input files
-  TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
-  //TString inputMC1 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_v1.root";
-  TString inputMC2 = "/pnfs/knu.ac.kr/data/cms/store/group/phys_heavyions/hidilepton/2018PbPbMC/Ups1S_TuneCP5_HydjetDrumMB_5p02TeV_officialPythia8MC-v1/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_ext-v1.root";
+  //TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
+  TString inputMC1 = "/afs/cern.ch/work/h/hckim/public/v20190724_ForJaebeom/Oniatree_addvn_MC_v20190724_ext1-v1.root";
+  TString inputMC2 = "/afs/cern.ch/work/h/hckim/public/v20190724_ForJaebeom/Oniatree_addvn_MC_v20190724_v1.root";
   TChain* mytree = new TChain("myTree"); 
   mytree->Add(inputMC1.Data());
-  //mytree->Add(inputMC2.Data());
+  mytree->Add(inputMC2.Data());
 
   TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
   TH1D* hptLowestC_reco = new TH1D("hptLowestC_reco","hptLowestC_reco",numBins,min,max);
@@ -466,12 +466,12 @@ void getEfficiency_wTnP(
   cptHighC_eff->SaveAs("Plots/cptHighC_eff.pdf");
 
   //Save efficiency files for later use.
-  hpt_eff->SetName("mc_eff_vs_pt_noTnP_Cent0100");
-  hptLowestC_eff->SetName("mc_eff_vs_pt_noTnP_Cent010");
-  hptLowC_eff->SetName("mc_eff_vs_pt_noTnP_Cent1030");
-  hptMidC_eff->SetName("mc_eff_vs_pt_noTnP_Cent3050");
-  hptHighC_eff->SetName("mc_eff_vs_pt_noTnP_Cent5090");
-  TString outFileName = "mc_eff_vs_pt_noTnP_OfficialMC.root";
+  hpt_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent0100",isTnP));
+  hptLowestC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP));
+  hptLowC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1030",isTnP));
+  hptMidC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent3050",isTnP));
+  hptHighC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090",isTnP));
+  TString outFileName = Form("mc_eff_vs_pt_TnP%d_OfficialMC.root",isTnP);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowestC_eff->Write();
