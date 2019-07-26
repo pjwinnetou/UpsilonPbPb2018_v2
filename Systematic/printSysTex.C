@@ -52,6 +52,7 @@ void printSysTex()
   		//"hSys_int"
 	};
 	const int nPt = 5;
+  const char* ptBinName[4]= {"0 -- 3", "3 -- 6", "6 -- 50", "0 -- 50"};
 	const char* ptName[nPt] = {
   		"hPtSys_cent010",
   		"hPtSys_cent1030",
@@ -102,9 +103,9 @@ void printSysTex()
   for(int icent = 0; icent<nCent+1;icent++){
     for(int ipt = 0; ipt < nPt-1; ipt++){
       for(int i=0; i<nSyst; i++){
-        if(ipt==0 && icent<nCent && i==0) cout << Form("\\multirow{3}{*}{%.f-%.f\%%}     & ",centBin[icent],centBin[icent+1]);
-        else if(ipt==0 && icent==nCent && i==0) cout << "\\multirow{3}{*}{0-90%}      & ";
-        else if(ipt!=0 && i==0) cout << "                            & ";
+        if(ipt==0 && icent<nCent && i==0) cout << Form("\\multirow{3}{*}{%.f-%.f\\%%}     &  %s  & ",centBin[icent],centBin[icent+1],ptBinName[ipt]);
+        else if(ipt==0 && icent==nCent && i==0) cout << Form("\\multirow{3}{*}{0-90\\%}      &  %s  & ",ptBinName[ipt]);
+        else if(ipt!=0 && i==0) cout << Form("                            &  %s  & ",ptBinName[ipt]);
         if(i<nSyst-1 && icent<nCent){
           if(ipt<nPt-2) cout << Form("%.6f",hpt[icent][i]->GetBinContent(ipt+1)) << " & ";
           if(ipt==nPt-2) cout << Form("%.6f",hCent[nCent-1][i]->GetBinContent(icent+1)) << " & ";
