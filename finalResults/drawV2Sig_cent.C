@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void drawV2Sig_cent(int fVer=0){
+void drawV2Sig_cent(){
 
   setTDRStyle();
   writeExtraText= true;
@@ -21,15 +21,13 @@ void drawV2Sig_cent(int fVer=0){
   //// read input file : value & stat.
   TFile* fIn[nBin];
   TFile* fIn_int[nBin];
-  double centBin[nBin+1] = {0, 10, 30, 50, 100};
+  double centBin[nBin+1] = {0, 10, 30, 50, 90};
 
 	TGraphErrors* gv2[nBin];
 	TGraphErrors* gv2_int[nBin];
   for (int is=0; is<nBin; is++){
-  	if(fVer==0) fIn[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-3.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
-  	if(fVer==1) fIn[is] = new TFile(Form("../SimFit/AllParmFree/FitResult/SimFitResult_pt0.0-3.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
-  	if(fVer==0) fIn_int[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
-  	if(fVer==1) fIn_int[is] = new TFile(Form("../SimFit/AllParmFree/FitResult/SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
+  	fIn[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-3.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
+  	fIn_int[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
     gv2[is]=(TGraphErrors*)fIn[is]->Get("v2vspt");
     gv2_int[is]=(TGraphErrors*)fIn_int[is]->Get("v2vspt");
   }
@@ -75,7 +73,7 @@ void drawV2Sig_cent(int fVer=0){
   final_v2_int->GetYaxis()->SetTitleOffset(1.2);
   final_v2_int->GetXaxis()->SetTitleOffset(1.);
   final_v2_int->SetMinimum(-0.05);
-  final_v2_int->SetMaximum(0.2);
+  final_v2_int->SetMaximum(0.15);
 
   TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
   TFile* fSys = new TFile("../Systematic/merged_sys.root","read");
@@ -83,7 +81,7 @@ void drawV2Sig_cent(int fVer=0){
   TGraphErrors *gsys = new TGraphErrors();
   for(int ib=0;ib<final_v2->GetNbinsX();ib++){
     gsys->SetPoint(ib, final_v2->GetBinCenter(ib+1), final_v2->GetBinContent(ib+1));
-    gsys->SetPointError(ib, final_v2->GetBinWidth(ib+1)/2, final_v2->GetBinContent(ib+1)*hsys->GetBinContent(ib+1));
+    gsys->SetPointError(ib, final_v2->GetBinWidth(ib+1)/2, hsys->GetBinContent(ib+1));
     final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
   }
 
@@ -92,20 +90,21 @@ void drawV2Sig_cent(int fVer=0){
   TGraphErrors *gsys_int = new TGraphErrors();
   for(int ib=0;ib<final_v2_int->GetNbinsX();ib++){
     gsys_int->SetPoint(ib, final_v2_int->GetBinCenter(ib+1), final_v2_int->GetBinContent(ib+1));
-    gsys_int->SetPointError(ib, final_v2_int->GetBinWidth(ib+1)/2, final_v2_int->GetBinContent(ib+1)*hsys_int->GetBinContent(ib+1));
+    gsys_int->SetPointError(ib, final_v2_int->GetBinWidth(ib+1)/2, hsys_int->GetBinContent(ib+1));
     final_v2_int_g->SetPointError(ib,0,final_v2_int->GetBinError(ib+1));
   }
-  SetGraphStyle(final_v2_g,4,4);
-  SetGraphStyleSys(gsys,4);
+  SetGraphStyle(final_v2_g,1,1);
+  SetGraphStyleSys(gsys,1);
 
-  SetGraphStyle(final_v2_int_g,4,4);
-  SetGraphStyleSys(gsys_int,4);
+  SetGraphStyle(final_v2_int_g,1,1);
+  SetGraphStyleSys(gsys_int,1);
 
-  double xmax = 100; 
+  double xmax = 90; 
  
   TCanvas* c1 = new TCanvas("c1","c1",600,600);
-  gPad->SetLeftMargin(0.16);
-  gPad->SetBottomMargin(0.15);
+  gPad->SetLeftMargin(0.19);
+  gPad->SetBottomMargin(0.17);
+  gPad->SetTopMargin(0.065);
   c1->cd();
   final_v2_g->SetMarkerStyle(kFullCircle);
   gsys->Draw("A5");
@@ -117,13 +116,14 @@ void drawV2Sig_cent(int fVer=0){
   gsys->GetXaxis()->SetTitle("Centrality (%)");
   gsys->GetXaxis()->SetRangeUser(0,xmax);
   gsys->SetMinimum(-0.05);
-  gsys->SetMaximum(0.2);
+  gsys->SetMaximum(0.15);
 
   final_v2_g->Draw("pe same");
 
-  TLegend *leg= new TLegend(0.57, 0.62, 0.785, 0.74);
+  TLegend *leg= new TLegend(0.74, 0.70, 0.925, 0.77);
   SetLegendStyle(leg);
-  leg->AddEntry(final_v2,"#Upsilon(1S)","pe");
+  leg->SetTextSize(0.044);
+  leg->AddEntry(final_v2_g,"#Upsilon(1S)","pe");
   leg->Draw("same");
   dashedLine(0.,0.,xmax,0.,1,1);
   
@@ -133,18 +133,19 @@ void drawV2Sig_cent(int fVer=0){
   globtex->SetTextFont(42);
   globtex->SetTextSize(0.040);
   double sz_init = 0.875; double sz_step = 0.0535;
-  globtex->DrawLatex(0.22, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
-  globtex->DrawLatex(0.22, sz_init-sz_step, "p_{T}^{#Upsilon} < 3 GeV/c");
-  globtex->DrawLatex(0.22, sz_init-sz_step*2, "|y| < 2.4");
+  globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
+  globtex->DrawLatex(0.23, sz_init-sz_step, "p_{T}^{#Upsilon} < 3 GeV/c");
+  globtex->DrawLatex(0.23, sz_init-sz_step*2, "|y| < 2.4");
   
   CMS_lumi_square( c1, iPeriod, iPos );
 	c1->Update();
-  c1->SaveAs(Form("v2Sig_cent_lowPt_%d.pdf",fVer));
+  c1->SaveAs("v2Sig_cent_lowPt.pdf");
 
  
   TCanvas* c2 = new TCanvas("c2","c2",600,600);
-  gPad->SetLeftMargin(0.16);
-  gPad->SetBottomMargin(0.15);
+  gPad->SetLeftMargin(0.19);
+  gPad->SetBottomMargin(0.17);
+  gPad->SetTopMargin(0.065);
   c2->cd();
   final_v2_int_g->SetMarkerStyle(kFullCircle);
   gsys_int->Draw("A5");
@@ -156,13 +157,14 @@ void drawV2Sig_cent(int fVer=0){
   gsys_int->GetXaxis()->SetTitle("Centrality (%)");
   gsys_int->GetXaxis()->SetRangeUser(0,xmax);
   gsys_int->SetMinimum(-0.05);
-  gsys_int->SetMaximum(0.2);
+  gsys_int->SetMaximum(0.15);
 
   final_v2_int_g->Draw("pe same");
 
-  TLegend *leg_int= new TLegend(0.57, 0.62, 0.785, 0.74);
+  TLegend *leg_int= new TLegend(0.74, 0.70, 0.925, 0.77);
   SetLegendStyle(leg_int);
-  leg_int->AddEntry(final_v2_int,"#Upsilon(1S)","pe");
+  leg_int->SetTextSize(0.044);
+  leg_int->AddEntry(final_v2_int_g,"#Upsilon(1S)","pe");
   leg_int->Draw("same");
   dashedLine(0.,0.,xmax,0.,1,1);
   
@@ -171,13 +173,24 @@ void drawV2Sig_cent(int fVer=0){
   globtex_int->SetTextAlign(12); //left-center
   globtex_int->SetTextFont(42);
   globtex_int->SetTextSize(0.040);
-  globtex_int->DrawLatex(0.22, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
-  globtex_int->DrawLatex(0.22, sz_init-sz_step, "p_{T}^{#Upsilon} < 50 GeV/c");
-  globtex_int->DrawLatex(0.22, sz_init-sz_step*2, "|y| < 2.4");
+  globtex_int->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
+  globtex_int->DrawLatex(0.23, sz_init-sz_step, "p_{T}^{#Upsilon} < 50 GeV/c");
+  globtex_int->DrawLatex(0.23, sz_init-sz_step*2, "|y| < 2.4");
   
   CMS_lumi_square( c2, iPeriod, iPos );
 	c2->Update();
-  c2->SaveAs(Form("v2Sig_cent_int_%d.pdf",fVer));
+  c2->SaveAs("v2Sig_cent_int.pdf");
+  
+  TFile *out = new TFile("out_v2_vs_cent.root","recreate");
+  out->cd();
+  gsys->SetName("gr_sys_v2_vs_cent_pt03");
+  final_v2_g->SetName("gr_point_v2_vs_cent_pt03");
+  gsys_int->SetName("gr_sys_v2_vs_cent_pt050");
+  final_v2_int_g->SetName("gr_point_v2_vs_cent_pt050");
+  gsys_int->Write(); 
+  final_v2_int_g->Write();
+  gsys->Write(); 
+  final_v2_g->Write();
 
 	return;
 }
