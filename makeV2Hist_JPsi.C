@@ -21,14 +21,12 @@ using namespace RooFit;
 
 using namespace hi;
 
-double getAccWeight(TH1D* h = 0, double pt = 0);
-double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
 void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
                 float ptLow = 6.5, float ptHigh = 50, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 2.6, float massHigh =3.5, bool dimusign=true, bool fAccW = true, bool fEffW = true)
+                float SiMuPtCut = 0, float massLow = 2.6, float massHigh =3.5, bool dimusign=true, bool fAccW = true, bool fEffW = true)
 {
   //Basic Setting
   gStyle->SetOptStat(0);
@@ -37,7 +35,7 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   int iPeriod = 2;
   int iPos = 33;
   TH1::SetDefaultSumw2();
-  TString kineLabel = getKineLabel (ptLow, ptHigh, yLow, yHigh, SiMuPtCut, cLow, cHigh) ;
+  TString kineLabel = getKineLabel (ptLow, ptHigh, yLow, yHigh, SiMuPtCut, cLow, cHigh, 1) ;
   TString dimusignString;
   if(dimusign) dimusignString = "OS";
   else if(!dimusign) dimusignString = "SS";
@@ -75,7 +73,6 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   Int_t nDimu; 
   float vz;
   int recoQQsign[nMaxDimu];
-  double weight;
 
   TBranch *b_event;
   TBranch *b_cBin;
@@ -98,7 +95,6 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   TBranch *b_qyb;
   TBranch *b_qyc;
   TBranch *b_qydimu;
-  TBranch *b_weight;
   
 
   tree -> SetBranchAddress("event", &event, &b_event);
@@ -122,7 +118,6 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   tree -> SetBranchAddress("qyb", qyb, &b_qyb);
   tree -> SetBranchAddress("qyc", qyc, &b_qyc);
   tree -> SetBranchAddress("qydimu", qydimu, &b_qydimu);
-  tree -> SetBranchAddress("weight", &weight, &b_weight);
   
 
   const int nMassBin = 12;
@@ -131,7 +126,7 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
 
   float massBin_[nMassBin+1];
   
-  kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh) + "_" + dimusignString;
+  kineLabel = kineLabel + Form("_m%.1f-%.1f",massLow,massHigh) + "_" + dimusignString;
   
   for(int i=0; i<=nMassBin; i++){
     massBin_[i] = massBinDiff[i];
@@ -182,9 +177,8 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   TH1D* h_mass = new TH1D("h_mass",";m_{#mu^{+}#mu^{-}};Counts",60,massLow,massHigh);
 
   RooRealVar* massVar = new RooRealVar("mass","mass variable",0,200,"GeV/c^{2}");
-  RooRealVar* weightVar = new RooRealVar("weightVar","weight var",0,10000,"");
 
-  RooArgSet* argSet = new RooArgSet(*massVar, *weightVar);
+  RooArgSet* argSet = new RooArgSet(*massVar);
   RooDataSet* dataSet = new RooDataSet("dataset","a dataset",*argSet); 
 
   const static int countMax = 1000000;
@@ -196,7 +190,6 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   vector<vector<double>> v2_2_raw(nMassBin,vector<double> (countMax,0));
   vector<vector<double>> v2_3_raw(nMassBin,vector<double> (countMax,0));
   vector<vector<double>> v2_4_raw(nMassBin,vector<double> (countMax,0));
-  vector<vector<double>> weight_dimu(nMassBin,vector<double> (countMax,0));
 
   vector<double> v2_1_avg(nMassBin,0);
   vector<double> v2_2_avg(nMassBin,0);
@@ -207,17 +200,12 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   vector<unsigned int> count(nMassBin,0);
   vector<unsigned int> count_ss(nMassBin,0);
   
-  vector<double> weight_s(nMassBin,0);
-
   bool dimusignPass = true;
 
   int nDimuPass=0;
   int nDimu_one=0;
   int nDimu_more=0;
 
-  double weight_acc = 1;
-  double weight_eff = 1;
-  
 
   Int_t nEvt = tree->GetEntries();
   cout << "nEvt : " << nEvt << endl;
@@ -253,15 +241,12 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
 
       if(mass[j]<massLow || mass[j]>massHigh) continue; // dimuon mass range
       if(pt[j]>ptLow&&pt[j]<ptHigh&&abs(y[j])<yHigh&&abs(y[j])>yLow&&pt1[j]>SiMuPtCut&&pt2[j]>SiMuPtCut&&abs(eta1[j])<2.4&&abs(eta2[j])<2.4){
-        weight_acc = 1;
-        weight_eff = 1;
-        double weight_ = weight * weight_eff * weight_acc;
         for(int imbin=0; imbin<nMassBin; imbin++){
           if(mass[j]>=massBin[imbin] && mass[j]<massBin[imbin+1]){
-              v2_1[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j])*weight_;
-              v2_2[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j])*weight_;
-              v2_3[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j])*weight_;
-              v2_4[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j])*weight_;
+              v2_1[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
+              v2_2[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j]);
+              v2_3[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j]);
+              v2_4[imbin][count[imbin]] = (qxb[j]*qxc[j] + qyb[j]*qyc[j]);
               v2_1_raw[imbin][count[imbin]] = (qxa[j]*qxdimu[j] + qya[j]*qydimu[j]);
               v2_2_raw[imbin][count[imbin]] = (qxa[j]*qxb[j] + qya[j]*qyb[j]);
               v2_3_raw[imbin][count[imbin]] = (qxa[j]*qxc[j] + qya[j]*qyc[j]);
@@ -272,32 +257,10 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
               v2_3_avg[imbin] += v2_3[imbin][count[imbin]];
               v2_4_avg[imbin] += v2_4[imbin][count[imbin]];
 
-              weight_dimu[imbin][count[imbin]] = weight_;
-
               count[imbin]++;
-              weight_s[imbin] += weight_;
           }
         }
-        if(mass[j]>=mass_low_SB1 && mass[j]<mass_high_SB1){
-          h_v2_1[0]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
-          h_v2_2[0]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
-          h_v2_3[0]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
-          h_v2_4[0]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
-        }
-        else if(mass[j]>=mass_low_SB2 && mass[j]<mass_high_SB2){
-          h_v2_1[1]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
-          h_v2_2[1]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
-          h_v2_3[1]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
-          h_v2_4[1]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
-        }
-        else if(mass[j]>=mass_low_SB && mass[j]<mass_high_SB){
-          h_v2_1[2]->Fill(qxa[j]*qxdimu[j] + qya[j]*qydimu[j], weight_);
-          h_v2_2[2]->Fill(qxa[j]*qxb[j] + qya[j]*qyb[j], weight_);
-          h_v2_3[2]->Fill(qxa[j]*qxc[j] + qya[j]*qyc[j], weight_);
-          h_v2_4[2]->Fill(qxb[j]*qxc[j] + qyb[j]*qyc[j], weight_);
-        }
         massVar->setVal((double)mass[j]);
-        weightVar->setVal((double)weight_);
         dataSet->add(*argSet);
       h_mass->Fill(mass[j]);
       }
@@ -308,16 +271,14 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   RooWorkspace *ws = new RooWorkspace("workspace");
   ws->import(*dataSet);
   ws->data("dataset")->Print();
-  RooDataSet *reducedDS = new RooDataSet("reducedDS","A sample",*dataSet->get(),Import(*dataSet),WeightVar(*ws->var("weightVar")));
+  RooDataSet *reducedDS = new RooDataSet("reducedDS","A sample",*dataSet->get(),Import(*dataSet));
   reducedDS->SetName("reducedDS");
   ws->import(*reducedDS);
   ws->var("mass")->setRange(massLow, massHigh);
   ws->var("mass")->Print();
 
   RooPlot* myPlot = ws->var("mass")->frame(nMassFrameBin);
-  //if(fAccW == true || fEffW == true){ws->data("reducedDS")->plotOn(myPlot,DataError(RooAbsData::SumW2),Name("massDataHist"));}
-  if(fAccW == true || fEffW == true){ws->data("reducedDS")->plotOn(myPlot,Name("massDataHist"));}
-  else{ws->data("reducedDS")->plotOn(myPlot,Name("massDataHist"));}
+  ws->data("reducedDS")->plotOn(myPlot,Name("massDataHist"));
 
   RooHist* hist = (RooHist*) myPlot->findObject("massDataHist");
   int nHistP = hist->GetN();
@@ -345,32 +306,22 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
   vector<double> v2_4_err(nMassBin,0);
 
   for(int ibin=0; ibin<nMassBin; ibin++){
-    /*v2_1_avg[ibin] = v2_1_avg[ibin]/count[ibin];
+    v2_1_avg[ibin] = v2_1_avg[ibin]/count[ibin];
     v2_2_avg[ibin] = v2_2_avg[ibin]/count[ibin];
     v2_3_avg[ibin] = v2_3_avg[ibin]/count[ibin];
     v2_4_avg[ibin] = v2_4_avg[ibin]/count[ibin];
-    */
-    v2_1_avg[ibin] = v2_1_avg[ibin]/weight_s[ibin];
-    v2_2_avg[ibin] = v2_2_avg[ibin]/weight_s[ibin];
-    v2_3_avg[ibin] = v2_3_avg[ibin]/weight_s[ibin];
-    v2_4_avg[ibin] = v2_4_avg[ibin]/weight_s[ibin];
 
     for(int icount=0; icount<count[ibin]; icount++){
-      v2_1_err[ibin] += (v2_1_raw[ibin][icount]-v2_1_avg[ibin])*(v2_1_raw[ibin][icount]-v2_1_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
-      v2_2_err[ibin] += (v2_2_raw[ibin][icount]-v2_2_avg[ibin])*(v2_2_raw[ibin][icount]-v2_2_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
-      v2_3_err[ibin] += (v2_3_raw[ibin][icount]-v2_3_avg[ibin])*(v2_3_raw[ibin][icount]-v2_3_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
-      v2_4_err[ibin] += (v2_4_raw[ibin][icount]-v2_4_avg[ibin])*(v2_4_raw[ibin][icount]-v2_4_avg[ibin]) * weight_dimu[ibin][icount] * weight_dimu[ibin][icount];
+      v2_1_err[ibin] += (v2_1_raw[ibin][icount]-v2_1_avg[ibin])*(v2_1_raw[ibin][icount]-v2_1_avg[ibin]) ;
+      v2_2_err[ibin] += (v2_2_raw[ibin][icount]-v2_2_avg[ibin])*(v2_2_raw[ibin][icount]-v2_2_avg[ibin]) ;
+      v2_3_err[ibin] += (v2_3_raw[ibin][icount]-v2_3_avg[ibin])*(v2_3_raw[ibin][icount]-v2_3_avg[ibin]) ;
+      v2_4_err[ibin] += (v2_4_raw[ibin][icount]-v2_4_avg[ibin])*(v2_4_raw[ibin][icount]-v2_4_avg[ibin]) ;
     }
 
-    /*v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin]/(count[ibin]*(count[ibin]-1)));
-    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin]/(count[ibin]*(count[ibin]-1)));
-    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin]/(count[ibin]*(count[ibin]-1)));
-    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin]/(count[ibin]*(count[ibin]-1)));
-*/
-    v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin])/weight_s[ibin];
-    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin])/weight_s[ibin];
-    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin])/weight_s[ibin];
-    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin])/weight_s[ibin];
+    v2_1_err[ibin] = TMath::Sqrt(v2_1_err[ibin])/count[ibin];
+    v2_2_err[ibin] = TMath::Sqrt(v2_2_err[ibin])/count[ibin];
+    v2_3_err[ibin] = TMath::Sqrt(v2_3_err[ibin])/count[ibin];
+    v2_4_err[ibin] = TMath::Sqrt(v2_4_err[ibin])/count[ibin];
 
     h_v2_num_q1->SetBinContent(ibin+1,v2_1_avg[ibin]);
     h_v2_num_q1->SetBinError(ibin+1,v2_1_err[ibin]);
@@ -381,7 +332,7 @@ void makeV2Hist_JPsi(int cLow = 10, int cHigh = 120,
     h_v2_den_q4->SetBinContent(ibin+1,v2_4_avg[ibin]);
     h_v2_den_q4->SetBinError(ibin+1,v2_4_err[ibin]);
     
-    cout << ibin << "th Bin : " << count[ibin] << ",  weight sum  : " << weight_s[ibin] << endl;
+    cout << ibin << "th Bin : " << count[ibin] << ",  sum  : " << count[ibin] << endl;
     cout << "v2_1_avg " << ibin << " : " << v2_1_avg[ibin] << endl;
     cout << "v2_2_avg " << ibin << " : " << v2_2_avg[ibin] << endl;
     cout << "v2_3_avg " << ibin << " : " << v2_3_avg[ibin] << endl;
@@ -583,15 +534,4 @@ void GetHistSqrt(TH1D* h1, TH1D* h2){
     h2->SetBinContent(i,TMath::Sqrt(content));
     h2->SetBinError(i,err);
   }
-} 
-
-double getAccWeight(TH1D* h, double pt){
-  double weight_ = 1./h->GetBinContent((int)((pt*100)/100+1));
-  return weight_;
-} 
-
-double getEffWeight(TH1D *h, double pt){
-//  if(pt >=30) pt = 29.;
-  double weight_ = 1./h->GetBinContent((int)((pt*100)/100+1));
-  return weight_;
 } 
