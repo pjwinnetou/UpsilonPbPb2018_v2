@@ -14,183 +14,301 @@ void drawV2Sig_cent(){
   int iPeriod = 2;
   int iPos = 33;
   
-  const int nBin=4;
+  const int nBin=3;
+  const int nCentBin = 4;
   double exsys[nBin] =  {1.5, 1.5,22};
 
+  double xmax = 8; double ymin = -0.05; double ymax = 0.15;
   ////////////////////////////////////////////////////////////////
   //// read input file : value & stat.
-  TFile* fIn[nBin];
-  TFile* fIn_int[nBin];
-  double centBin[nBin+1] = {0, 10, 30, 50, 90};
+  TFile *fSpectra = new TFile("Spectra_v2.root");
+  double ptBin[nBin+1] = {0, 3, 6, 50};
+  double centBin[nCentBin+1] = {0,10,30,50,90};
 
-	TGraphErrors* gv2[nBin];
-	TGraphErrors* gv2_int[nBin];
-  for (int is=0; is<nBin; is++){
-  	fIn[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-3.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
-  	fIn_int[is] = new TFile(Form("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality%.f-%.f_m8-14_OS.root",centBin[is]*2,centBin[is+1]*2),"READ");
-    gv2[is]=(TGraphErrors*)fIn[is]->Get("v2vspt");
-    gv2_int[is]=(TGraphErrors*)fIn_int[is]->Get("v2vspt");
-  }
+	TGraphErrors* gv2[nCentBin];
+	TGraphErrors* gv2_sys[nCentBin];
+	TGraphErrors* gv2_int = (TGraphErrors*) fSpectra->Get("gr_Cent_PtInt");
+	TGraphErrors* gv2_int_sys = (TGraphErrors*) fSpectra->Get("gr_sys_Cent_PtInt");
 
-  TH1D *final_v2 = new TH1D("Final_v2",";p_{T}^{#Upsilon(1S)} (GeV/c);v_{2}^{Sig}",nBin,centBin);
-  TH1D *final_v2_int = new TH1D("Final_v2_int",";p_{T}^{#Upsilon(1S)} (GeV/c);v_{2}^{Sig}",nBin,centBin);
+	TGraphErrors* gr_v2[nCentBin];
+	TGraphErrors* gr_v2_sys[nCentBin];
+	TGraphErrors* gr_v2_int = new TGraphErrors();
+	TGraphErrors* gr_v2_int_sys = new TGraphErrors();
   
-
-  //// get bin width and calculate systematic uncertainties
-  double pxtmp, pytmp, extmp, eytmp;
-  double relsys;
-
-  for (int is=0; is<nBin; is++){
-    cout << is+1 <<"th bin***************" << endl;
-    pxtmp=0; pytmp=0; extmp=0; eytmp=0; relsys=0;
-    gv2[is] -> GetPoint(0,pxtmp,pytmp);
-    eytmp = gv2[is]->GetErrorY(0);
-    final_v2->SetBinContent(is+1, pytmp);
-    final_v2->SetBinError(is+1, eytmp);
+  double pxtmp, pytmp, extmp, eytmp, esy;
+  double esx = xmax/(3*8);
+  for(int ipt = 0; ipt<nBin; ipt++){
+    gv2[ipt] = (TGraphErrors*) fSpectra->Get(Form("gr_Cent_Pt%.f%.f",ptBin[ipt],ptBin[ipt+1])); 
+    gv2_sys[ipt] = (TGraphErrors*) fSpectra->Get(Form("gr_sys_Cent_Pt%.f%.f",ptBin[ipt],ptBin[ipt+1])); 
+    for(int ip = 0; ip<gv2[ipt]->GetN(); ip++){
+      pxtmp = 0; pytmp = 0; extmp = 0; eytmp = 0; esy=0;
+      gv2[ipt]->GetPoint(ip,pxtmp,pytmp);
+      eytmp = gv2[ipt]->GetErrorY(ip);
+      esy = gv2_sys[ipt]->GetErrorY(ip);
+      gv2[ipt]->SetPoint(ip, xmax/(nCentBin*2)+xmax/nCentBin*ip, pytmp);
+      gv2[ipt]->SetPointError(ip, 0, eytmp);
+      gv2_sys[ipt]->SetPoint(ip, xmax/(nCentBin*2)+xmax/nCentBin*ip, pytmp);
+      gv2_sys[ipt]->SetPointError(ip, esx, esy);
+    }
+    SetGraphStyle(gv2[ipt],1,1);
+    SetGraphStyleSys(gv2_sys[ipt],1);
   }
-
-  final_v2->GetXaxis()->CenterTitle();
-  final_v2->GetYaxis()->CenterTitle();
-  final_v2->GetYaxis()->SetTitleOffset(1.2);
-  final_v2->GetXaxis()->SetTitleOffset(1.);
-  final_v2->SetMinimum(-0.05);
-  final_v2->SetMaximum(0.2);
-
-  double pxtmp_int, pytmp_int, extmp_int, eytmp_int;
-  double relsys_int;
-
-  for (int is=0; is<nBin; is++){
-    cout << is+1 <<"th bin***************" << endl;
-    pxtmp_int=0; pytmp_int=0; extmp_int=0; eytmp_int=0; relsys_int=0;
-    gv2_int[is] -> GetPoint(0,pxtmp_int,pytmp_int);
-    eytmp_int = gv2_int[is]->GetErrorY(0);
-    final_v2_int->SetBinContent(is+1, pytmp_int);
-    final_v2_int->SetBinError(is+1, eytmp_int);
-  }
-
-  final_v2_int->GetXaxis()->CenterTitle();
-  final_v2_int->GetYaxis()->CenterTitle();
-  final_v2_int->GetYaxis()->SetTitleOffset(1.2);
-  final_v2_int->GetXaxis()->SetTitleOffset(1.);
-  final_v2_int->SetMinimum(-0.05);
-  final_v2_int->SetMaximum(0.15);
-
-  TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
-  TFile* fSys = new TFile("../Systematic/merged_sys.root","read");
-  TH1D* hsys = (TH1D*) fSys->Get("hCent_Pt03_merged");
-  TGraphErrors *gsys = new TGraphErrors();
-  for(int ib=0;ib<final_v2->GetNbinsX();ib++){
-    gsys->SetPoint(ib, final_v2->GetBinCenter(ib+1), final_v2->GetBinContent(ib+1));
-    gsys->SetPointError(ib, final_v2->GetBinWidth(ib+1)/2, hsys->GetBinContent(ib+1));
-    final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
-  }
-
-  TGraphErrors* final_v2_int_g = new TGraphErrors(final_v2_int);
-  TH1D* hsys_int = (TH1D*) fSys->Get("hCent_Pt050_merged");
-  TGraphErrors *gsys_int = new TGraphErrors();
-  for(int ib=0;ib<final_v2_int->GetNbinsX();ib++){
-    gsys_int->SetPoint(ib, final_v2_int->GetBinCenter(ib+1), final_v2_int->GetBinContent(ib+1));
-    gsys_int->SetPointError(ib, final_v2_int->GetBinWidth(ib+1)/2, hsys_int->GetBinContent(ib+1));
-    final_v2_int_g->SetPointError(ib,0,final_v2_int->GetBinError(ib+1));
-  }
-  SetGraphStyle(final_v2_g,1,1);
-  SetGraphStyleSys(gsys,1);
-
-  SetGraphStyle(final_v2_int_g,1,1);
-  SetGraphStyleSys(gsys_int,1);
-
-  double xmax = 90; 
- 
-  TCanvas* c1 = new TCanvas("c1","c1",600,600);
-  gPad->SetLeftMargin(0.19);
-  gPad->SetBottomMargin(0.17);
-  gPad->SetTopMargin(0.065);
-  c1->cd();
-  final_v2_g->SetMarkerStyle(kFullCircle);
-  gsys->Draw("A5");
-  gsys->GetXaxis()->CenterTitle();
-  gsys->GetYaxis()->CenterTitle();
-  gsys->GetYaxis()->SetTitleOffset(1.2);
-  gsys->GetXaxis()->SetTitleOffset(1.);
-  gsys->GetYaxis()->SetTitle("v_{2}^{sig}");
-  gsys->GetXaxis()->SetTitle("Centrality (%)");
-  gsys->GetXaxis()->SetRangeUser(0,xmax);
-  gsys->SetMinimum(-0.05);
-  gsys->SetMaximum(0.15);
-
-  final_v2_g->Draw("pe same");
-
-  TLegend *leg= new TLegend(0.74, 0.70, 0.925, 0.77);
-  SetLegendStyle(leg);
-  leg->SetTextSize(0.044);
-  leg->AddEntry(final_v2_g,"#Upsilon(1S)","pe");
-  leg->Draw("same");
-  dashedLine(0.,0.,xmax,0.,1,1);
   
+  //Set for Integrated Bin
+  for(int ip = 0; ip<gv2_int->GetN(); ip++){
+    pxtmp = 0; pytmp = 0; extmp = 0; eytmp = 0; esy=0;
+    gv2_int->GetPoint(ip,pxtmp,pytmp);
+    eytmp = gv2_int->GetErrorY(ip);
+    esy = gv2_int_sys->GetErrorY(ip);
+    gv2_int->SetPoint(ip, xmax/(nCentBin*2)+xmax/nCentBin*ip, pytmp);
+    gv2_int->SetPointError(ip, 0, eytmp);
+    gv2_int_sys->SetPoint(ip, xmax/(nCentBin*2)+xmax/nCentBin*ip, pytmp);
+    gv2_int_sys->SetPointError(ip, esx, esy);
+  }
+  SetGraphStyle(gv2_int,1,1);
+  SetGraphStyleSys(gv2_int_sys,1);
+
+
+  TCanvas* c1[nCentBin];
+  TLegend *leg[nCentBin];
+  TLatex* globtex_label = new TLatex();
+  globtex_label->SetNDC();
+  globtex_label->SetTextAlign(12); //left-center
+  globtex_label->SetTextFont(42);
+  globtex_label->SetTextSize(0.040);
   TLatex* globtex = new TLatex();
   globtex->SetNDC();
   globtex->SetTextAlign(12); //left-center
   globtex->SetTextFont(42);
   globtex->SetTextSize(0.040);
-  double sz_init = 0.875; double sz_step = 0.0535;
-  globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
-  globtex->DrawLatex(0.23, sz_init-sz_step, "p_{T}^{#Upsilon} < 3 GeV/c");
-  globtex->DrawLatex(0.23, sz_init-sz_step*2, "|y| < 2.4");
-  
-  CMS_lumi_square( c1, iPeriod, iPos );
-	c1->Update();
-  c1->SaveAs("v2Sig_cent_lowPt.pdf");
+  double sz_init = 0.867; double sz_step = 0.0535; double ymin_d = 0.007;
+  double lab_posx = 0.282; double lab_posy = 0.14; double lab_pos_diff = 0.269;
+  for(int ic=0; ic<nBin; ic++){
+    c1[ic]= new TCanvas(Form("c%d",ic),Form("c%d",ic),600,600);
+    gPad->SetLeftMargin(0.19);
+    gPad->SetBottomMargin(0.17);
+    gPad->SetTopMargin(0.065);
+    c1[ic]->cd();
+    gv2[ic]->SetMarkerStyle(kFullCircle);
+    gv2_sys[ic]->Draw("A5");
+    gv2_sys[ic]->GetXaxis()->CenterTitle();
+    gv2_sys[ic]->GetYaxis()->CenterTitle();
+    gv2_sys[ic]->GetYaxis()->SetTitleOffset(1.5);
+    gv2_sys[ic]->GetXaxis()->SetTitleOffset(1.1);
+    gv2_sys[ic]->GetYaxis()->SetTitle("#it{v}_{2}^{#varUpsilon(1S)}");
+    gv2_sys[ic]->GetXaxis()->SetTitle("Centrality (%)");
+    gv2_sys[ic]->GetXaxis()->SetTitleSize(0.055);
+//    gv2_sys[ic]->GetXaxis()->SetTitleSize(0);
+    gv2_sys[ic]->GetXaxis()->SetLabelSize(0);
+    gv2_sys[ic]->GetXaxis()->SetTickLength(0);
+    gv2_sys[ic]->GetXaxis()->SetRangeUser(0,xmax);
+    gv2_sys[ic]->GetXaxis()->SetLimits(0,xmax);
+    gv2_sys[ic]->SetMinimum(ymin);
+    gv2_sys[ic]->SetMaximum(ymax);
 
- 
-  TCanvas* c2 = new TCanvas("c2","c2",600,600);
-  gPad->SetLeftMargin(0.19);
-  gPad->SetBottomMargin(0.17);
-  gPad->SetTopMargin(0.065);
-  c2->cd();
-  final_v2_int_g->SetMarkerStyle(kFullCircle);
-  gsys_int->Draw("A5");
-  gsys_int->GetXaxis()->CenterTitle();
-  gsys_int->GetYaxis()->CenterTitle();
-  gsys_int->GetYaxis()->SetTitleOffset(1.2);
-  gsys_int->GetXaxis()->SetTitleOffset(1.);
-  gsys_int->GetYaxis()->SetTitle("v_{2}^{sig}");
-  gsys_int->GetXaxis()->SetTitle("Centrality (%)");
-  gsys_int->GetXaxis()->SetRangeUser(0,xmax);
-  gsys_int->SetMinimum(-0.05);
-  gsys_int->SetMaximum(0.15);
+    gv2[ic]->Draw("pe same");
+    dashedLine(0.,0.,xmax,0.,1,1);
 
-  final_v2_int_g->Draw("pe same");
+    TString perc = "%";
+    leg[ic]= new TLegend(0.74, 0.70, 0.925, 0.77);
+    SetLegendStyle(leg[ic]);
+    leg[ic]->SetTextSize(0.044);
+    leg[ic]->AddEntry(gv2[ic],"#varUpsilon(1S)","pe");
+    leg[ic]->Draw("same");
+    solidLine(xmax/3,ymin,xmax/3,ymin+ymin_d,1,1);
+    solidLine(xmax/3*2,ymin,xmax/3*2,ymin+ymin_d,1,1);
+    
+    solidLine(xmax/3,ymax,xmax/3,ymax-ymin_d,1,1);
+    solidLine(xmax/3*2,ymax,xmax/3*2,ymax-ymin_d,1,1);
 
-  TLegend *leg_int= new TLegend(0.74, 0.70, 0.925, 0.77);
-  SetLegendStyle(leg_int);
-  leg_int->SetTextSize(0.044);
-  leg_int->AddEntry(final_v2_int_g,"#Upsilon(1S)","pe");
-  leg_int->Draw("same");
-  dashedLine(0.,0.,xmax,0.,1,1);
-  
+
+    globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
+    globtex->DrawLatex(0.23, sz_init-sz_step, "|y| < 2.4");
+    globtex->DrawLatex(0.23, sz_init-sz_step*2, Form("p_{T}^{#varUpsilon}. %.f-%.f%s",centBin[ic],centBin[ic+1],perc.Data()));
+    globtex_label->DrawLatex(lab_posx, lab_posy, "0-3");
+    globtex_label->DrawLatex(lab_posx+lab_pos_diff,  lab_posy,"3-6");
+    globtex_label->DrawLatex(lab_posx+lab_pos_diff*2, lab_posy, "6-50");
+    gv2_sys[ic]->SetName(Form("gr_sys_v2_vs_pt_Cent%.f%.f",centBin[ic],centBin[ic+1]));
+    gv2[ic]->SetName(Form("gr_point_v2_vs_pt_Cent%.f%.f",centBin[ic],centBin[ic+1]));
+    CMS_lumi_square( c1[ic], iPeriod, iPos );
+    c1[ic]->Update();
+    c1[ic]->SaveAs(Form("v2Sig_Cent_pt%d.pdf",ic));
+  }
+
   TLatex* globtex_int = new TLatex();
   globtex_int->SetNDC();
   globtex_int->SetTextAlign(12); //left-center
   globtex_int->SetTextFont(42);
   globtex_int->SetTextSize(0.040);
+
+
+
+
+  //Integrated Panel
+  TGraphErrors* gv2_int1S = (TGraphErrors*) fSpectra->Get("gr_Int1S");
+  TGraphErrors* gv2_int2S = (TGraphErrors*) fSpectra->Get("gr_Int2S");
+  TGraphErrors* gv2_int1S_sys = (TGraphErrors*) fSpectra->Get("gr_sys_Int1S");
+  TGraphErrors* gv2_int2S_sys = (TGraphErrors*) fSpectra->Get("gr_sys_Int2S");
+  
+  double xmax_int = 1;
+  double pos_d = xmax_int/8;
+  double pxint=0; double pyint =0; double eyint = 0; double esysint = 0;
+  double xlonger = 120;
+    
+  gv2_int1S->GetPoint(0, pxint, pyint);
+  eyint = gv2_int1S->GetErrorY(0);
+  esysint = gv2_int1S_sys->GetErrorY(0);
+  gv2_int1S->SetPoint(0,xmax_int/2-pos_d,pyint);
+  gv2_int1S->SetPointError(0,0,eyint);
+  gv2_int1S_sys->SetPoint(0,xmax_int/2-pos_d,pyint);
+  gv2_int1S_sys->SetPointError(0,xmax_int/12,esysint);
+
+  pxint=0; pyint =0; eyint = 0; esysint = 0;
+  gv2_int2S->GetPoint(0, pxint, pyint);
+  eyint = gv2_int2S->GetErrorY(0);
+  esysint = gv2_int2S_sys->GetErrorY(0);
+  gv2_int2S->SetPoint(0,xmax_int/2+pos_d,pyint);
+  gv2_int2S->SetPointError(0,0,eyint);
+  gv2_int2S_sys->SetPoint(0,xmax_int/2+pos_d,pyint);
+  gv2_int2S_sys->SetPointError(0,xmax_int/12,esysint);
+
+  SetGraphStyle(gv2_int1S,1,1);
+  SetGraphStyleSys(gv2_int1S_sys,1);
+  SetGraphStyle(gv2_int2S,2,2);
+  SetGraphStyleSys(gv2_int2S_sys,2);
+  gv2_int1S_sys->GetXaxis()->SetLimits(0,xmax_int);
+  gv2_int1S_sys->GetXaxis()->SetRangeUser(0,xmax_int);
+  gv2_int1S_sys->SetMinimum(ymin);
+  gv2_int1S_sys->SetMaximum(ymax);
+  gv2_int1S_sys->GetXaxis()->SetNdivisions(101);
+  gv2_int1S_sys->GetXaxis()->SetLabelSize(0);
+  gv2_int1S_sys->GetYaxis()->SetTickLength(0.03*600/xlonger);
+  gv2_int1S_sys->GetYaxis()->SetLabelSize(0);
+  
+  TCanvas *c2 = new TCanvas("cint","", 600,600);
+  TPad* pad_diff = new TPad("pad_diff", "",0, 0, 600/(600.+xlonger), 1.0); // vs centrality
+  pad_diff->SetRightMargin(0);
+  pad_diff->SetLeftMargin(0.20);
+  pad_diff->SetBottomMargin(0.13);
+  pad_diff->SetTopMargin(0.067);
+  TPad* pad_int = new TPad("pad_int", "",600/(600.+xlonger), 0, 1.0, 1.0); // centrality-integrated
+  pad_int->SetBottomMargin(0.13);
+  pad_int->SetTopMargin(0.067);
+  pad_int->SetLeftMargin(0);
+  pad_int->SetRightMargin(0.032*600/xlonger);
+
+  c2->cd();
+  pad_diff->Draw();
+  pad_diff->cd();
+
+
+  gv2_int->SetMarkerStyle(kFullCircle);
+  gv2_int_sys->Draw("A5");
+  gv2_int_sys->GetXaxis()->CenterTitle();
+  gv2_int_sys->GetYaxis()->CenterTitle();
+  gv2_int_sys->GetYaxis()->SetTitleOffset(1.5);
+  gv2_int_sys->GetXaxis()->SetTitleOffset(1.1);
+  gv2_int_sys->GetYaxis()->SetTitle("#it{v}_{2}^{#varUpsilon(1S)}");
+  gv2_int_sys->GetXaxis()->SetTitle("Centrality (%)");
+  gv2_int_sys->GetXaxis()->SetTitleSize(0.055);
+  gv2_int_sys->GetXaxis()->SetLabelSize(0);
+  gv2_int_sys->GetXaxis()->SetTickLength(0);
+  gv2_int_sys->GetXaxis()->SetRangeUser(0,xmax);
+  gv2_int_sys->GetXaxis()->SetLimits(0,xmax);
+  gv2_int_sys->SetMinimum(ymin);
+  gv2_int_sys->SetMaximum(ymax);
+  
+  gv2_int->Draw("pe same");
+  
+  TLegend *leg_int= new TLegend(0.74, 0.70, 0.925, 0.77);
+  SetLegendStyle(leg_int);
+  leg_int->SetTextSize(0.044);
+  leg_int->AddEntry(gv2_int,"#varUpsilon(1S)","pe");
+  leg_int->AddEntry(gv2_int2S,"#varUpsilon(2S)","pe");
+  leg_int->Draw("same");
+  dashedLine(0.,0.,xmax,0.,1,1);
+  ymin_d = 0.007;
+  solidLine(xmax/4,ymin,xmax/4,ymin+ymin_d,1,1);
+  solidLine(xmax/2,ymin,xmax/2,ymin+ymin_d,1,1);
+  solidLine(xmax/4*3,ymin,xmax/4*3,ymin+ymin_d,1,1);
+  solidLine(xmax/4,ymax,xmax/4,ymax-ymin_d,1,1);
+  solidLine(xmax/2,ymax,xmax/2,ymax-ymin_d,1,1);
+  solidLine(xmax/4*3,ymax,xmax/4*3,ymax-ymin_d,1,1);
+  
   globtex_int->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
-  globtex_int->DrawLatex(0.23, sz_init-sz_step, "p_{T}^{#Upsilon} < 50 GeV/c");
-  globtex_int->DrawLatex(0.23, sz_init-sz_step*2, "|y| < 2.4");
+  globtex_int->DrawLatex(0.23, sz_init-sz_step, "|y| < 2.4");
+  globtex_int->DrawLatex(0.23, sz_init-sz_step*2, "p_{T}^{#varUpsilon} < 50 GeV/c");
   
-  CMS_lumi_square( c2, iPeriod, iPos );
+  double lab_posx_ = 0.269; double lab_posy_ = 0.103; double lab_pos_diff_ = 0.186;
+  TLatex* globtex_label_ = new TLatex();
+  globtex_label_->SetNDC();
+  globtex_label_->SetTextAlign(12); //left-center
+  globtex_label_->SetTextFont(42);
+  globtex_label_->SetTextSize(0.040);
+  globtex_label_->DrawLatex(lab_posx_, lab_posy_, "0-10");
+  globtex_label_->DrawLatex(lab_posx_+lab_pos_diff_,  lab_posy_,"10-30");
+  lab_pos_diff_ = lab_pos_diff_ + 0.0015;
+  globtex_label_->DrawLatex(lab_posx+lab_pos_diff_*2, lab_posy_, "30-50");
+  lab_pos_diff_ = lab_pos_diff_ + 0.0018;
+  globtex_label_->DrawLatex(lab_posx+lab_pos_diff_*3, lab_posy_, "50-90");
+     
+  pad_diff->Update();
+  CMS_lumi_square( pad_diff, iPeriod, iPos );
+  
+  pad_diff->Update();
+
+ 
+  c2->cd(); 
+  pad_int->Draw();
+  pad_int->cd();
+  gv2_int1S_sys->Draw("A5");
+  gv2_int2S_sys->Draw("5");
+  gv2_int1S->Draw("P");
+  gv2_int2S->Draw("P");
+  dashedLine(0.,0.,xmax_int,0.,1,1);
+  globtex_label_->SetTextSize(0.21);
+  globtex_label_->DrawLatex(lab_posx-0.2+lab_pos_diff_, lab_posy_, "0-90");
+  
 	c2->Update();
-  c2->SaveAs("v2Sig_cent_int.pdf");
+  c2->SaveAs("v2Sig_cent_w2S.pdf");
+
+
+
+/*
+  TFile *fFullInt1S = new TFile("../SimFit/SigAllFreeFitFix/FitResult/SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality0-180_m8-14_OS.root","read");
+  TFile *fFullInt2S = new TFile("../SimFit/SigAllFreeFitFix/FitResult/2S_SimFitResult_pt0.0-50.0_y0.0-2.4_muPt3.5_centrality0-180_m8-14_OS.root","read");
   
-  TFile *out = new TFile("out_v2_vs_cent.root","recreate");
+  TGraphErrors* gInt1S = (TGraphErrors*) fFullInt1S -> Get("v2vspt");  
+  TGraphErrors* gInt2S = (TGraphErrors*) fFullInt2S -> Get("v2vspt");  
+  double xInt1S, yInt1S, xInt2S, yInt2S;
+  double xInt1SErr, yInt1SErr, xInt2SErr, yInt2SErr;
+  
+  gInt1S->GetPoint(0, xInt1S, yInt1S);
+  gInt2S->GetPoint(0, xInt2S, yInt2S);
+  yInt1SErr= gInt1S->GetErrorY(0);
+  yInt2SErr= gInt2S->GetErrorY(0);
+
+  TFile* fSys2S = new TFile("../Systematic/merged_sys_2S.root","read");
+  TH1D* hInt1S = (TH1D*) fSys->Get("hSys_int_merged");
+  TH1D* hInt2S = (TH1D*) fSys2S->Get("hSys_int_merged");
+  
+  double yInt1Ssys = hInt1S->GetBinContent(1);
+  double yInt2Ssys = hInt2S->GetBinContent(1);
+
+  cout << "Integrated 1S : " << Form("%.3f",yInt1S) << " +/- " << Form("%.3f",yInt1SErr) << " +/- " << Form("%.3f",yInt1Ssys) << endl;
+  cout << "Integrated 2S : " << Form("%.3f",yInt2S) << " +/- " << Form("%.3f",yInt2SErr) << " +/- " << Form("%.3f",yInt2Ssys) << endl;
+
+  TFile *out = new TFile("out_v2_vs_pt.root","recreate");
   out->cd();
-  gsys->SetName("gr_sys_v2_vs_cent_pt03");
-  final_v2_g->SetName("gr_point_v2_vs_cent_pt03");
-  gsys_int->SetName("gr_sys_v2_vs_cent_pt050");
-  final_v2_int_g->SetName("gr_point_v2_vs_cent_pt050");
+  gsys_int->SetName("gr_sys_v2_vs_pt_Cent090");
+  final_v2_int_g->SetName("gr_point_v2_vs_pt_Cent090");
   gsys_int->Write(); 
   final_v2_int_g->Write();
-  gsys->Write(); 
-  final_v2_g->Write();
+  for(int i=0;i<nCentBin;i++){
+    gsys[i]->Write();
+    final_v2_g[i]->Write();
+  }
+*/
 
 	return;
-}
+} 
