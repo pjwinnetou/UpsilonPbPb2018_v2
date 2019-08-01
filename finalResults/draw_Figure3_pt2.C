@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void draw_Figure2_pt(){
+void draw_Figure3_pt2(){
 
   setTDRStyle();
   writeExtraText= true;
@@ -32,7 +32,7 @@ void draw_Figure2_pt(){
   fIn = new TFile("./out_v2_vs_pt.root","READ");
 
   final_v2 = new TH1D("Final_v2",";p_{T}^{#Upsilon(1S)} (GeV/c);v_{2}^{Sig}",nBin,0,3);
-  gv2 = (TGraphErrors*)fIn->Get("gr_point_v2_vs_pt_Cent090");
+  gv2 = (TGraphErrors*)fIn->Get("gr_point_v2_vs_pt_Cent1030");
 
   //// get bin width and calculate systematic uncertainties
   double pxtmp, pytmp, extmp, eytmp;
@@ -57,7 +57,7 @@ void draw_Figure2_pt(){
 
   double sysX, sysY, sysX_Error, sysY_Error;
   TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
-  gsys = (TGraphErrors*)fIn->Get("gr_sys_v2_vs_pt_Cent090");
+  gsys = (TGraphErrors*)fIn->Get("gr_sys_v2_vs_pt_Cent1030");
   TGraphErrors* gsys2 = new TGraphErrors();
   TH1D *hsys= new TH1D("hsys",";p_{T}^{#Upsilon(1S)} (GeV/c);v_{2}^{Sig}",nBin,0,3);
 
@@ -106,13 +106,6 @@ void draw_Figure2_pt(){
   gsys2->GetXaxis()->SetNdivisions(210);
   gsys2->GetXaxis()->SetTickLength(0);
 
-  TLine *linebin1 = new TLine(1,-0.05,1,-0.045);
-  TLine *linebin2 = new TLine(2,-0.05,2,-0.045);
-  TLine *linebin3 = new TLine(3,-0.05,3,-0.045);
-  linebin1->Draw("same");
-  linebin2->Draw("same");
-  //linebin3->Draw("same");
-
   final_v2_g->Draw("pe same");
 
   TF1 *line = new TF1("line","0",0,3);
@@ -122,6 +115,14 @@ void draw_Figure2_pt(){
 
   line->Draw("same");
 
+  TLine *linebin1 = new TLine(1,-0.05,1,-0.045);
+  TLine *linebin2 = new TLine(2,-0.05,2,-0.045);
+  TLine *linebin3 = new TLine(3,-0.05,3,-0.045);
+  linebin1->Draw("same");
+  linebin2->Draw("same");
+  //linebin3->Draw("same");
+
+
   TString perc = "%";
   leg= new TLegend(0.74, 0.70, 0.925, 0.77);
   SetLegendStyle(leg);
@@ -130,17 +131,15 @@ void draw_Figure2_pt(){
   leg->Draw("same");
   //globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
   //globtex->DrawLatex(0.23, sz_init-sz_step, "|y| < 2.4");
-  //globtex->DrawLatex(0.23, sz_init-sz_step*2, Form("Cent. 0-90%s",perc.Data()));
+  //globtex->DrawLatex(0.23, sz_init-sz_step*2, Form("Cent. 0-10%s",perc.Data()));
   globtex->DrawLatex(0.23, sz_init, "|y| < 2.4");
-  globtex->DrawLatex(0.23, sz_init-sz_step, Form("Cent. 0-90%s",perc.Data()));
+  globtex->DrawLatex(0.23, sz_init-sz_step, Form("Cent. 10-30%s",perc.Data()));
   globtex->DrawLatex(0.30, 0.14, "0-3");
   globtex->DrawLatex(0.55, 0.14, "3-6");
-  globtex->DrawLatex(0.80, 0.14, "6-30");
-  gsys2->SetName("gr_sys_v2_vs_pt_Cent090");
-  final_v2_g->SetName("gr_point_v2_vs_pt_Cent090");
+  globtex->DrawLatex(0.80, 0.14, "6-50");
   CMS_lumi_square( c1, iPeriod, iPos );
   c1->Update();
-  c1->SaveAs("v2Sig_pt_Cent.pdf");
+  c1->SaveAs("v2Sig_pt_Cent_2.pdf");
 
 
   return;
