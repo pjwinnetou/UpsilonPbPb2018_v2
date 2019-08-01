@@ -81,6 +81,7 @@ void draw_Figure2_cent(){
   final_v2_int->SetMaximum(0.15);
 
   double sysX, sysY, sysX_Error, sysY_Error;
+  double eXdiv = 6.0;
   TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
   gsys = (TGraphErrors*)fIn->Get("gr_sys_v2_vs_cent_pt050");
   TGraphErrors* gsys2 = new TGraphErrors();
@@ -93,7 +94,7 @@ void draw_Figure2_cent(){
 	hsys->SetBinContent(ib+1, sysY);
 	hsys->SetBinError(ib+1, sysY_Error);
     gsys2->SetPoint(ib,final_v2->GetBinCenter(ib+1),sysY);
-    gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2,sysY_Error);
+    gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2/eXdiv,sysY_Error);
     final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
     //final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
 	cout << "Syst Error : " << hsys->GetBinContent(ib+1) << endl;
@@ -104,9 +105,9 @@ void draw_Figure2_cent(){
   SetGraphStyleSys(gsys2,1);
 
   SetGraphStyle(gv2Int1S,1,1);
-  SetGraphStyleSys(gv2Int1Ssys,2);
-  SetGraphStyle(gv2Int2S,2,2);
   SetGraphStyleSys(gv2Int1Ssys,1);
+  SetGraphStyle(gv2Int2S,2,2);
+  SetGraphStyleSys(gv2Int2Ssys,2);
  
 
   double xmax = 4.05; // 90, 4 
@@ -129,17 +130,6 @@ void draw_Figure2_cent(){
   double tmpv2sEr1 = v2Err[0];
   double tmpv2sEr2 = v2Err[1];
 
-
-  TH1F *hPadInt = new TH1F("hPadInt",";;",1,0,20);
-  hPadInt->SetMaximum(0.15);
-  hPadInt->SetMinimum(-0.05);
-
-  hPadInt->GetXaxis()->SetNdivisions(101);
-  hPadInt->GetXaxis()->SetLabelSize(0);
-  hPadInt->GetXaxis()->SetRangeUser(0,20);
-  hPadInt->GetYaxis()->SetTickLength(0.03*600/xlonger);
-  hPadInt->GetYaxis()->SetLabelSize(0);
-  hPadInt->GetXaxis()->SetTitle("");
 
   double xwth = 0.1;
   double swth = 2.0;
@@ -296,20 +286,6 @@ void draw_Figure2_cent(){
   gv2Int1Ssys2->GetXaxis()->SetTitle("");
 
 
-  /*
-  gv2Int1Ssys->Draw("A5");
-  gv2Int2Ssys->Draw("5");
-  gv2Int1S->Draw("pe same");
-  gv2Int2S->Draw("pe same");
-  */
-
-  THStack* ths = new THStack();
-  ths->Add(hPadInt);
-
-  ths->Draw("samenostack");
-
-  //hPadInt->Draw();
-
   gv2Int1Ssys2->GetYaxis()->SetLimits(-0.05,0.15);
   gv2Int1Ssys2->GetYaxis()->SetRangeUser(-0.05,0.15);
   gv2Int1Ssys2->GetXaxis()->SetLimits(0,20);
@@ -323,8 +299,9 @@ void draw_Figure2_cent(){
   line->Draw("same");
 
   double yext = 0.1;
-  lt1->DrawLatex(0.5*(1-0.032*600/xlonger), sz_init-sz_step-sz_allign+yext, "Cent.");
-  lt1->DrawLatex(0.5*(1-0.032*600/xlonger), sz_init-sz_step*2-sz_allign+yext, "0-90%");
+  //lt1->DrawLatex(0.5*(1-0.032*600/xlonger), sz_init-sz_step-sz_allign+yext, "Cent.");
+  //lt1->DrawLatex(0.5*(1-0.032*600/xlonger), sz_init-sz_step*2-sz_allign+yext, "0-90%");
+  lt1->DrawLatex(0.45, 0.14, "0-90");
 
   pad_int->Update();
 

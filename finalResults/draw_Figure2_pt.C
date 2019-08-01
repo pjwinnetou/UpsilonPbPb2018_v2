@@ -56,6 +56,7 @@ void draw_Figure2_pt(){
   final_v2->SetMaximum(0.2);
 
   double sysX, sysY, sysX_Error, sysY_Error;
+  double eXdiv = 6.0;
   TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
   gsys = (TGraphErrors*)fIn->Get("gr_sys_v2_vs_pt_Cent090");
   TGraphErrors* gsys2 = new TGraphErrors();
@@ -66,7 +67,7 @@ void draw_Figure2_pt(){
 	  gsys->GetPoint(ib,sysX,sysY);
 	  sysY_Error = gsys->GetErrorY(ib);
 	  gsys2->SetPoint(ib,final_v2->GetBinCenter(ib+1),sysY);
-	  gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2,sysY_Error);
+	  gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2/eXdiv,sysY_Error);
 	  hsys->SetBinContent(ib+1, final_v2->GetBinContent(ib+1));
 	  hsys->SetBinError(ib+1, gsys2->GetErrorY(ib+1));
 	  final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
