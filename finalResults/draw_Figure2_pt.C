@@ -56,6 +56,7 @@ void draw_Figure2_pt(){
   final_v2->SetMaximum(0.2);
 
   double sysX, sysY, sysX_Error, sysY_Error;
+  double eXdiv = 6.0;
   TGraphErrors* final_v2_g = new TGraphErrors(final_v2);
   gsys = (TGraphErrors*)fIn->Get("gr_sys_v2_vs_pt_Cent090");
   TGraphErrors* gsys2 = new TGraphErrors();
@@ -66,7 +67,7 @@ void draw_Figure2_pt(){
 	  gsys->GetPoint(ib,sysX,sysY);
 	  sysY_Error = gsys->GetErrorY(ib);
 	  gsys2->SetPoint(ib,final_v2->GetBinCenter(ib+1),sysY);
-	  gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2,sysY_Error);
+	  gsys2->SetPointError(ib,final_v2->GetBinWidth(ib+1)/2/eXdiv,sysY_Error);
 	  hsys->SetBinContent(ib+1, final_v2->GetBinContent(ib+1));
 	  hsys->SetBinError(ib+1, gsys2->GetErrorY(ib+1));
 	  final_v2_g->SetPointError(ib,0,final_v2->GetBinError(ib+1));
@@ -104,6 +105,14 @@ void draw_Figure2_pt(){
   gsys2->SetMaximum(0.15);
   gsys2->GetXaxis()->SetLabelSize(0);
   gsys2->GetXaxis()->SetNdivisions(210);
+  gsys2->GetXaxis()->SetTickLength(0);
+
+  TLine *linebin1 = new TLine(1,-0.05,1,-0.045);
+  TLine *linebin2 = new TLine(2,-0.05,2,-0.045);
+  TLine *linebin3 = new TLine(3,-0.05,3,-0.045);
+  linebin1->Draw("same");
+  linebin2->Draw("same");
+  //linebin3->Draw("same");
 
   final_v2_g->Draw("pe same");
 
@@ -120,9 +129,11 @@ void draw_Figure2_pt(){
   leg->SetTextSize(0.044);
   leg->AddEntry(final_v2_g,"#Upsilon(1S)","pe");
   leg->Draw("same");
-  globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
-  globtex->DrawLatex(0.23, sz_init-sz_step, "|y| < 2.4");
-  globtex->DrawLatex(0.23, sz_init-sz_step*2, Form("Cent. 0-90%s",perc.Data()));
+  //globtex->DrawLatex(0.23, sz_init, "p_{T}^{#mu} > 3.5 GeV/c");
+  //globtex->DrawLatex(0.23, sz_init-sz_step, "|y| < 2.4");
+  //globtex->DrawLatex(0.23, sz_init-sz_step*2, Form("Cent. 0-90%s",perc.Data()));
+  globtex->DrawLatex(0.23, sz_init, "|y| < 2.4");
+  globtex->DrawLatex(0.23, sz_init-sz_step, Form("Cent. 0-90%s",perc.Data()));
   globtex->DrawLatex(0.30, 0.14, "0-3");
   globtex->DrawLatex(0.55, 0.14, "3-6");
   globtex->DrawLatex(0.80, 0.14, "6-30");
@@ -132,13 +143,6 @@ void draw_Figure2_pt(){
   c1->Update();
   c1->SaveAs("v2Sig_pt_Cent.pdf");
 
-  
-  TFile *out = new TFile("out_v2_vs_pt_v2.root","recreate");
-  out->cd();
-  gsys2->Write();
-  final_v2_g->Write();
- 
 
-
-	return;
+  return;
 } 
