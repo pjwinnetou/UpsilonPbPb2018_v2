@@ -27,7 +27,7 @@ void getEfficiency_wTnP(
   double min = 0;
   double max = ptHigh;
   double binwidth = 1;
-  const int numBins = (max-min)/binwidth;
+  const int numBins = 31;//(max-min)/binwidth;
 
   //input files
   //TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
@@ -37,17 +37,20 @@ void getEfficiency_wTnP(
   mytree->Add(inputMC1.Data());
   mytree->Add(inputMC2.Data());
 
-  TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,min,max);
-  TH1D* hptLowestC_reco = new TH1D("hptLowestC_reco","hptLowestC_reco",numBins,min,max);
-  TH1D* hptLowC_reco = new TH1D("hptLowC_reco","hptLowC_reco",numBins,min,max);
-  TH1D* hptMidC_reco = new TH1D("hptMidC_reco","hptMidC_reco",numBins,min,max);
-  TH1D* hptHighC_reco = new TH1D("hptHighC_reco","hptHighC_reco",numBins,min,max);
+  
+  double ptBin[numBins] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,27,30,34,38,42,46,50};
 
-  TH1D* hpt_gen = new TH1D("hpt_gen","hpt_gen",numBins,min,max);
-  TH1D* hptLowestC_gen = new TH1D("hptLowestC_gen","hptLowestC_gen",numBins,min,max);
-  TH1D* hptLowC_gen = new TH1D("hptLowC_gen","hptLowC_gen",numBins,min,max);
-  TH1D* hptMidC_gen = new TH1D("hptMidC_gen","hptMidC_gen",numBins,min,max);
-  TH1D* hptHighC_gen = new TH1D("hptHighC_gen","hptHighC_gen",numBins,min,max);
+  TH1D* hpt_reco = new TH1D("hpt_reco","hpt_reco",numBins,ptBin);
+  TH1D* hptLowestC_reco = new TH1D("hptLowestC_reco","hptLowestC_reco",numBins,ptBin);
+  TH1D* hptLowC_reco = new TH1D("hptLowC_reco","hptLowC_reco",numBins,ptBin);
+  TH1D* hptMidC_reco = new TH1D("hptMidC_reco","hptMidC_reco",numBins,ptBin);
+  TH1D* hptHighC_reco = new TH1D("hptHighC_reco","hptHighC_reco",numBins,ptBin);
+
+  TH1D* hpt_gen = new TH1D("hpt_gen","hpt_gen",numBins,ptBin);
+  TH1D* hptLowestC_gen = new TH1D("hptLowestC_gen","hptLowestC_gen",numBins,ptBin);
+  TH1D* hptLowC_gen = new TH1D("hptLowC_gen","hptLowC_gen",numBins,ptBin);
+  TH1D* hptMidC_gen = new TH1D("hptMidC_gen","hptMidC_gen",numBins,ptBin);
+  TH1D* hptHighC_gen = new TH1D("hptHighC_gen","hptHighC_gen",numBins,ptBin);
 
   hpt_reco->Sumw2();
   hptLowestC_reco->Sumw2();
@@ -217,7 +220,7 @@ void getEfficiency_wTnP(
       mupl_Gen = (TLorentzVector*) Gen_mu_4mom->At(Gen_QQ_mupl_idx[igen]);
       mumi_Gen = (TLorentzVector*) Gen_mu_4mom->At(Gen_QQ_mumi_idx[igen]);
 
-      if(!( (mupl_Gen->Pt()>3.5 && fabs(mupl_Gen->Eta())<2.4) && (mumi_Gen->Pt()>3.5 && fabs(mumi_Gen->Eta())<2.4) )) continue;
+      if(!( (mupl_Gen->Pt()>muPtCut && fabs(mupl_Gen->Eta())<2.4) && (mumi_Gen->Pt()>muPtCut && fabs(mumi_Gen->Eta())<2.4) )) continue;
       if(Gen_mu_charge[Gen_QQ_mupl_idx[igen]]*Gen_mu_charge[Gen_QQ_mumi_idx[igen]]>0) continue;
 
       hpt_gen->Fill(JP_Gen->Pt(),weight);
@@ -269,7 +272,7 @@ void getEfficiency_wTnP(
       if ( Reco_QQ_VtxProb[irqq]  < 0.01 ) continue;
       if(Reco_QQ_sign[irqq]!=0) continue;  
       
-      if(!( (mupl_Reco->Pt()>3.5 && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>3.5 && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50  && JP_Reco->M()>massLow && JP_Reco->M()<massHigh)) continue;
+      if(!( (mupl_Reco->Pt()>muPtCut && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>muPtCut && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50  && JP_Reco->M()>massLow && JP_Reco->M()<massHigh)) continue;
      
       count++;
       if(isTnP){
@@ -470,12 +473,12 @@ void getEfficiency_wTnP(
   cptHighC_eff->SaveAs("Plots/cptHighC_eff.pdf");
 
   //Save efficiency files for later use.
-  hpt_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent0100",isTnP));
+  hpt_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent090",isTnP));
   hptLowestC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP));
   hptLowC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1030",isTnP));
   hptMidC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent3050",isTnP));
   hptHighC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090",isTnP));
-  TString outFileName = Form("mc_eff_vs_pt_TnP%d_OfficialMC.root",isTnP);
+  TString outFileName = Form("mc_eff_vs_pt_TnP%d_OfficialMC_muPtCut%d.root",isTnP,muPtCut);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowestC_eff->Write();
