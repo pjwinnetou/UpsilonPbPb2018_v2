@@ -4,6 +4,7 @@
 #include "commonUtility.h"
 #include "HiEvtPlaneList.h"
 #include "cutsAndBinUpsilonV2.h"
+#include "tnp_weight_lowptPbPb.h"
 
 static const long MAXTREESIZE = 1000000000000;
 double getAccWeight(TH1D* h = 0, double pt = 0);
@@ -63,7 +64,7 @@ Int_t getHiBinFromhiHF_Down(const Double_t hiHF)
 }
 
 
-void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, int hiHFBinEdge = 0) 
+void SkimTree_Event(int nevt=-1, bool isMC = true, int kTrigSel = kTrigUps, int hiHFBinEdge = 0) 
 {
 
   using namespace std;
@@ -78,7 +79,8 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
   TString fnameData1 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v1_Oniatree_addvn_part*.root";
   TString fnameData2 = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/PromptAOD/DoubleMuonPD/PromptAOD_v2_Oniatree_addvn_part*.root";
   TString fnameDataReReco = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/ReReco/AOD/DoubleMuon/ReReco_Oniatree_addvn_part*.root";
-  TString fnameMC = "/eos/cms/store/group/phys_heavyions/gbak/Ups1SMM_MC/Oniatree_Ups1SMM_5p02TeV_TuneCP5_Embd_RECO_MC.root";
+  //TString fnameDataReReco = "/eos/cms/store/group/phys_heavyions/dileptons/Data2018/PbPb502TeV/TTrees/ReReco/AOD/DoubleMuonPsiPeri/ReReco_Oniatree_addvn_part*.root";
+  TString fnameMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC*_v20190801.root";
 
   TChain *mytree = new TChain("myTree");
   if(!isMC){
@@ -196,6 +198,12 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
   TBranch        *b_Reco_mu_SelectionType;
   mytree->SetBranchAddress("Reco_mu_SelectionType", Reco_mu_SelectionType, &b_Reco_mu_SelectionType);
 
+  Float_t         Reco_QQ_ctau3D[maxBranchSize];
+  Float_t         Reco_QQ_ctauErr3D[maxBranchSize];
+  TBranch        *b_Reco_QQ_ctau3D;
+  TBranch        *b_Reco_QQ_ctauErr3D;
+  mytree->SetBranchAddress("Reco_QQ_ctau3D", Reco_QQ_ctau3D, &b_Reco_QQ_ctau3D);
+  mytree->SetBranchAddress("Reco_QQ_ctauErr3D", Reco_QQ_ctauErr3D, &b_Reco_QQ_ctauErr3D);
   
   Int_t Reco_mu_whichGen[maxBranchSize];
   TBranch *b_Reco_mu_whichGen;
@@ -230,12 +238,22 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
   else if(kTrigSel == kTrigUps) trigIndx=1;
   else if(kTrigSel == kTrigL1DBOS40100) trigIndx=2;
   else if(kTrigSel == kTrigL1DB50100) trigIndx=3;
+  
+  double tnp_weight = 1;
+  double tnp_trig_weight_mupl = -1;
+  double tnp_trig_weight_mumi = -1;
+
+  int kL2filter = 38;
+  int kL3filter = 39;
+
+  int count =0;
+  int counttnp =0;
 
   TString fCentSelHF = "HFNom";
   if(hiHFBinEdge==1) fCentSelHF = "HFUp";
   else if(hiHFBinEdge==-1) fCentSelHF = "HFDown";
   TFile* newfile;
-  newfile = new TFile(Form("OniaFlowSkim_%sTrig_DBPD_isMC%d_%s_190716.root",fTrigName[trigIndx].Data(),isMC,fCentSelHF.Data()),"recreate");
+  newfile = new TFile(Form("OniaFlowSkim_%sTrig_DB_isMC%d_%s_190801.root",fTrigName[trigIndx].Data(),isMC,fCentSelHF.Data()),"recreate");
 
   const static int nMaxDimu = 1000;
   int evt;
@@ -270,6 +288,9 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
   float qymupl[nMaxDimu];
   float qymumi[nMaxDimu];
   int recoQQsign[nMaxDimu];
+  float ctau3D[nMaxDimu];
+  float ctau3DErr[nMaxDimu];
+  double TnPweight[nMaxDimu] = {1.};
   double weight = 1;
 
   TTree* mmevttree = new TTree("mmepevt","dimuonAndEventPlanes in event based");
@@ -301,7 +322,10 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
   mmevttree->Branch("qymupl",qymupl,"qymupl[nDimu]/F");
   mmevttree->Branch("qymumi",qymumi,"qymumi[nDimu]/F");
   mmevttree->Branch("recoQQsign",recoQQsign,"recoQQsign[nDimu]/I");
+  mmevttree->Branch("ctau3D",ctau3D,"ctau3D[nDimu]/F");
+  mmevttree->Branch("ctau3DErr",ctau3DErr,"ctau3DErr[nDimu]/F");
   mmevttree->Branch("weight",&weight,"weight/D");
+  mmevttree->Branch("TnPweight",TnPweight,"TnPweight[nDimu]/D");
       
 
 
@@ -388,21 +412,64 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
         continue;
    
       recoQQsign[irqq] = Reco_QQ_sign[irqq];     
+ 
+      count++;     
+      if(isMC){
+       tnp_weight = 1;
+       tnp_trig_weight_mupl = -1;
+       tnp_trig_weight_mumi = -1;
+       tnp_weight = tnp_weight * tnp_weight_muid_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 0) * tnp_weight_muid_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 0); //mu id
+       tnp_weight = tnp_weight * tnp_weight_trk_pbpb(mupl_Reco->Eta(), 0) * tnp_weight_trk_pbpb(mumi_Reco->Eta(), 0); //inner tracker
+
+       //Trigger part
+       if(!((Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) && (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ){
+//         cout << "irqq : " << irqq << " - iev : " << iev << endl;
+//         cout << "TnP ERROR !!!! ::: No matched L2 filter1 " << endl;
+         continue;
+       }
+       bool mupl_L2Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
+       bool mupl_L3Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
+       bool mumi_L2Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
+       bool mumi_L3Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
+       if(mupl_L2Filter == false || mumi_L2Filter == false){ cout << "TnP ERROR !!!! ::: No matched L2 filter2 " << endl; cout << endl;} 
+
+       bool mupl_isL2 = (mupl_L2Filter && !mupl_L3Filter) ? true : false;
+       bool mupl_isL3 = (mupl_L2Filter && mupl_L3Filter) ? true : false;
+       bool mumi_isL2 = (mumi_L2Filter && !mumi_L3Filter) ? true : false;
+       bool mumi_isL3 = (mumi_L2Filter && mumi_L3Filter) ? true : false;
+       bool SelDone = false;
+
+       if( mupl_isL2 && mumi_isL3){
+         tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 2, 0);
+         tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 3, 0);
+         SelDone = true;
+       }
+       else if( mupl_isL3 && mumi_isL2){
+         tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
+         tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
+         SelDone = true;
+       }
+       else if( mupl_isL3 && mumi_isL3){
+         int t[2] = {-1,1}; // mupl, mumi
+         int l = rand() % (2); 
+         //pick up what will be L2
+         if(t[l]==-1){
+           tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 2, 0);
+           tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 3, 0);
+         }
+         else if(t[l]==1){
+           tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
+           tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
+         }
+         else {cout << "ERROR :: No random selection done !!!!" << endl; continue;}
+         SelDone = true;
+       }    
+       if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
+       tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
+       counttnp++;
+      }
 
 
-     /* cout << "Event #: " << iev<<endl;
-      cout << "   mass = "<<mass <<endl;
-      cout << "   phi = "<<phi<<endl;
-      cout << "   eta = "<<eta<<endl;
-      cout << "HF plus Q-vector" << endl;
-      cout << "   (qx, qy) = ("<<qx[HFp2]<<", "<<qy[HFp2]<<")"<<endl;
-      cout << "HF minus Q-vector" << endl;
-      cout << "   (qx, qy) = ("<<qx[HFm2]<<", "<<qy[HFm2]<<")"<<endl;
-      cout << "Track    Q-vector" << endl;
-      cout << "   (qx, qy) = ("<<qx[trackmid2]<<", "<<qy[trackmid2]<<")"<<endl;
-
-      cout <<endl;
-     */      
       // Fill the output tree
       if ( JP_Reco->Eta() < 0 )  {  
         qxa[nDimu] = qx[HFp2];
@@ -421,6 +488,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
       qxc[nDimu] = qx[trackmid2];
       qyc[nDimu] = qy[trackmid2];
 
+      if(isMC) TnPweight[nDimu] = tnp_weight;
       mass[nDimu] = JP_Reco->M();
       phi[nDimu] = JP_Reco->Phi();
       phi1[nDimu] = mupl_Reco->Phi();
@@ -438,6 +506,8 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
       qxmumi[nDimu] = TMath::Cos(2*phi2[nDimu]);
       qymupl[nDimu] = TMath::Sin(2*phi1[nDimu]);
       qymumi[nDimu] = TMath::Sin(2*phi2[nDimu]);
+      ctau3D[nDimu] = Reco_QQ_ctau3D[irqq];
+      ctau3DErr[nDimu] = Reco_QQ_ctauErr3D[irqq];
       nDimu++;
 
     } // end of dimuon loop
@@ -446,6 +516,8 @@ void SkimTree_Event(int nevt=-1, bool isMC = false, int kTrigSel = kTrigJpsi, in
     
   } //end of event loop
 //  mmtree->Write();  // Don't need to call Write() for trees
+  cout << "count " << count << endl;
+  cout << "counttnp " << counttnp << endl;
   newfile->cd();
   mmevttree->Write();
   newfile->Close();
