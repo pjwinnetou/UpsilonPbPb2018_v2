@@ -103,6 +103,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = true, int kTrigSel = kTrigUps, int 
   TClonesArray    *Reco_QQ_4mom;
   TClonesArray    *Reco_mu_4mom;
   ULong64_t       Reco_QQ_trig[maxBranchSize];   //[Reco_QQ_size]
+  ULong64_t       Reco_mu_trig[maxBranchSize];   //[Reco_QQ_size]
   Float_t         Reco_QQ_VtxProb[maxBranchSize];   //[Reco_QQ_size]
   TBranch        *b_runNb;   //!
   TBranch        *b_eventNb;   //!
@@ -116,6 +117,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = true, int kTrigSel = kTrigUps, int 
   TBranch        *b_Reco_QQ_4mom;   //!
   TBranch        *b_Reco_mu_4mom;   //!
   TBranch        *b_Reco_QQ_trig;   //!
+  TBranch        *b_Reco_mu_trig;   //!
   TBranch        *b_Reco_QQ_VtxProb;   //!
 
   Bool_t          Reco_mu_highPurity[maxBranchSize];   //[Reco_QQ_size]
@@ -136,6 +138,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = true, int kTrigSel = kTrigUps, int 
   mytree->SetBranchAddress("Reco_QQ_4mom", &Reco_QQ_4mom, &b_Reco_QQ_4mom);
   mytree->SetBranchAddress("Reco_mu_4mom", &Reco_mu_4mom, &b_Reco_mu_4mom);
   mytree->SetBranchAddress("Reco_QQ_trig", Reco_QQ_trig, &b_Reco_QQ_trig);
+  mytree->SetBranchAddress("Reco_mu_trig", Reco_mu_trig, &b_Reco_mu_trig);
   mytree->SetBranchAddress("Reco_QQ_VtxProb", Reco_QQ_VtxProb, &b_Reco_QQ_VtxProb);
 
   //  muon id 
