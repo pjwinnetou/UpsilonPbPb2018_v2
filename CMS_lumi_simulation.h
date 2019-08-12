@@ -13,7 +13,7 @@ float cmsTextFont   = 61;  // default is helvetic-bold
 
 bool writeExtraText = false;
 //TString extraText   = "Supplementary";
-TString extraText   = "Preliminary";
+TString extraText   = "Simulation";
 float extraTextFont = 52;  // default is helvetica-italics
 
 // text sizes and text offsets with respect to the top frame
@@ -34,11 +34,11 @@ float extraOverCmsTextSize  = 0.76;
 
 TString lumi_pp502TeV  = "28.0 pb^{-1}";
 TString lumi_pPb502TeV  = "34.6 nb^{-1}";
-TString lumi_PbPb502TeV  = "1.6 nb^{-1}";
+TString lumi_PbPb502TeV  = "";
 TString lumi_PbPb502TeV_projected  = "10 nb^{-1} projection";
 TString lumi_sqrtS = "";
 
 bool drawLogo      = false;
 
-void CMS_lumi_square( TPad* pad, int iPeriod=3, int iPosX=10 );
+void CMS_lumi_simulation( TPad* pad, int iPeriod=3, int iPosX=10 );
 
