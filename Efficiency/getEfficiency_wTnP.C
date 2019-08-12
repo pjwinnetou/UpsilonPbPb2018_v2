@@ -30,7 +30,7 @@ void getEfficiency_wTnP(
   const int numBins = 31;//(max-min)/binwidth;
 
   //input files
-  TString inputMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_*20190801.root";
+  TString inputMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC*20190801.root";
   TChain* mytree = new TChain("myTree"); 
   mytree->Add(inputMC.Data());
 
@@ -282,7 +282,7 @@ void getEfficiency_wTnP(
       
       if(!( fabs(JP_Reco->Rapidity())<2.4 && (mupl_Reco->Pt()>muPtCut && fabs(mupl_Reco->Eta())<2.4) && (mumi_Reco->Pt()>muPtCut && fabs(mumi_Reco->Eta())<2.4) && fabs(JP_Reco->Rapidity())<2.4 && JP_Reco->Pt()<50  && JP_Reco->M()>massLow && JP_Reco->M()<massHigh)) continue;
      
-      count++;
+      if(HLTPass==true && HLTFilterPass==true) count++;
       if(isTnP){
        tnp_weight = 1;
        tnp_trig_weight_mupl = -1;
@@ -336,11 +336,11 @@ void getEfficiency_wTnP(
 
        if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
        tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
-       counttnp++;
+       if(HLTPass==true && HLTFilterPass==true) counttnp++;
       }
 
       pt_weight = 1;
-      if(isPtW) pt_weight = f1->Eval(JP_Reco->Pt());
+      if(isPtWeight) pt_weight = f1->Eval(JP_Reco->Pt());
 
       if(HLTPass==true && HLTFilterPass==true){
         hpt_reco->Fill(JP_Reco->Pt(),weight * tnp_weight * pt_weight);
@@ -467,34 +467,6 @@ void getEfficiency_wTnP(
   cptHighC_eff->cd();
   hptHighC_eff->Draw();
 
-  //Save canvases
-  cpt_reco->SaveAs("Plots/cpt_reco.png");
-  cptLowC_reco->SaveAs("Plots/cptLowC_reco.png");
-  cptMidC_reco->SaveAs("Plots/cptMidC_reco.png");
-  cptHighC_reco->SaveAs("Plots/cptHighC_reco.png");
-  cpt_reco->SaveAs("Plots/cpt_reco.pdf");
-  cptLowC_reco->SaveAs("Plots/cptLowC_reco.pdf");
-  cptMidC_reco->SaveAs("Plots/cptMidC_reco.pdf");
-  cptHighC_reco->SaveAs("Plots/cptHighC_reco.pdf");
-
-  cpt_gen->SaveAs("Plots/cpt_gen.png");
-  cptLowC_gen->SaveAs("Plots/cptLowC_gen.png");
-  cptMidC_gen->SaveAs("Plots/cptMidC_gen.png");
-  cptHighC_gen->SaveAs("Plots/cptHighC_gen.png");
-  cpt_gen->SaveAs("Plots/cpt_gen.pdf");
-  cptLowC_gen->SaveAs("Plots/cptLowC_gen.pdf");
-  cptMidC_gen->SaveAs("Plots/cptMidC_gen.pdf");
-  cptHighC_gen->SaveAs("Plots/cptHighC_gen.pdf");
-
-  cpt_eff->SaveAs("Plots/cpt_eff.png");
-  cptLowC_eff->SaveAs("Plots/cptLowC_eff.png");
-  cptMidC_eff->SaveAs("Plots/cptMidC_eff.png");
-  cptHighC_eff->SaveAs("Plots/cptHighC_eff.png");
-  cpt_eff->SaveAs("Plots/cpt_eff.pdf");
-  cptLowC_eff->SaveAs("Plots/cptLowC_eff.pdf");
-  cptMidC_eff->SaveAs("Plots/cptMidC_eff.pdf");
-  cptHighC_eff->SaveAs("Plots/cptHighC_eff.pdf");
-
   //Save efficiency files for later use.
   hpt_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent090",isTnP));
   hptLowC_eff->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP));
@@ -508,7 +480,7 @@ void getEfficiency_wTnP(
   hptLowC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010_Trig",isTnP));
   hptMidC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1050_Trig",isTnP));
   hptHighC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090_Trig",isTnP));
-  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_muPtCut%.1f.root",isPtW,isTnP,muPtCut);
+  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_muPtCut%.1f.root",isPtWeight,isTnP,muPtCut);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowC_eff->Write();
