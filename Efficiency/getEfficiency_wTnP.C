@@ -35,7 +35,7 @@ void getEfficiency_wTnP(
   mytree->Add(inputMC.Data());
 
   //pT reweighting function
-  TFile *fPtW = new TFile("WeightedFunc/Func_dNdpT_1S.root","read");
+  TFile *fPtW = new TFile("../Reweight/WeightedFunc/Func_dNdpT_1S.root","read");
   TF1* f1 = (TF1*) fPtW->Get("fitRatio");
 
   
