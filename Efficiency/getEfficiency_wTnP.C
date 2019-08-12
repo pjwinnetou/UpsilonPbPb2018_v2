@@ -12,11 +12,11 @@ using namespace std;
 void getEfficiency_wTnP(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = false 
+  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = true
   ) {
 
   gStyle->SetOptStat(0);
-  int kTrigSel = 1;
+  int kTrigSel = 13;
 
   float muPtCut = 3.5;
   float muEtaCut = 2.4;
@@ -30,12 +30,13 @@ void getEfficiency_wTnP(
   const int numBins = 31;//(max-min)/binwidth;
 
   //input files
-  //TString inputMC1 = "Oniatree_addvn_MC_v20190724_r3_evt100k.root";
-  TString inputMC1 = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_ext-v1_v20190801.root";
-  TString inputMC2 = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_r1_v20190801.root";
+  TString inputMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC_*20190801.root";
   TChain* mytree = new TChain("myTree"); 
-  mytree->Add(inputMC1.Data());
-  mytree->Add(inputMC2.Data());
+  mytree->Add(inputMC.Data());
+
+  //pT reweighting function
+  TFile *fPtW = new TFile("WeightedFunc/Func_dNdpT_1S.root","read");
+  TF1* f1 = (TF1*) fPtW->Get("fitRatio");
 
   
   double ptBin[numBins+1] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,27,30,34,38,42,46,50};
@@ -201,6 +202,7 @@ void getEfficiency_wTnP(
   double tnp_weight = 1;
   double tnp_trig_weight_mupl = -1;
   double tnp_trig_weight_mumi = -1;
+  double pt_weight = 1;
 
   int kL2filter = 38;
   int kL3filter = 39;
@@ -225,10 +227,13 @@ void getEfficiency_wTnP(
       if(!( fabs(JP_Gen->Rapidity())<2.4 && (mupl_Gen->Pt()>muPtCut && fabs(mupl_Gen->Eta())<2.4) && (mumi_Gen->Pt()>muPtCut && fabs(mumi_Gen->Eta())<2.4) )) continue;
       if(Gen_mu_charge[Gen_QQ_mupl_idx[igen]]*Gen_mu_charge[Gen_QQ_mumi_idx[igen]]>0) continue;
 
-      hpt_gen->Fill(JP_Gen->Pt(),weight);
-      if(Centrality < 20) hptLowC_gen -> Fill(JP_Gen->Pt(), weight);
-      else if(Centrality > 20 && Centrality < 100) hptMidC_gen -> Fill(JP_Gen->Pt(), weight);
-      else if(Centrality > 100 && Centrality < 180) hptHighC_gen -> Fill(JP_Gen->Pt(), weight);
+      pt_weight = 1;
+      if(isPtWeight) pt_weight = f1->Eval(JP_Gen->Pt()); 
+
+      hpt_gen->Fill(JP_Gen->Pt(),weight*pt_weight);
+      if(Centrality < 20) hptLowC_gen -> Fill(JP_Gen->Pt(), weight*pt_weight);
+      else if(Centrality > 20 && Centrality < 100) hptMidC_gen -> Fill(JP_Gen->Pt(), weight*pt_weight);
+      else if(Centrality > 100 && Centrality < 180) hptHighC_gen -> Fill(JP_Gen->Pt(), weight*pt_weight);
     }
 
   
@@ -334,16 +339,19 @@ void getEfficiency_wTnP(
        counttnp++;
       }
 
+      pt_weight = 1;
+      if(isPtW) pt_weight = f1->Eval(JP_Reco->Pt());
+
       if(HLTPass==true && HLTFilterPass==true){
-        hpt_reco->Fill(JP_Reco->Pt(),weight * tnp_weight);
-        if(Centrality < 20) hptLowC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight);
-        else if(Centrality > 20 && Centrality < 100) hptMidC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight);
-        else if(Centrality > 100 && Centrality < 180) hptHighC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight);
+        hpt_reco->Fill(JP_Reco->Pt(),weight * tnp_weight * pt_weight);
+        if(Centrality < 20) hptLowC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
+        else if(Centrality > 20 && Centrality < 100) hptMidC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
+        else if(Centrality > 100 && Centrality < 180) hptHighC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
       }
       hpt_reco_NoTrig->Fill(JP_Reco->Pt(),weight * tnp_weight);
-      if(Centrality < 20) hptLowC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight);
-      else if(Centrality > 20 && Centrality < 100) hptMidC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight);
-      else if(Centrality > 100 && Centrality < 180) hptHighC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight);
+      if(Centrality < 20) hptLowC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
+      else if(Centrality > 20 && Centrality < 100) hptMidC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
+      else if(Centrality > 100 && Centrality < 180) hptHighC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
     }
   }
 
@@ -500,7 +508,7 @@ void getEfficiency_wTnP(
   hptLowC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010_Trig",isTnP));
   hptMidC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1050_Trig",isTnP));
   hptHighC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090_Trig",isTnP));
-  TString outFileName = Form("mc_eff_vs_pt_TnP%d_OfficialMC_muPtCut%.1f_L1DoubleMu50100.root",isTnP,muPtCut);
+  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_muPtCut%.1f.root",isPtW,isTnP,muPtCut);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowC_eff->Write();
