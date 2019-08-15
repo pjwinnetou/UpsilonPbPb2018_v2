@@ -62,19 +62,19 @@ void makeV2Hist(int cLow = 20, int cHigh = 180,
   TFile *rf;
   if(isMC) rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DB_isMC1_HFNom_190801.root","read");
   else if(!isMC){
-    if(hSel==0){
+    if(hfSel==0){
       cout << "Centrality Table :::: Nominal HF Calibration" << endl; 
       rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
     }
-    else if(hSel==1){
+    else if(hfSel==1){
       cout << "Centrality Table :::: Sys Up HF Calibration" << endl; 
       rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFUp_190716.root","read");
     }
-    else if(hSel==-1){
+    else if(hfSel==-1){
       cout << "Centrality Table :::: Sys Down HF Calibration" << endl; 
       rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFDo_190716.root","read");
     }
-    else{ cout << "ERROR!!!!! No HF Calibration Selected!!!" << endl; return 1;}
+    else{ cout << "ERROR!!!!! No HF Calibration Selected!!!" << endl; return;}
   }
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
@@ -542,7 +542,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 180,
   drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
   CMS_lumi_v2mass(c_mass,iPeriod,iPos,0);
   c_mass->Update();
-  c_mass->SaveAs(Form("%s/MassV2Hist/MassDist_%s.pdf",fDIR.Data(),kineLabel.Data()));
+  c_mass->SaveAs(Form("%s/MassDist_%s.pdf",fDIR.Data(),kineLabel.Data()));
 
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
