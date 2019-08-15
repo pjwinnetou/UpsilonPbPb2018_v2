@@ -12,7 +12,7 @@ using namespace std;
 void getEfficiency(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = true, int state=1
+  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = false, int state=1
   ) {
 
   gStyle->SetOptStat(0);
@@ -33,6 +33,7 @@ void getEfficiency(
 
   //input files
   TString inputMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi1S_TuneCP5_HydjetDrumMB_officialPythia8MC*20190801.root";
+  if(state==2) inputMC = "/eos/cms/store/group/phys_heavyions/dileptons/MC2018/PbPb502TeV/TTrees/Upsi2S_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8_v1.root";
   TChain* mytree = new TChain("myTree"); 
   mytree->Add(inputMC.Data());
 
@@ -482,7 +483,7 @@ void getEfficiency(
   hptLowC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010_Trig",isTnP));
   hptMidC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1050_Trig",isTnP));
   hptHighC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090_Trig",isTnP));
-  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_muPtCut%.1f.root",isPtWeight,isTnP,muPtCut);
+  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_Y%dS_muPtCut%.1f.root",isTnP,isPtWeight,state,muPtCut);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowC_eff->Write();
