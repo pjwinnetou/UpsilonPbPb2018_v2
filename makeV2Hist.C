@@ -25,10 +25,10 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 0, int cHigh = 180,
-                float ptLow = 0, float ptHigh = 3, 
+void makeV2Hist(int cLow = 20, int cHigh = 180,
+                float ptLow = 0, float ptHigh = 50, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true)
+                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true, int hfSel =0)
 {
   //Basic Setting
   gStyle->SetOptStat(0);
@@ -36,6 +36,19 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   writeExtraText= true;
   int iPeriod = 2;
   int iPos = 33;
+  
+  TString hfDIR;
+  if(hfSel==1) hfDIR = "HFUp";
+  else if(hfSel==-1) hfDIR = "HFDo"; 
+  TString mainDIR = gSystem->ExpandPathName(gSystem->pwd());
+  TString fDIR = mainDIR + "/plots/MassV2Hist";
+  if(hfSel==1 || hfSel == -1) fDIR = fDIR + hfDIR;
+  
+  void * dirf = gSystem->OpenDirectory(fDIR.Data());
+  if(dirf) gSystem->FreeDirectory(dirf);
+  else gSystem->mkdir(fDIR.Data(), kTRUE);
+  
+  
   TH1::SetDefaultSumw2();
   TString kineLabel = getKineLabel (ptLow, ptHigh, yLow, yHigh, SiMuPtCut, cLow, cHigh) ;
   TString dimusignString;
@@ -43,21 +56,38 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   else if(!dimusign) dimusignString = "SS";
 
 
+
+
   //READ Input Skimmed File
   TFile *rf;
   if(isMC) rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DB_isMC1_HFNom_190801.root","read");
-  else if(!isMC) rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
+  else if(!isMC){
+    if(hSel==0){
+      cout << "Centrality Table :::: Nominal HF Calibration" << endl; 
+      rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
+    }
+    else if(hSel==1){
+      cout << "Centrality Table :::: Sys Up HF Calibration" << endl; 
+      rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFUp_190716.root","read");
+    }
+    else if(hSel==-1){
+      cout << "Centrality Table :::: Sys Down HF Calibration" << endl; 
+      rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFDo_190716.root","read");
+    }
+    else{ cout << "ERROR!!!!! No HF Calibration Selected!!!" << endl; return 1;}
+  }
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   
   //Get Correction histograms
   bool isTnP = true;
-  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_TnP%d_PtW1_OfficialMC_muPtCut3.5.root",isTnP),"read");
+  bool isPtWeight = true;
+  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_Y1S_muPtCut3.5.root",isTnP,isPtWeight),"read");
   TH1D* hEffPt[3];
   hEffPt[0] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP)); 
   hEffPt[1] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent1050",isTnP)); 
   hEffPt[2] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent5090",isTnP)); 
-  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1Spt0_50_20190810_dNdptWeighted.root","read");
+  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_20190813_dNdptWeighted.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
 
@@ -137,15 +167,15 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   const int nMassBin_7 = 18;
   const int nMassBin_8 = 15;
   
-  float massBinDiff_7[nMassBin_7+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
-  float massBinDiff_8[nMassBin_8+1]={0, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 48, 56, 77, 98, 120};
+  float massBinDiff_7[nMassBin_7+1]={0, 8, 14, 20, 7, 15, 23, 26, 29, 30, 32, 35, 38, 46, 49, 70, 85, 98, 120};
+//  float massBinDiff_8[nMassBin_8+1]={0, 7, 15, 23, 26, 29, 30, 32, 35, 38, 41, 49, 57, 60, 80, 98, 120};
 
   float massBin_7[nMassBin_7+1];
-  float massBin_8[nMassBin_8+1];
+//  float massBin_8[nMassBin_8+1];
   
   kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh) + "_" + dimusignString;
   kineLabel = kineLabel + Form("_AccW%d_EffW%d",fAccW,fEffW);
-  
+ /* 
   for(int i=0; i<=nMassBin_7; i++){
     if(i<=3) massBin_7[i] = 7 + massBinDiff_7[i]*0.05;
     else if(i>3) massBin_7[i] = 8 + massBinDiff_7[i]*0.05;
@@ -153,6 +183,9 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   for(int i=0; i<=nMassBin_8; i++){
     massBin_8[i] = 8 + massBinDiff_8[i]*0.05;
   }
+  */
+  //float massBin_8[nMassBin_8+1] = {8, 8.35, 8.75, 9.15, 9.30, 9.43, 9.49, 9.62, 9.75, 9.95, 10.096, 10.265, 10.455, 10.9, 11.7, 12.8, 14.0};
+  float massBin_8[nMassBin_8+1] = {8, 8.30, 8.80, 9.06, 9.27, 9.40, 9.52, 9.77, 10.0, 10.076, 10.254, 10.445, 11.0, 11.95, 13.1, 14.0};
 
   float* massBin;
   int nMassBin_;
@@ -261,7 +294,7 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
     }
 
     if(nDimuPass>1) {nDimu_more++; continue;}
-    nDimu_one++;
+    if(nDimuPass==1) nDimu_one++;
 
     // Fill Dimuon Loop
     for(int j=0; j<nDimu; j++){
@@ -492,7 +525,7 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   pad1->Draw();
   pad2->Draw();
 
-  c_mass_v2->SaveAs(Form("v2Mass_%s.pdf",kineLabel.Data()));
+  c_mass_v2->SaveAs(Form("%s/v2Mass_%s.pdf",fDIR.Data(),kineLabel.Data()));
 
 
   TCanvas* c_mass = new TCanvas("c_mass","",600,600);
@@ -509,7 +542,7 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
   drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
   CMS_lumi_v2mass(c_mass,iPeriod,iPos,0);
   c_mass->Update();
-  c_mass->SaveAs(Form("MassDist_%s.pdf",kineLabel.Data()));
+  c_mass->SaveAs(Form("%s/MassV2Hist/MassDist_%s.pdf",fDIR.Data(),kineLabel.Data()));
 
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
@@ -557,39 +590,7 @@ void makeV2Hist(int cLow = 0, int cHigh = 180,
     leg_v2_4->AddEntry(h_v2_4[i],(fSB[i]+Form(" mean:%.2f",mean_v2_4[i])+Form(" err:%.2f",mean_err_v2_4[i])).Data(),"l");
   }
 
-  TCanvas *c_qq_1 = new TCanvas("c_qqa","",600,600);
-  c_qq_1->cd();
-  h_v2_1[0]->Draw("hist");
-  h_v2_1[1]->Draw("hist same");
-  h_v2_1[2]->Draw("hist same");
-  leg_v2_1->Draw("same");
-  c_qq_1->SaveAs(Form("c_qqa_%s.pdf",kineLabel.Data()));
-
-  TCanvas *c_qq_2 = new TCanvas("c_qaqb","",600,600);
-  c_qq_2->cd();
-  h_v2_2[0]->Draw("hist");
-  h_v2_2[1]->Draw("hist same");
-  h_v2_2[2]->Draw("hist same");
-  leg_v2_2->Draw("same");
-  c_qq_2->SaveAs(Form("c_qaqb_%s.pdf",kineLabel.Data()));
-
-  TCanvas *c_qq_3 = new TCanvas("c_qaqc","",600,600);
-  c_qq_3->cd();
-  h_v2_3[0]->Draw("hist");
-  h_v2_3[1]->Draw("hist same");
-  h_v2_3[2]->Draw("hist same");
-  leg_v2_3->Draw("same");
-  c_qq_3->SaveAs(Form("c_qaqc_%s.pdf",kineLabel.Data()));
-
-  TCanvas *c_qq_4 = new TCanvas("c_qbqc","",600,600);
-  c_qq_4->cd();
-  h_v2_4[0]->Draw("hist");
-  h_v2_4[1]->Draw("hist same");
-  h_v2_4[2]->Draw("hist same");
-  leg_v2_4->Draw("same");
-  c_qq_4->SaveAs(Form("c_qbqc_%s.pdf",kineLabel.Data()));
-  
-  TFile *wf = new TFile(Form("Ups_%s.root",kineLabel.Data()),"recreate");
+  TFile *wf = new TFile(Form("%s/Ups_%s.root",fDIR.Data(),kineLabel.Data()),"recreate");
   wf->cd();
   h_v2_final->Write();
   g_mass->Write();
@@ -621,6 +622,6 @@ double getAccWeight(TH1D* h, double pt){
 
 double getEffWeight(TH1D *h, double pt){
   double binN = h->FindBin(pt);
-  double weight_ = 1./(h->GetBinContentn(binN));
+  double weight_ = 1./(h->GetBinContent(binN));
   return weight_;
 } 
