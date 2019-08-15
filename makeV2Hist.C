@@ -25,10 +25,10 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 60, int cHigh = 100,
+void makeV2Hist(int cLow = 0, int cHigh = 180,
                 float ptLow = 0, float ptHigh = 3, 
                 float yLow = 0, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, bool fAccW = true, bool fEffW = true)
+                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true)
 {
   //Basic Setting
   gStyle->SetOptStat(0);
@@ -44,18 +44,20 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
 
 
   //READ Input Skimmed File
-  TFile *rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
+  TFile *rf;
+  if(isMC) rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DB_isMC1_HFNom_190801.root","read");
+  else if(!isMC) rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_190710.root","read");
   TTree *tree = (TTree*) rf -> Get("mmepevt");
 
   
   //Get Correction histograms
-  TFile *fEff = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_noTnP_OfficialMC.root","read");
-  TH1D* hEffPt[4];
-  hEffPt[0] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent010"); 
-  hEffPt[1] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent1030"); 
-  hEffPt[2] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent3050"); 
-  hEffPt[3] = (TH1D*) fEff -> Get("mc_eff_vs_pt_noTnP_Cent5090"); 
-  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_v20190611.root","read");
+  bool isTnP = true;
+  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_TnP%d_PtW1_OfficialMC_muPtCut3.5.root",isTnP),"read");
+  TH1D* hEffPt[3];
+  hEffPt[0] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP)); 
+  hEffPt[1] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent1050",isTnP)); 
+  hEffPt[2] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent5090",isTnP)); 
+  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1Spt0_50_20190810_dNdptWeighted.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
 
@@ -274,9 +276,8 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
         if(fAccW){weight_acc = getAccWeight(hAccPt, pt[j]);} 
         if(fEffW){ 
           if(cBin<20) weight_eff = getEffWeight(hEffPt[0], pt[j]);
-          if(cBin>=20 && cBin<60) weight_eff = getEffWeight(hEffPt[1], pt[j]);
-          if(cBin>=60 && cBin<100) weight_eff = getEffWeight(hEffPt[2], pt[j]);
-          if(cBin>=100 && cBin<180) weight_eff = getEffWeight(hEffPt[3], pt[j]);
+          if(cBin>=20 && cBin<100) weight_eff = getEffWeight(hEffPt[1], pt[j]);
+          if(cBin>=100 && cBin<180) weight_eff = getEffWeight(hEffPt[2], pt[j]);
         }
         double weight_ = weight * weight_eff * weight_acc;
         for(int imbin=0; imbin<nMassBin; imbin++){
@@ -322,7 +323,7 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
         massVar->setVal((double)mass[j]);
         weightVar->setVal((double)weight_);
         dataSet->add(*argSet);
-//      h_mass->Fill(mass[j]);
+      h_mass->Fill(mass[j],weight_);
       }
     }
   }
@@ -481,10 +482,10 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
   pad2->SetLeftMargin(0.19);
   pad2->SetTicks();
   pad2->cd();
-  jumSun(massLow,0,massHigh,0,1,1);
   h_v2_final->Draw("P");
+  jumSun(massLow,0,massHigh,0,1,1);
 
-  CMS_lumi_v2mass(pad1,iPeriod,iPos);  
+  CMS_lumi_v2mass(pad1,iPeriod,iPos,1);  
   pad1->Update();
   pad2->Update();
   c_mass_v2->cd();
@@ -492,6 +493,23 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
   pad2->Draw();
 
   c_mass_v2->SaveAs(Form("v2Mass_%s.pdf",kineLabel.Data()));
+
+
+  TCanvas* c_mass = new TCanvas("c_mass","",600,600);
+  c_mass->cd();
+  TH1D* h_mass_norm = (TH1D*) h_mass->Clone("h_mass_norm");
+  h_mass_norm->Scale(1./h_mass->Integral());
+  h_mass->Draw("P");
+  if(ptLow==0) drawText(Form("p_{T}^{#mu#mu} < %.f GeV/c",ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  else if(ptLow!=0) drawText(Form("%.f < p_{T}^{#mu#mu} < %.f GeV/c",ptLow, ptHigh ),pos_x_mass,pos_y,text_color,text_size);
+  if(yLow==0) drawText(Form("|y^{#mu#mu}| < %.1f",yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  else if(yLow!=0) drawText(Form("%.1f < |y^{#mu#mu}| < %.1f",yLow, yHigh ), pos_x_mass,pos_y-pos_y_diff,text_color,text_size);
+  drawText(Form("p_{T}^{#mu} > %.1f GeV/c", SiMuPtCut ), pos_x_mass,pos_y-pos_y_diff*2,text_color,text_size);
+  drawText("|#eta^{#mu}| < 2.4", pos_x_mass,pos_y-pos_y_diff*3,text_color,text_size);
+  drawText(Form("Centrality %d-%d%s",cLow/2,cHigh/2,perc.Data()),pos_x_mass,pos_y-pos_y_diff*4,text_color,text_size);
+  CMS_lumi_v2mass(c_mass,iPeriod,iPos,0);
+  c_mass->Update();
+  c_mass->SaveAs(Form("MassDist_%s.pdf",kineLabel.Data()));
 
 
   TLegend *leg_v2_1 = new TLegend(0.38,0.64,0.77,0.9);
@@ -575,6 +593,8 @@ void makeV2Hist(int cLow = 60, int cHigh = 100,
   wf->cd();
   h_v2_final->Write();
   g_mass->Write();
+  h_mass->Write();
+  h_mass_norm->Write();
 
 }
     
@@ -594,12 +614,13 @@ void GetHistSqrt(TH1D* h1, TH1D* h2){
 } 
 
 double getAccWeight(TH1D* h, double pt){
-  double weight_ = 1./h->GetBinContent((int)((pt*100)/100+1));
+  double binN = h->FindBin(pt);
+  double weight_ = 1./(h->GetBinContent(binN));
   return weight_;
 } 
 
 double getEffWeight(TH1D *h, double pt){
-//  if(pt >=30) pt = 29.;
-  double weight_ = 1./h->GetBinContent((int)((pt*100)/100+1));
+  double binN = h->FindBin(pt);
+  double weight_ = 1./(h->GetBinContentn(binN));
   return weight_;
 } 
