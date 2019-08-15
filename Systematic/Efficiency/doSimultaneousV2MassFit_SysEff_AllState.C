@@ -1035,10 +1035,10 @@ void doSimultaneousV2MassFit_SysEff_AllState(int cLow = 20, int cHigh = 180,
   TGraphErrors* v2plot = new TGraphErrors();
   v2plot->SetPoint(0,ptar,v2);
   v2plot->SetPointError(0,0,v2e);
-  v2plot->SetPoint(0,ptar*2,v2_2s);
-  v2plot->SetPointError(0,0,v2e_2s);
-  v2plot->SetPoint(0,ptar*3,v2_3s);
-  v2plot->SetPointError(0,0,v2e_3s);
+  v2plot->SetPoint(1,ptar*2,v2_2s);
+  v2plot->SetPointError(1,0,v2e_2s);
+  v2plot->SetPoint(2,ptar*3,v2_3s);
+  v2plot->SetPointError(2,0,v2e_3s);
   v2plot->SetTitle("");
   v2plot->SetName("v2vspt");
   v2plot->Write();
