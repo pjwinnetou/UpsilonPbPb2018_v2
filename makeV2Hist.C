@@ -81,13 +81,17 @@ void makeV2Hist(int cLow = 20, int cHigh = 180,
   
   //Get Correction histograms
   bool isTnP = true;
-  bool isPtWeight = true;
-  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_Y1S_muPtCut3.5.root",isTnP,isPtWeight),"read");
+  bool isEffPtWeight = true;
+  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_Y1S_muPtCut3.5.root",isTnP,isEffPtWeight),"read");
   TH1D* hEffPt[3];
   hEffPt[0] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP)); 
   hEffPt[1] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent1050",isTnP)); 
   hEffPt[2] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent5090",isTnP)); 
-  TFile *fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_20190813_dNdptWeighted.root","read");
+  
+  bool isAccPtWeight = true;
+  TFile *fAcc;
+  if(isAccPtWeight) fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_20190813_dNdptWeighted.root","read");
+  else if(!isAccPtWeight) fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_20190813_nonweighted.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
 
