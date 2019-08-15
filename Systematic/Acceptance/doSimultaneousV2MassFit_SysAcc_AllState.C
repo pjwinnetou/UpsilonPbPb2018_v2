@@ -613,7 +613,7 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
   }
   
   //Get yield distribution{{{
-  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2Hist/Ups_%s_AccW0_EffW1.root",kineLabel.Data()),"read");
+  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2HistAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
   TH1D* h_v2_SplusB = (TH1D*) rf->Get("h_v2_SplusB");  
   TGraphAsymmErrors* g_mass = (TGraphAsymmErrors*) rf->Get("g_mass");  
 
