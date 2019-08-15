@@ -94,6 +94,8 @@ void makeV2Hist(int cLow = 20, int cHigh = 180,
   else if(!isAccPtWeight) fAcc = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Acceptance/acceptance_wgt_1S_pt0_50_20190813_nonweighted.root","read");
   TH1D* hAccPt = (TH1D*) fAcc -> Get("hptAccNoW1S"); 
 
+  if(isEffPtWeight==false && isAccPtWeight==true) fDIR = fDIR + "EffSys";
+  else if(isEffPtWeight==true && isAccPtWeight==false) fDIR = fDIR + "AccSys";
 
   //SetBranchAddress
   const int nMaxDimu = 1000;
