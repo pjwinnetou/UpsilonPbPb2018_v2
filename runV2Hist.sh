@@ -1,43 +1,50 @@
-#void makeV2Hist(int cLow = 20, cHigh = 120,
-#                float ptLow = 0, float ptHigh = 6,
-#                float yLow = 0, float yHigh = 2.4,
-#                float SiMuPtCut = 4.0,
-#                float massLow = 8, float massHigh = 14,
-
-
-SiMuPtCut='3.5'
-cLow='0'
-cHigh='200'
-ptLow='0'
-ptHigh='30'
-yLow='0'
-yHigh='2.4'
-massLow='7'
-massHigh='14'
-
-#root -q -b makeV2Hist.C'('$cLow','$cHigh','$ptLow','$ptHigh','$yLow','$yHigh','$SiMuPtCut','$massLow','$massHigh')'
-
-outputdir='plots/MassV2_190306'
-mkdir -p $outputdir
-cp commonUtility.h cutsAndBinUpsilonV2.h HiEvtPlaneList.h Style_jaebeom.h tdrstyle.C CMS_lumi_v2mass.* $outputdir 
+dimusign=true
+accW=true
+effW=true
+isMC=false
+HFSel=0
 
 root -l -b <<EOF
 .L makeV2Hist.C++
 .q
 EOF
+rm *.so *.d *.pcm
 
 echo make hist... 
 
-for pt in '0,30' '0,3' '0,6' '3,6' '6,30' 
+for pt in '0,3' '0,50' '3,6' '6,50' 
 do
-  for cBin in '20,60' '20,120' '60,100' '100,200'
+  for cBin in '20,180' '20,100' '100,180' '0,20' 
   do
-    for muPt in '3.5'
+    for muPt in '3.5' 
     do
       for mBin in '8,14'
       do
-        ./condor_root.sh $outputdir 'makeV2Hist.C('$cBin','$pt','$yLow','$yHigh','$muPt','$mBin')'
+        for corrW in '1,1'
+        do
+          root -l -q -b 'makeV2Hist.C('$cBin','$pt','$yLow','$yHigh','$muPt','$mBin','$isMC','$dimusign','$corrW','$HFSel')'
+        done
       done
     done
   done
 done
+
+for pt in '0,50' '0,3' '3,6' '6,15'
+do
+  for cBin in '10,120'
+  do
+    for rap in '0,2.4' '0,1.2' '1.2,2.4' 
+    do
+      for mBin in '8,14'
+      do
+        for corrW in '1,1'
+        do
+          root -l -q -b 'makeV2Hist.C('$cBin','$pt','$rap',3.5,'$mBin','$isMC','$dimusign','$corrW','$HFSel')'
+        done
+      done
+    done
+  done
+done
+
+
+
