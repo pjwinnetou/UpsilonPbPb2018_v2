@@ -25,9 +25,9 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist(int cLow = 20, int cHigh = 180,
-                float ptLow = 0, float ptHigh = 50, 
-                float yLow = 0, float yHigh=2.4,
+void makeV2Hist(int cLow = 10, int cHigh = 120,
+                float ptLow = 15, float ptHigh = 50, 
+                float yLow = 1.2, float yHigh=2.4,
                 float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true, int hfSel =0)
 {
   //Basic Setting
@@ -72,7 +72,7 @@ void makeV2Hist(int cLow = 20, int cHigh = 180,
     }
     else if(hfSel==-1){
       cout << "Centrality Table :::: Sys Down HF Calibration" << endl; 
-      rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFDo_190716.root","read");
+      rf = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaFlowSkim_UpsTrig_DBPD_isMC0_HFDown_190716.root","read");
     }
     else{ cout << "ERROR!!!!! No HF Calibration Selected!!!" << endl; return;}
   }
