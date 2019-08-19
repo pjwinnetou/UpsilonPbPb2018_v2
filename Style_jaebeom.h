@@ -163,6 +163,21 @@ void SetGraphStyle2(TGraph* gr, Int_t c, Int_t m) {
   gr-> SetMarkerColor(colorArr[c]);
   if(m<4) gr-> SetMarkerStyle(markerFullArr[m]);
   else gr-> SetMarkerStyle(markerOpenArr[m-4]);
+  if (m==2 || m==3) gr-> SetMarkerSize(1.5);
+  else gr-> SetMarkerSize(1.5);
+  gr-> SetLineColor(colorArr[c]);
+  gr-> SetLineWidth(1.);
+  gr-> GetXaxis()->CenterTitle();
+  gr-> GetYaxis()->CenterTitle();
+}
+
+void SetGraphStyleSmall(TGraph* gr, Int_t c, Int_t m) {
+  Int_t colorArr[] = { kGray+3, kRed+2, kBlue+1, kOrange+7, kGreen+3, kAzure+9, kViolet-1, kGreen+1,kBlack };
+  Int_t markerFullArr[] = {kFullCircle, kFullTriangleUp, kFullTriangleDown, kFullSquare, kFullStar, kFullDiamond};
+  Int_t markerOpenArr[] = {kOpenCircle, kOpenTriangleUp, kOpenTriangleDown, kOpenSquare, kOpenStar, kOpenDiamond};
+  gr-> SetMarkerColor(colorArr[c]);
+  if(m<4) gr-> SetMarkerStyle(markerFullArr[m]);
+  else gr-> SetMarkerStyle(markerOpenArr[m-4]);
   if (m==2 || m==3) gr-> SetMarkerSize(2.6);
   else gr-> SetMarkerSize(0.8);
   gr-> SetLineColor(colorArr[c]);
