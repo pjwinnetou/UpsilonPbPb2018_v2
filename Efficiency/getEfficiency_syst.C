@@ -12,7 +12,7 @@ using namespace std;
 void getEfficiency_syst(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = true, int fMuId = -1, int fInnTrk=-1, int fTrig = -1, int state=1
+  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = true, int fMuId = -1, int fInnTrk=0, int fTrig = 0, int state=1
   ) {
 
   gStyle->SetOptStat(0);
@@ -240,7 +240,7 @@ void getEfficiency_syst(
     }
 
   
-    if((HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) continue;
+    if(!((HLTriggers&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel))) ) continue;
 
     for (Int_t irqq=0; irqq<Reco_QQ_size; ++irqq) 
     {
@@ -248,8 +248,7 @@ void getEfficiency_syst(
       mupl_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mupl_idx[irqq]);
       mumi_Reco = (TLorentzVector*) Reco_mu_4mom->At(Reco_QQ_mumi_idx[irqq]);
       
-      bool HLTFilterPass=false;
-      if( (Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel)) ) continue;
+      if( !((Reco_QQ_trig[irqq]&((ULong64_t)pow(2, kTrigSel))) == ((ULong64_t)pow(2, kTrigSel))) ) continue;
 
       if(Reco_mu_whichGen[Reco_QQ_mupl_idx[irqq]] == -1) continue;
       if(Reco_mu_whichGen[Reco_QQ_mumi_idx[irqq]] == -1) continue;
@@ -336,7 +335,7 @@ void getEfficiency_syst(
          SelDone = true;
        }    
 
-       if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
+       if(SelDone == false || (tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){continue;}
        tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
        counttnp++;
       }
@@ -466,13 +465,13 @@ void getEfficiency_syst(
   
   TString fTrigSysString = "SysNom";
   TString fTrigStatString = "StatNom";
-  if(fTrigSys==-1) fTrigSysString = "SysUp";
+  if(fTrig==-1) fTrigSysString = "SysUp";
   else if(fTrig==-2) fTrigSysString = "SysDo";
   else if(fTrig==1) fTrigStatString = "StatUp";
   else if(fTrig==2) fTrigStatString = "StatDo";
 
 
-  TString outFileName = Form("mc_eff_Sys_Y%dS_muPtCut%.1f_MuId%s%s_InnTrk%s%s_Trig%s%s.root",isTnP,isPtWeight,state,muPtCut,fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data());
+  TString outFileName = Form("mc_eff_Sys_Y%dS_muPtCut%.1f_MuId%s%s_InnTrk%s%s_Trig%s%s.root",state,muPtCut,fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data());
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowC_eff->Write();
