@@ -735,8 +735,8 @@ void doSimultaneousV2MassFit_TnPEff_AllState(int cLow = 0, int cHigh = 20,
   //}}}
 
   //combined function condition{{{
-  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.3, -0.8, -0.8, -3, -3, -3, -2};
-  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.8,  0.8,  3,  3,  3,  2};
+  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.3, -0.8, -1.3, -3, -3, -3, -2};
+  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.8,  1.3,  3,  3,  3,  2};
 
   fitter.Config().SetParamsSettings(nParmV_, par0);
   for(int ipar = 0; ipar<nParmV_; ipar++){
