@@ -639,7 +639,7 @@ void doSimultaneousV2MassFit_TnPEff_AllState(int cLow = 0, int cHigh = 20,
   TH1D* h_v2_SplusB = (TH1D*) rf->Get("h_v2_SplusB");  
   TGraphAsymmErrors* g_mass = (TGraphAsymmErrors*) rf->Get("g_mass");  
 
-  TFile *wf = new TFile(Form("%s/SimFitResult_SysEff_%s.root",fDIR.Data(),kineLabel.Data()),"recreate");
+  TFile *wf = new TFile(Form("%s/SimFitResult_TnP_%s_MuId%s%s_InnTrk%s%s_Trig%s%s.root",fDIR.Data(),kineLabel.Data(),fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data()),"recreate");
 
   //define function for simultaneous fitting{{{
   TF1* fyield_simul = new TF1("fyield_simul", TotalYield, massLow, massHigh, nParmM);
