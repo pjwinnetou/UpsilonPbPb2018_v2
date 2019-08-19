@@ -1,4 +1,4 @@
-#include "CMS_lumi_square.h"
+#include "CMS_lumi_v2mass.h"
 #include <iostream>
 
 void CMS_lumi_square( TPad* pad, int iPeriod, int iPosX )

@@ -1,7 +1,7 @@
 #include "CMS_lumi_v2mass.h"
 #include <iostream>
 
-void CMS_lumi_v2mass( TPad* pad, int iPeriod, int iPosX )
+void CMS_lumi_v2mass( TPad* pad, int iPeriod, int iPosX , int iFrameSt = 1)
 {            
   bool outOfFrame    = false;
   if( iPosX/10==0 ) 
@@ -22,7 +22,9 @@ void CMS_lumi_v2mass( TPad* pad, int iPeriod, int iPosX )
   float H = pad->GetWh();
   float W = pad->GetWw();
   float l = pad->GetLeftMargin();
-  float t = pad->GetTopMargin()*0.87;
+  float t;
+  if(iFrameSt==1) t= pad->GetTopMargin()*0.87;
+  else if(iFrameSt==0) t= pad->GetTopMargin()*0.83;
   float r = pad->GetRightMargin();
   float b = pad->GetBottomMargin();
   //  float e = 0.025;
