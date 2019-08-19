@@ -204,7 +204,11 @@ void makeV2Hist_TnPSys(int cLow = 10, int cHigh = 120,
   
   kineLabel = kineLabel + Form("_m%.0f-%.0f",massLow,massHigh) + "_" + dimusignString;
   kineLabel = kineLabel + Form("_AccW%d_EffW%d",fAccW,fEffW);
- /* 
+  
+  kineLabel = kineLabel + Form("_MuId%s%s_InnTrk%s%s_Trig%s%s",fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data());
+
+
+  /* 
   for(int i=0; i<=nMassBin_7; i++){
     if(i<=3) massBin_7[i] = 7 + massBinDiff_7[i]*0.05;
     else if(i>3) massBin_7[i] = 8 + massBinDiff_7[i]*0.05;
