@@ -25,10 +25,10 @@ double getAccWeight(TH1D* h = 0, double pt = 0);
 double getEffWeight(TH1D* h = 0, double pt = 0);
 void GetHistSqrt(TH1D* h1 =0, TH1D* h2=0);
 
-void makeV2Hist_TnPSys(int cLow = 10, int cHigh = 120,
-                float ptLow = 15, float ptHigh = 50, 
-                float yLow = 1.2, float yHigh=2.4,
-                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true, int hfSel =0, int fMuId = 0, int fInnTrk = 0, int fTrig = 0, int state=1)
+void makeV2Hist_TnPSys(int cLow = 0, int cHigh = 20,
+                float ptLow = 0, float ptHigh = 3, 
+                float yLow = 0, float yHigh=2.4,
+                float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool isMC = false, bool dimusign=true, bool fAccW = true, bool fEffW = true, int hfSel =0, int fMuId = 1, int fInnTrk = 0, int fTrig = 0, int state=1)
 {
   //Basic Setting
   gStyle->SetOptStat(0);
@@ -105,7 +105,7 @@ void makeV2Hist_TnPSys(int cLow = 10, int cHigh = 120,
   //Get Correction histograms
   bool isTnP = true;
   bool isEffPtWeight = true;
-  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_Sys_Y%dS_muPtCut3.5_MuId%s%s_InnTrk%s%s_Trig%s%s.root",state,fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data(),),"read");
+  TFile *fEff = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Efficiency/mc_eff_Sys_Y%dS_muPtCut3.5_MuId%s%s_InnTrk%s%s_Trig%s%s.root",state,fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data()),"read");
   TH1D* hEffPt[3];
   hEffPt[0] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent010",isTnP)); 
   hEffPt[1] = (TH1D*) fEff -> Get(Form("mc_eff_vs_pt_TnP%d_Cent1050",isTnP)); 
