@@ -565,14 +565,10 @@ Double_t pol3bkg(Double_t* x, Double_t* par)
 //}}}
 
 
-<<<<<<< HEAD
 void doSimultaneousV2MassFit_TnPEff_AllState_hwan(int cLow = 0, int cHigh = 20,
-=======
-void doSimultaneousV2MassFit_TnPEff_AllState_hwan(int cLow = 20, int cHigh = 180,
->>>>>>> 81ff5694fd647dd8ca04619a477f829ff0d949bd
-                     float ptLow = 0, float ptHigh = 3,
+                     float ptLow = 6, float ptHigh = 50,
                      float yLow = 0, float yHigh=2.4,
-                     float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, int ibkg_vn_sel = fpol2, int fMuId = -2, int fInnTrk = 0, int fTrig = 0)
+                     float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, int ibkg_vn_sel = fpol2, int fMuId = 1, int fInnTrk = 0, int fTrig = 0)
 {
   setTDRStyle();
 	gStyle->SetOptFit(0000);
@@ -704,17 +700,10 @@ void doSimultaneousV2MassFit_TnPEff_AllState_hwan(int cLow = 20, int cHigh = 180
   Double_t Bkgsigma_ = ws->var("#sigma")->getVal();
   Double_t Bkgp0_ = ws->var("#lambda")->getVal();
   Double_t c_ = 0.033;
-<<<<<<< HEAD
   Double_t c_2s_ = 0.;
   Double_t c_3s_ = 0.;
-  Double_t c1_ = 0.03142884;
-  Double_t c2_ = 0.0114097;
-=======
-  Double_t c_2s_ = 0.22;
-  Double_t c_3s_ = 0.01;
   Double_t c1_ = -0.23142884;
   Double_t c2_ = -0.0114097;
->>>>>>> 81ff5694fd647dd8ca04619a477f829ff0d949bd
   Double_t c3_ = 0.021;
   Double_t c4_ = -0.0011964;
   //}}}
@@ -747,13 +736,8 @@ void doSimultaneousV2MassFit_TnPEff_AllState_hwan(int cLow = 20, int cHigh = 180
 
   if(N3_<0) N3_ = -N3_;
   //combined function condition{{{
-<<<<<<< HEAD
-  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.3,  par0[11]*0.3, par0[12]*0.3, -0.3, -0.8, -1.3, -3, -3, -3, -2};
-  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.8,  1.3,  3,  3,  3,  2};
-=======
-  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.3, par0[12]*0.5, -0.3, -0.8, -1.3, -3, -3, -3, -2};
-  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*3.0, par0[12]*2.5,  0.3,  0.8,  1.3,  3,  3,  3,  2};
->>>>>>> 81ff5694fd647dd8ca04619a477f829ff0d949bd
+  Double_t parLimitLow[nParmV]  = {     0,    -10,    -10,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.7,  par0[11]*0.7, par0[12]*0.7, -0.3, -0.8, -1.3, -3, -3, -3, -2};
+  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*3.5,  par0[11]*2.0, par0[12]*4.0,  0.3,  0.8,  1.3,  3,  3,  3,  2};
 
   fitter.Config().SetParamsSettings(nParmV_, par0);
   for(int ipar = 0; ipar<nParmV_; ipar++){
@@ -983,7 +967,7 @@ void doSimultaneousV2MassFit_TnPEff_AllState_hwan(int cLow = 20, int cHigh = 180
   c_mass_v2->cd();
   pad1->Draw();
   pad2->Draw();
-  c_mass_v2->SaveAs(Form("%s/v2Mass_SysEff_%s.pdf",fDIR.Data(),kineLabel.Data()));
+  c_mass_v2->SaveAs(Form("%s/v2Mass_SysEff_%s_MuId%s%s_InnTrk%s%s_Trig%s%s.pdf",fDIR.Data(),kineLabel.Data(),fMuIdSysString.Data(),fMuIdStatString.Data(),fInnTrkSysString.Data(),fInnTrkStatString.Data(),fTrigSysString.Data(),fTrigStatString.Data()));
 /*
   Double_t xmass[200];
   Double_t pullmass[200];
