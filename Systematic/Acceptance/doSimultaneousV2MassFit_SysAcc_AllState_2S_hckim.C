@@ -572,10 +572,25 @@ Double_t pol3bkg(Double_t* x, Double_t* par)
 //}}}
 
 
-void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
+void doSimultaneousV2MassFit_SysAcc_AllState_2S_hckim(int cLow = 20, int cHigh = 180,
                      float ptLow = 0, float ptHigh = 50,
                      float yLow = 0, float yHigh=2.4,
-                     float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, int ibkg_vn_sel = fpol2)
+                     float SiMuPtCut = 3.5, float massLow = 8, float massHigh =14, bool dimusign=true, int ibkg_vn_sel = fpol2,
+							double low10sf=0.5, double low11sf=0.5, double low12sf=0.5,
+							double high10sf=2.5, double high11sf=2.5, double high12sf=2.5,
+							double c_ = 0.031, double c1_ = -0.13142884, double c2_ = -0.0114097, double c3_ = 0.021)
+/*
+  Double_t c_ = 0.031;
+  Double_t c_2s_ = 0;
+  Double_t c_3s_ = 0;
+  Double_t c1_ = -0.13142884;
+  Double_t c2_ = -0.0114097;
+  Double_t c3_ = 0.021;
+  Double_t c4_ = -0.0011964;
+*/ 
+  //combined function condition{{{
+//  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.3, -0.4, -0.4, -3, -3, -3, -2};
+//  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.4,  0.4,  3,  3,  3,  2};
 {
   setTDRStyle();
 	gStyle->SetOptFit(0000);
@@ -585,7 +600,7 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
 
 //Make directory{{{
 	TString mainDIR = gSystem->ExpandPathName(gSystem->pwd());
-	TString fDIR = mainDIR + "/FitResult";
+	TString fDIR = mainDIR + "/FitResultv2AccSys_2S";
 
 	void * dirf = gSystem->OpenDirectory(fDIR.Data());
 	if(dirf) gSystem->FreeDirectory(dirf);
@@ -621,14 +636,14 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
   
   //Get yield distribution{{{
 //  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2HistAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
-  TFile* rf = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/plots/MassV2Hist/hckim/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
-//  TFile* rf = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/plots/MassV2Hist/hckimAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+//###  TFile* rf = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/plots/MassV2Hist/hckim/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+  TFile* rf = new TFile(Form("../../plots/MassV2Hist2S/hckimAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
 
 
   TH1D* h_v2_SplusB = (TH1D*) rf->Get("h_v2_SplusB");  
   TGraphAsymmErrors* g_mass = (TGraphAsymmErrors*) rf->Get("g_mass");  
 
-  TFile *wf = new TFile(Form("%s/SimFitResult_SysAcc_%s.root",fDIR.Data(),kineLabel.Data()),"recreate");
+  TFile *wf = new TFile(Form("%s/SimFitResult_SysAcc_%s_2S.root",fDIR.Data(),kineLabel.Data()),"recreate");
 
   //define function for simultaneous fitting{{{
   TF1* fyield_simul = new TF1("fyield_simul", TotalYield, massLow, massHigh, nParmM);
@@ -670,7 +685,7 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
 
   //Read Signal File
 //  TFile *sfile = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/MassFit/AllParmFreeFit/fitRes/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
-  TFile *sfile = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/Acceptance/v201908/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
+  TFile *sfile = new TFile(Form("../../Acceptance/v201908/fitresults_2S_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
 
 
   sfile->cd();
@@ -691,12 +706,12 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
   Double_t Bkgmean_ = ws->var("#mu")->getVal();
   Double_t Bkgsigma_ = ws->var("#sigma")->getVal();
   Double_t Bkgp0_ = ws->var("#lambda")->getVal();
-  Double_t c_ = 0.031;
+//  Double_t c_ = 0.031;
   Double_t c_2s_ = 0;
   Double_t c_3s_ = 0;
-  Double_t c1_ = -0.13142884;
-  Double_t c2_ = -0.0114097;
-  Double_t c3_ = 0.021;
+//  Double_t c1_ = -0.13142884;
+//  Double_t c2_ = -0.0114097;
+//  Double_t c3_ = 0.021;
   Double_t c4_ = -0.0011964;
   //}}}
 
@@ -728,8 +743,11 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
 
   if(N3_<0) N3_ = -N3_;
   //combined function condition{{{
-  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.3, -0.4, -0.4, -3, -3, -3, -2};
-  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.4,  0.4,  3,  3,  3,  2};
+//  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*0.5,  par0[11]*0.5, par0[12]*0.5, -0.3, -0.4, -0.4, -3, -3, -3, -2};
+//  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*2.5,  par0[11]*2.5, par0[12]*2.5,  0.3,  0.4,  0.4,  3,  3,  3,  2};
+  Double_t parLimitLow[nParmV]  = {     0,     -2,     -2,        0, mean_ -0.02, 0.00,  0.0,  0.0, 0, 0, par0[10]*low10sf,  par0[11]*low11sf, par0[12]*low12sf, -0.3, -0.4, -0.4, -3, -3, -3, -2};
+  Double_t parLimitHigh[nParmV] = {N1_*10, N2_*10, N3_*10, Nbkg_*10, mean_ +0.02,  0.5, 10.0, 10.0, 1, 1, par0[10]*high10sf,  par0[11]*high11sf, par0[12]*high12sf,  0.3,  0.4,  0.4,  3,  3,  3,  2};
+
 
   fitter.Config().SetParamsSettings(nParmV_, par0);
   for(int ipar = 0; ipar<nParmV_; ipar++){
@@ -934,7 +952,7 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
   c_mass_v2->cd();
   pad1->Draw();
   pad2->Draw();
-  c_mass_v2->SaveAs(Form("%s/v2Mass_SysAcc_%s.pdf",fDIR.Data(),kineLabel.Data()));
+  c_mass_v2->SaveAs(Form("%s/v2Mass_SysAcc_%s_2S.pdf",fDIR.Data(),kineLabel.Data()));
 /*
   Double_t xmass[200];
   Double_t pullmass[200];
