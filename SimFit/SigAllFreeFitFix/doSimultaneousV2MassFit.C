@@ -889,7 +889,7 @@ void doSimultaneousV2MassFit(int cLow = 0, int cHigh = 180,
   h_v2_SplusB->Draw("P");
   jumSun(massLow,0,massHigh,0,1,1);
   drawText(Form("v_{2}(S) = %.3f #pm %.3f",v2,v2e),pos_x_mass,pos_y,text_color,text_size);
-  CMS_lumi_v2mass(pad1,iPeriod,iPos);  
+  CMS_lumi_v2mass(pad1,iPeriod,iPos,1);  
   pad1->Update();
   pad2->Update();
   c_mass_v2->cd();
