@@ -9,14 +9,14 @@
 
 using namespace std;
 
-void getEfficiency(
+void getEfficiency_L1DoubleMuOpen50100(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
   int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = false, int state=1
   ) {
 
   gStyle->SetOptStat(0);
-  int kTrigSel = 13;
+  int kTrigSel = 0;
 
   float muPtCut = 3.5;
   float muEtaCut = 2.4;
@@ -206,9 +206,10 @@ void getEfficiency(
   double tnp_trig_weight_mupl = -1;
   double tnp_trig_weight_mumi = -1;
   double pt_weight = 1;
-  
+
   double tnp_trig_dimu=-1;
   TH2D* hpt_tnp_trig = new TH2D("hpt_tnp_trig","hpt_tnp_trig",numBins,ptBin,40,0,2);
+  
 
   int kL2filter = 38;
   int kL3filter = 39;
@@ -290,64 +291,20 @@ void getEfficiency(
      
       if(HLTPass==true && HLTFilterPass==true) count++;
       if(isTnP){
-       tnp_weight = 1;
-       tnp_trig_weight_mupl = -1;
-       tnp_trig_weight_mumi = -1;
-       tnp_weight = tnp_weight * tnp_weight_muid_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 0) * tnp_weight_muid_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 0); //mu id
-       tnp_weight = tnp_weight * tnp_weight_trk_pbpb(mupl_Reco->Eta(), 0) * tnp_weight_trk_pbpb(mumi_Reco->Eta(), 0); //inner tracker
+        tnp_weight = 1;
+        tnp_trig_weight_mupl = -1;
+        tnp_trig_weight_mumi = -1;
+        tnp_weight = tnp_weight * tnp_weight_muid_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 0) * tnp_weight_muid_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 0); //mu id
+        tnp_weight = tnp_weight * tnp_weight_trk_pbpb(mupl_Reco->Eta(), 0) * tnp_weight_trk_pbpb(mumi_Reco->Eta(), 0); //inner tracker
 
-       //Trigger part
-       if(!((Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) && (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ){
-//         cout << "irqq : " << irqq << " - iev : " << iev << endl;
-//         cout << "TnP ERROR !!!! ::: No matched L2 filter1 " << endl;
-         continue;
-       }
-       bool mupl_L2Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
-       bool mupl_L3Filter = ( (Reco_mu_trig[Reco_QQ_mupl_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
-       bool mumi_L2Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL2filter))) == ((ULong64_t)pow(2, kL2filter)) ) ? true : false ;
-       bool mumi_L3Filter = ( (Reco_mu_trig[Reco_QQ_mumi_idx[irqq]]&((ULong64_t)pow(2, kL3filter))) == ((ULong64_t)pow(2, kL3filter)) ) ? true : false ;
-       if(mupl_L2Filter == false || mumi_L2Filter == false){ cout << "TnP ERROR !!!! ::: No matched L2 filter2 " << endl; cout << endl;} 
-
-       bool mupl_isL2 = (mupl_L2Filter && !mupl_L3Filter) ? true : false;
-       bool mupl_isL3 = (mupl_L2Filter && mupl_L3Filter) ? true : false;
-       bool mumi_isL2 = (mumi_L2Filter && !mumi_L3Filter) ? true : false;
-       bool mumi_isL3 = (mumi_L2Filter && mumi_L3Filter) ? true : false;
-       bool SelDone = false;
-
-       if( mupl_isL2 && mumi_isL3){
-         tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 2, 0);
-         tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 3, 0);
-         SelDone = true;
-       }
-       else if( mupl_isL3 && mumi_isL2){
-         tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
-         tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
-         SelDone = true;
-       }
-       else if( mupl_isL3 && mumi_isL3){
-         int t[2] = {-1,1}; // mupl, mumi
-         int l = rand() % (2); 
-         //pick up what will be L2
-         if(t[l]==-1){
-           tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 2, 0);
-           tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 3, 0);
-         }
-         else if(t[l]==1){
-           tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 3, 0);
-           tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 2, 0);
-         }
-         else {cout << "ERROR :: No random selection done !!!!" << endl; continue;}
-         SelDone = true;
-       }    
-
-       if(SelDone == false){cout << "ERROR :: No muon filter combination selected !!!!" << endl; continue;}
-       if((tnp_trig_weight_mupl == -1 || tnp_trig_weight_mumi == -1)){cout << "ERROR :: No trigger muon tnp scale factors selected !!!!" << endl; continue;}
-       tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
-       if(HLTPass==true && HLTFilterPass==true){
-         counttnp++;
-         tnp_trig_dimu = tnp_trig_weight_mupl * tnp_trig_weight_mumi;
-         hpt_tnp_trig->Fill(JP_Reco->Pt(),tnp_trig_dimu);
-       }
+        tnp_trig_weight_mupl = tnp_weight_trg_pbpb(mupl_Reco->Pt(), mupl_Reco->Eta(), 4, 0);
+        tnp_trig_weight_mumi = tnp_weight_trg_pbpb(mumi_Reco->Pt(), mumi_Reco->Eta(), 4, 0);
+        tnp_weight = tnp_weight * tnp_trig_weight_mupl * tnp_trig_weight_mumi;
+        if(HLTPass==true && HLTFilterPass==true){ 
+          counttnp++;
+          tnp_trig_dimu = tnp_trig_weight_mupl * tnp_trig_weight_mumi;
+          hpt_tnp_trig->Fill(JP_Reco->Pt(),tnp_trig_dimu);
+        }
       }
 
       pt_weight = 1;
@@ -359,7 +316,7 @@ void getEfficiency(
         else if(Centrality > 20 && Centrality < 100) hptMidC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
         else if(Centrality > 100 && Centrality < 180) hptHighC_reco -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
       }
-      hpt_reco_NoTrig->Fill(JP_Reco->Pt(),weight * tnp_weight * pt_weight);
+      hpt_reco_NoTrig->Fill(JP_Reco->Pt(),weight * tnp_weight*pt_weight);
       if(Centrality < 20) hptLowC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
       else if(Centrality > 20 && Centrality < 100) hptMidC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
       else if(Centrality > 100 && Centrality < 180) hptHighC_reco_NoTrig -> Fill(JP_Reco->Pt(), weight * tnp_weight * pt_weight);
@@ -491,7 +448,7 @@ void getEfficiency(
   hptLowC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent010_Trig",isTnP));
   hptMidC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent1050_Trig",isTnP));
   hptHighC_eff_Trig->SetName(Form("mc_eff_vs_pt_TnP%d_Cent5090_Trig",isTnP));
-  TString outFileName = Form("mc_eff_vs_pt_TnP%d_PtW%d_OfficialMC_Y%dS_muPtCut%.1f.root",isTnP,isPtWeight,state,muPtCut);
+  TString outFileName = Form("mc_eff_vs_pt_L1DoubleMuOpen_TnP%d_PtW%d_OfficialMC_Y%dS_muPtCut%.1f.root",isTnP,isPtWeight,state,muPtCut);
   TFile* outFile = new TFile(outFileName,"RECREATE");
   hpt_eff->Write();
   hptLowC_eff->Write();
@@ -505,8 +462,6 @@ void getEfficiency(
   hptLowC_eff_Trig->Write();
   hptMidC_eff_Trig->Write();
   hptHighC_eff_Trig->Write();
-  hpt_reco_NoTrig->Write();
-  hpt_reco->Write();
   hpt_tnp_trig->Write();
   outFile->Close();
 
