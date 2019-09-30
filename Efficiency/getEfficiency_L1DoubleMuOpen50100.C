@@ -12,13 +12,13 @@ using namespace std;
 void getEfficiency_L1DoubleMuOpen50100(
   float ptLow = 0.0, float ptHigh = 50.0,
   float yLow = 0.0, float yHigh = 2.4,
-  int cLow = 0, int cHigh = 180, bool isTnP = false, bool isPtWeight = false, int state=1
+  int cLow = 0, int cHigh = 180, bool isTnP = true, bool isPtWeight = true, int state=1
   ) {
 
   gStyle->SetOptStat(0);
   int kTrigSel = 0;
 
-  float muPtCut = 4.0;
+  float muPtCut = 3.5;
   float muEtaCut = 2.4;
 
   float massLow = 8.0;
@@ -210,7 +210,6 @@ void getEfficiency_L1DoubleMuOpen50100(
   double tnp_trig_dimu=-1;
   TH2D* hpt_tnp_trig = new TH2D("hpt_tnp_trig","hpt_tnp_trig",numBins,ptBin,40,0,2);
   
-
   int kL2filter = 38;
   int kL3filter = 39;
 

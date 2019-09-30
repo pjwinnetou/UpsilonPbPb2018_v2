@@ -38,12 +38,19 @@
 #include <Math/WrappedMultiTF1.h>
 #include <HFitInterface.h>
 
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/commonUtility.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/cutsAndBinUpsilonV2.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/HiEvtPlaneList.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Style_jaebeom.h"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/tdrstyle.C"
-#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/CMS_lumi_v2mass.C"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/commonUtility.h"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/cutsAndBinUpsilonV2.h"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/HiEvtPlaneList.h"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/Style_jaebeom.h"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/tdrstyle.C"
+//#include "/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/CMS_lumi_v2mass.C"
+#include "../../commonUtility.h"
+#include "../../cutsAndBinUpsilonV2.h"
+#include "../../HiEvtPlaneList.h"
+#include "../../Style_jaebeom.h"
+#include "../../tdrstyle.C"
+#include "../../CMS_lumi_v2mass.C"
+
 
 //}}}
 
@@ -613,7 +620,11 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
   }
   
   //Get yield distribution{{{
-  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2HistAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+//  TFile* rf = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/plots/MassV2HistAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+  TFile* rf = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/plots/MassV2Hist/hckim/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+//  TFile* rf = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/plots/MassV2Hist/hckimAccSys/Ups_%s_AccW1_EffW1.root",kineLabel.Data()),"read");
+
+
   TH1D* h_v2_SplusB = (TH1D*) rf->Get("h_v2_SplusB");  
   TGraphAsymmErrors* g_mass = (TGraphAsymmErrors*) rf->Get("g_mass");  
 
@@ -658,7 +669,10 @@ void doSimultaneousV2MassFit_SysAcc_AllState(int cLow = 20, int cHigh = 180,
 
 
   //Read Signal File
-  TFile *sfile = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/MassFit/AllParmFreeFit/fitRes/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
+//  TFile *sfile = new TFile(Form("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/MassFit/AllParmFreeFit/fitRes/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
+  TFile *sfile = new TFile(Form("/afs/cern.ch/work/h/hckim/cms1032_yv2_v3Guillaume_20190718/src/UpsilonPbPb2018_v2/Acceptance/v201908/fitresults_upsilon_DoubleCB_pt%.1f-%.1f_y%.1f-%.1f_muPt3.5_centrality0-180.root",ptLow,ptHigh,yLow,yHigh),"read");
+
+
   sfile->cd();
   RooWorkspace *ws = (RooWorkspace*) sfile -> Get("workspace");
 

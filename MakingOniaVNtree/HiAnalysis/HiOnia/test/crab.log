@@ -1,0 +1,173 @@
+DEBUG 2019-07-18 18:55:29,939: 	 Executing command: 'status'
+DEBUG 2019-07-18 18:55:29,939: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-18 18:55:29,939: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MCcrab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC_ext1-v1_OniaTreeGFvnmerge_p20190718/ is not a valid CRAB project directory.
+ERROR 2019-07-18 18:55:29,939: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MCcrab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC_ext1-v1_OniaTreeGFvnmerge_p20190718/ is not a valid CRAB project directory.
+DEBUG 2019-07-18 21:15:29,257: 	 Executing command: 'submit'
+DEBUG 2019-07-18 21:15:29,257: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+DEBUG 2019-07-18 21:15:29,266: 	 Checking credentials
+DEBUG 2019-07-18 21:15:29,267: 	 Found proxy file /tmp/x509up_u30955
+DEBUG 2019-07-18 21:15:29,267: 	 Getting proxy life time left
+DEBUG 2019-07-18 21:15:30,073: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u30955 -timeleft
+ output : 84674
+
+ error: 
+ retcode : 0
+DEBUG 2019-07-18 21:15:30,780: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u30955 -actimeleft
+ output : 84674
+
+ error: 
+ retcode : 0
+DEBUG 2019-07-18 21:15:30,780: 	 Proxy valid for 23:31:14 hours
+INFO 2019-07-18 21:15:30,781: 	 Will use CRAB configuration file crabConfig_MC_ONIATREE_vnmerge_v20190718.py
+DEBUG 2019-07-18 21:15:30,781: 	 Loading CRAB configuration file.
+ERROR 2019-07-18 21:15:30,825: 	 Invalid CRAB configuration: Parameter General.requestName should not be longer than 100 characters.
+The documentation about the CRAB configuration file can be found in https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
+ERROR 2019-07-18 21:15:30,826: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/submit.py", line 34, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 311, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 92, in loadConfig
+    raise ConfigurationException(configmsg)
+ConfigurationException: Invalid CRAB configuration: Parameter General.requestName should not be longer than 100 characters.
+The documentation about the CRAB configuration file can be found in https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
+DEBUG 2019-07-20 12:02:56,254: 	 Executing command: 'submit'
+DEBUG 2019-07-20 12:02:56,255: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+DEBUG 2019-07-20 12:02:56,266: 	 Checking credentials
+DEBUG 2019-07-20 12:02:56,268: 	 Found proxy file /tmp/x509up_u30955
+DEBUG 2019-07-20 12:02:56,268: 	 Getting proxy life time left
+DEBUG 2019-07-20 12:02:57,176: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u30955 -timeleft
+ output : 72392
+
+ error: 
+ retcode : 0
+DEBUG 2019-07-20 12:02:57,984: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u30955 -actimeleft
+ output : 72392
+
+ error: 
+ retcode : 0
+DEBUG 2019-07-20 12:02:57,984: 	 Proxy valid for 20:06:32 hours
+INFO 2019-07-20 12:02:57,985: 	 Will use CRAB configuration file crabConfig_MC_ONIATREE_vnmerge_v20190718.py
+DEBUG 2019-07-20 12:02:57,985: 	 Loading CRAB configuration file.
+DEBUG 2019-07-20 12:02:58,014: 	 Will use CRAB Analysis plugin (i.e. will run an analysis job type).
+ERROR 2019-07-20 12:02:58,014: 	 Invalid CRAB configuration:
+ when ignoreLocality is set a valid site white list must be specified using the Site.whitelist parameter
+The documentation about the CRAB configuration file can be found in https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
+ERROR 2019-07-20 12:02:58,015: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/submit.py", line 34, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 311, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 92, in loadConfig
+    raise ConfigurationException(configmsg)
+ConfigurationException: Invalid CRAB configuration:
+ when ignoreLocality is set a valid site white list must be specified using the Site.whitelist parameter
+The documentation about the CRAB configuration file can be found in https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
+DEBUG 2019-07-21 04:53:50,485: 	 Executing command: 'status'
+DEBUG 2019-07-21 04:53:50,486: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-21 04:53:50,486: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC is not a valid CRAB project directory.
+ERROR 2019-07-21 04:53:50,487: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC is not a valid CRAB project directory.
+DEBUG 2019-07-22 09:49:33,907: 	 Executing command: 'status'
+DEBUG 2019-07-22 09:49:33,908: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+DEBUG 2019-07-23 06:20:46,720: 	 Executing command: 'status'
+DEBUG 2019-07-23 06:20:46,721: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-23 06:20:46,721: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p20190718_r3 is not a valid CRAB project directory.
+ERROR 2019-07-23 06:20:46,721: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p20190718_r3 is not a valid CRAB project directory.
+DEBUG 2019-07-29 09:58:49,184: 	 Executing command: 'status'
+DEBUG 2019-07-29 09:58:49,184: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-29 09:58:49,185: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p190718_r2 is not a valid CRAB project directory.
+ERROR 2019-07-29 09:58:49,185: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p190718_r2 is not a valid CRAB project directory.
+DEBUG 2019-07-29 11:21:45,664: 	 Executing command: 'status'
+DEBUG 2019-07-29 11:21:45,664: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-29 11:21:45,676: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p190718_r2 is not a valid CRAB project directory.
+ERROR 2019-07-29 11:21:45,677: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p190718_r2 is not a valid CRAB project directory.
+DEBUG 2019-07-29 11:23:02,685: 	 Executing command: 'status'
+DEBUG 2019-07-29 11:23:02,685: 	 Found CRAB cache file /afs/cern.ch/user/h/hckim/.crab3
+ERROR 2019-07-29 11:23:02,686: 	 Error: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p20190718_r3 is not a valid CRAB project directory.
+ERROR 2019-07-29 11:23:02,686: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 586, in validateOptions
+    raise ConfigurationException(msg)
+ConfigurationException: [91mError[0m: crab_projects/crab_Ups1SMM_5p02TeV_pThat-2_TuneCP5_HydjetDrumMB_officialPythia8MC-v1_OniaTreeGFvnmerge_p20190718_r3 is not a valid CRAB project directory.
