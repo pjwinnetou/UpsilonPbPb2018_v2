@@ -507,7 +507,7 @@ void getEfficiency(
   hptHighC_eff_Trig->Write();
   hpt_reco_NoTrig->Write();
   hpt_reco->Write();
-  hpt_tnp_trig->Write();
+  if(isTnP) hpt_tnp_trig->Write();
   outFile->Close();
 
 }
