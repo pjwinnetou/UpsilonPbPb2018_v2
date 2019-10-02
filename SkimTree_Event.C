@@ -208,7 +208,7 @@ void SkimTree_Event(int nevt=-1, bool isMC = true, int kTrigSel = kTrigUps, int 
   if(hiHFBinEdge==1) fCentSelHF = "HFUp";
   else if(hiHFBinEdge==-1) fCentSelHF = "HFDown";
   TFile* newfile;
-  newfile = new TFile(Form("OniaFlowSkim_%sTrig_%sPD_isMC%d_%s_190813.root",fTrigName[trigIndx].Data(),fPD,isMC,fCentSelHF.Data()),"recreate");
+  newfile = new TFile(Form("OniaFlowSkim_%sTrig_%sPD_isMC%d_%s_190813.root",fTrigName[trigIndx].Data(),fPD.Data(),isMC,fCentSelHF.Data()),"recreate");
 
   const static int nMaxDimu = 1000;
   int evt;

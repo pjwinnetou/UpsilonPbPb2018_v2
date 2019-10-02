@@ -46,7 +46,7 @@ const int Ntrig = 4;
 int kTrigJpsi = 12;
 int kTrigUps = 13;
 int kTrigL1DBOS40100 = 0;
-int kTrigL1DB50100 = 1;
+int kTrigL1DB50100 = 2;
 TString fTrigName[Ntrig] = {"Jpsi", "Ups", "L1DoubleMuOpenOS40100", "L1DoubleMuOpen50100"};
 
 const Int_t nBins = 200; // table of bin edges
