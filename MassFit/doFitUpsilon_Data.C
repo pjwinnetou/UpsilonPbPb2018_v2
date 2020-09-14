@@ -19,17 +19,13 @@
 using namespace std;
 using namespace RooFit;
 void doFitUpsilon_Data(
-       float ptLow=30, float ptHigh=50, 
+       float ptLow=6, float ptHigh=9, 
        float yLow=0, float yHigh=2.4,
        int cLow=0, int cHigh=200,
        float SiMuPtCut=3.5,
        bool recoSign=true,
        bool fixParameters=0  )
 {
-  float dphiEp2Low = 0 ;
-  float dphiEp2High = 100 ;
-  
-
   using namespace RooFit;
   gStyle->SetEndErrorSize(0);
  
@@ -42,7 +38,7 @@ void doFitUpsilon_Data(
   float massHighForPlot = massHigh;
   int   nMassBin  = (massHigh-massLow)*10;
 
-  TFile* f1 = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/upsilonV2/skimmedFiles/OniaTree_Skim_UpsTrig_190506.root");
+  TFile* f1 = new TFile("/home/deathold/work/CMS/analysis/Upsilon_v2/UpsilonPbPb2018_v2/skimmedFiles/OniaTree_Skim_UpsTrig_190709.root");
  
   TString recoSignString;
   if(recoSign==true) recoSignString = " && recoQQsign==0";
@@ -114,28 +110,8 @@ void doFitUpsilon_Data(
   RooFormulaVar f3s("f3s","1.0*@0",RooArgList(*f1s) );
 
 
-  // Set initial parameters
-  if ( initPset.n1s_1 == -1 )
-    {
-      cout << endl << endl << endl << "#########################  ERROR!!!! ##################" << endl;
-      cout << "No Param. set for " << kineLabel << ","<<endl;
-      cout << "Fitting macro is stopped!" << endl << endl << endl;
-      return;
-    }
-  else { 
-    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
-    cout << endl << "Setting the initial  parameters..." << endl << endl;
-    cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
-    cout << "initPset.n1s_1 = " << initPset.n1s_1 << endl;
-    n1s_1.setVal(initPset.n1s_1);  
-    cout << "initPset.alpha1s_1 = " << initPset.alpha1s_1 << endl;
-    alpha1s_1.setVal(initPset.alpha1s_1);
-    cout << "initPset.sigma1s_1 = " << initPset.sigma1s_1 << endl;
-    cout << "initPset.f1s = " << initPset.f1s << endl;
-    cout << "initPset.x1s = " << initPset.x1s << endl;
-  } 
   // Fix? 
-  if (fixParameters)   {
+  if (fixParameters)  { 
     n1s_1.setConstant();
     alpha1s_1.setConstant();
     sigma1s_1.setConstant();
@@ -145,7 +121,6 @@ void doFitUpsilon_Data(
 
   
   RooCBShape* cb1s_1 = new RooCBShape("cball1s_1", "cystal Ball", *(ws->var("mass")), mean1s, sigma1s_1, alpha1s_1, n1s_1);
-  cout << " n1s_1.getVal() = " << n1s_1.getVal() << endl;
   RooCBShape* cb2s_1 = new RooCBShape("cball2s_1", "cystal Ball", *(ws->var("mass")), mean2s, sigma2s_1, alpha2s_1, n2s_1);
   RooCBShape* cb3s_1 = new RooCBShape("cball3s_1", "cystal Ball", *(ws->var("mass")), mean3s, sigma3s_1, alpha3s_1, n3s_1);
   RooCBShape* cb1s_2 = new RooCBShape("cball1s_2", "cystal Ball", *(ws->var("mass")), mean1s, sigma1s_2, alpha1s_2, n1s_2);
@@ -165,17 +140,10 @@ void doFitUpsilon_Data(
   double init_mu = initPset.bkg_mu ;
   double init_sigma = initPset.bkg_sigma ;
   double init_lambda = initPset.bkg_lambda ;
-
-  double init_mu_min = init_mu - 10; double init_mu_max = init_mu + 10;
-  double init_sigma_min = init_sigma - 10.; double init_sigma_max = init_sigma + 10;
-  double init_lambda_min = init_lambda - 10; double init_lambda_max = init_lambda + 10;
-  if(init_mu_min <0) init_mu_min = 0;
-  if(init_sigma_min <0) init_sigma_min = 0;
-  if(init_lambda_min <0) init_lambda_min = 0;
  
-  RooRealVar err_mu("#mu","err_mu",init_mu,  0, 25) ;
-  RooRealVar err_sigma("#sigma","err_sigma", init_sigma, 0,25);
-  RooRealVar m_lambda("#lambda","m_lambda",  init_lambda, 0,25);
+  RooRealVar err_mu("#mu","err_mu",init_mu,  0, 35) ;
+  RooRealVar err_sigma("#sigma","err_sigma", init_sigma, 0,35);
+  RooRealVar m_lambda("#lambda","m_lambda",  init_lambda, 0,35);
 
   RooGenericPdf *bkg;
   RooGenericPdf *bkgLowPt = new RooGenericPdf("bkgLowPt","Background","TMath::Exp(-@0/@1)*(TMath::Erf((@0-@2)/(TMath::Sqrt(2)*@3))+1)*0.5",RooArgList( *(ws->var("mass")), m_lambda, err_mu, err_sigma) );
@@ -354,8 +322,6 @@ void doFitUpsilon_Data(
   writeExtraText = true;
   extraText = "Preliminary";
 
-  TString label;
-  label="";
   CMS_lumi_massPull(pad1, 2 ,33);
 
 
@@ -378,21 +344,7 @@ void doFitUpsilon_Data(
   c1->Write();
   ws->Write();
   cout << "N, alpha, sigma1s, M0, f, X double CB for data " << endl;
-  //  void setSignalParMC(float MCn_, float MCalpha_, float MCsigma1S_, float MCm0_, float MCf_, float MCx_)
   cout << Form(" else if ( binMatched( %.f, %.f, %.f, %.1f, %.1f) ) {setSignalParMC(",SiMuPtCut, ptLow, ptHigh, yLow, yHigh);
   cout <<  ws->var("n1s_1")->getVal() << ", " <<  ws->var("alpha1s_1")->getVal() << ", "<<  ws->var("sigma1s_1")->getVal() << ", " <<  ws->var("m_{#Upsilon(1S)}")->getVal() << ", " <<  ws->var("f1s")->getVal() << ", "<<  ws->var("x1s")->getVal() << " );} " << endl;
-//  outf->Close();
-
-
-  ///  cout parameters :
-  /*
-  cout << "N, alpha, sigma1s, M0, f, X double CB for data " << endl;
-  cout << "if ( (SiMuPtCut==(float)"<< SiMuPtCut<<") &&  ( ptLow == (float)"<< ptLow <<" ) && (ptHigh == (float)"<<ptHigh<<" ) && (yLow == (float)"<<yLow<<" ) && (yHigh == (float)"<<yHigh<<" ) )" << endl;
-
-  //  void setSignalParMC(float MCn_, float MCalpha_, float MCsigma1S_, float MCm0_, float MCf_, float MCx_)
-  cout << " {ret.setParMC( " ;
-  cout <<  ws->var("n1s_1")->getVal() << ", " <<  ws->var("alpha1s_1")->getVal() << ", "<<  ws->var("sigma1s_1")->getVal() << ", " << endl;
-  cout <<  ws->var("m_{#Upsilon(1S)}")->getVal() << ", " <<  ws->var("f1s")->getVal() << ", "<<  ws->var("x1s")->getVal() << " );} " << endl;
-  */
 
 } 
